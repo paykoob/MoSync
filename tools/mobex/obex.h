@@ -31,7 +31,7 @@ int sendObject(const MABtAddr& address, const Array<char>& file, const Array<u16
 #define CONNERR_OBEX -1001
 
 
-#define LOG_CODE LOG("code %i\n", __LINE__)
+#define LOG_CODE LOG("line %i\n", __LINE__)
 
 #undef FAIL
 //#define FAIL(verb) { LOG("Failure %s, ", verb); LOG_CODE; return false; }
