@@ -570,7 +570,6 @@ static MA_FILE* openReadWrite(const char *filename, int modeFlags) {
 
 	file->buffer = (unsigned char*) malloc(size);
 	if(!file->buffer) {
-		free(file->buffer);
 		free(file);
 		return NULL;
 	}
@@ -798,10 +797,11 @@ int MA_fclose ( MA_FILE * stream ) {
 			maWriteStore(stream->store, data);
 			maDestroyObject(data);
 			maCloseStore(stream->store, 0);
-			free(stream->volEntry);
 		}
-
-		free(stream->buffer);
+		if(stream->volEntry)
+			free(stream->volEntry);
+		if(stream->buffer)
+			free(stream->buffer);
 		free(stream);
 		return 0;
 	}
