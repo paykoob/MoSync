@@ -18,6 +18,7 @@ MA 02110-1301, USA.
 
 #include <MAUtil/GLMoblet.h>
 #include <GLES/gl.h>
+#include <mavsprintf.h>
 
 using namespace MAUtil;
 
@@ -38,9 +39,9 @@ void gluPerspective(
 	GLfloat zNear,
 	GLfloat zFar)
 {
-	const float M_PI = 3.14159;
+	const float M_PI = 3.14159f;
 
-	GLfloat ymax = zNear * tan(fovy * M_PI / 360.0);
+	GLfloat ymax = zNear * tan(fovy * M_PI / 360.0f);
 	GLfloat ymin = -ymax;
 	GLfloat xmin = ymin * aspect;
 	GLfloat xmax = ymax * aspect;
@@ -133,7 +134,7 @@ public:
 	    GLfloat vcoords[4][3];
 
 	    // Set the background color to be used when clearing the screen.
-	    glClearColor(0.3f, 0.0f, 0.0f, 1.0f);
+	    glClearColor(0.5f, 0.0f, 0.0f, 1.0f);
 
 	    // Clear the screen and the depth buffer.
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -172,6 +173,7 @@ public:
 
 	    // Wait (blocks) until all GL drawing commands to finish.
 	    glFinish();
+			lprintfln("glFinish()");
 	}
 };
 

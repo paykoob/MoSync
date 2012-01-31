@@ -95,6 +95,7 @@
     <ClInclude Include="Dictionary.h" />
     <ClInclude Include="Dictionary_impl.h" />
     <ClInclude Include="Geometry.h" />
+    <ClInclude Include="GLMoblet.h" />
     <ClInclude Include="HashMap.h" />
     <ClInclude Include="HashMap_impl.h" />
     <ClInclude Include="List.h" />
@@ -127,6 +128,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Geometry.cpp" />
+    <ClCompile Include="GLMoblet.cpp" />
     <ClCompile Include="HashMap.cpp" />
     <ClCompile Include="RefCounted.cpp" />
     <ClCompile Include="String.cpp" />

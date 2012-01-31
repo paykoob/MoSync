@@ -96,6 +96,9 @@
     <ClInclude Include="GraphicsSoftware.h" />
     <ClInclude Include="PlaceholderPool.h" />
     <ClInclude Include="util.h" />
+    <ClInclude Include="GLMoblet.h">
+      <Filter>Environment</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Geometry.cpp">
@@ -149,5 +152,8 @@
     <ClCompile Include="GraphicsSoftware.c" />
     <ClCompile Include="PlaceholderPool.cpp" />
     <ClCompile Include="util.cpp" />
+    <ClCompile Include="GLMoblet.cpp">
+      <Filter>Environment</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

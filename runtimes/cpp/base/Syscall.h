@@ -157,6 +157,7 @@ namespace Base {
 		const wchar* GetValidatedWStr(int address);
 
 		int TranslateNativePointerToMoSyncPointer(void *nativePointer);
+		void* GetCustomEventPointer();
 
 #ifndef VSV_ARGPTR_DECL
 #define VSV_ARGPTR_DECL

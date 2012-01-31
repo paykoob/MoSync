@@ -1575,6 +1575,9 @@ int Base::Syscall::GetValidatedStackValue(int offset VSV_ARGPTR_DECL) {
 int Base::Syscall::TranslateNativePointerToMoSyncPointer(void *nativePointer) {
 	return Core::TranslateNativePointerToMoSyncPointer(gCore, nativePointer);
 }
+void* Base::Syscall::GetCustomEventPointer() {
+	return Core::GetCustomEventPointer(gCore);
+}
 const char* Base::Syscall::GetValidatedStr(int address) {
 	return Core::GetValidatedStr(gCore, address);
 }

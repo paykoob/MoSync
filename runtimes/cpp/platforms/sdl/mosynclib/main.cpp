@@ -181,6 +181,16 @@ int Base::maDumpCallStackEx(const char*, int) {
 	return -1;
 }
 
+void* Base::Syscall::GetCustomEventPointer() {
+	static char buffer[1024];
+	return buffer;
+}
+
+// warn: not gonna work in 64-bit systems.
+int Base::Syscall::TranslateNativePointerToMoSyncPointer(void* n) {
+	return (int)n;
+}
+
 #ifdef MEMORY_PROTECTION
 void Base::Syscall::protectMemory(int start, int length) {
 }

@@ -94,7 +94,11 @@ extern "C" {
 #include "Skinning/SkinManager.h"
 
 #ifdef SUPPORT_OPENGL_ES
+#define DONT_WANT_IX_OPENGL_ES_TYPEDEFS
 #include <helpers/CPP_IX_OPENGL_ES.h>
+#include <helpers/CPP_IX_GL1.h>
+//#include <helpers/CPP_IX_GL2.h>
+//#include <helpers/CPP_IX_GL_OES_FRAMEBUFFER_OBJECT.h>
 #include <dgles-0.5/GLES/gl.h>
 #include "../../generated/gl.h.cpp"
 #include "OpenGLES.h"
@@ -1615,6 +1619,16 @@ namespace Base {
 			return 0;
 		}
 		*dst = gEventFifo.get();
+
+		void* cep = SYSCALL_THIS->GetCustomEventPointer();
+
+#define HANDLE_CUSTOM_EVENT(eventType, dataType) if(dst->type == eventType) {\
+		memcpy(cep, (void*)dst->data, sizeof(dataType));\
+		delete (dataType*)dst->data;\
+		dst->data = SYSCALL_THIS->TranslateNativePointerToMoSyncPointer(cep); }
+
+		CUSTOM_EVENTS(HANDLE_CUSTOM_EVENT);
+
 		return 1;
 	}
 
@@ -1902,10 +1916,24 @@ namespace Base {
 #endif
 
 #ifdef SUPPORT_OPENGL_ES
-	int maOpenGLInitFullscreen() {
+	static void maGlGetPointerv(GLenum pname, void* params) {
+		glGetPointerv(pname, (void**)params);
+	}
+
+	int maOpenGLInitFullscreen(int glApi) {
+		if(glApi != MA_GL_API_GL1)
+			return MA_GL_INIT_RES_UNAVAILABLE_API;
 		TEST_Z(Base::subViewOpen(sSkin->getScreenLeft(), sSkin->getScreenTop(), sSkin->getScreenWidth(), sSkin->getScreenHeight(), sSubView));
 		TEST_Z(Base::openGLInit(sSubView));
 		sOpenGLMode = true;
+
+		MAEvent event;
+		event.type = EVENT_TYPE_WIDGET;
+		MAWidgetEventData *eventData = new MAWidgetEventData;
+		eventData->eventType = MAW_EVENT_GL_VIEW_READY;
+		eventData->widgetHandle = 0;
+		event.data = (int)eventData;
+		gEventFifo.put(event);
 
 		return 0;
 	}
@@ -1919,10 +1947,10 @@ namespace Base {
 	int maOpenGLTexImage2D(MAHandle image) {
 		SDL_Surface* surface = gSyscall->resources.get_RT_IMAGE(image);
 
-        // get the number of channels in the SDL surface
-        GLint nOfColors = surface->format->BytesPerPixel;
+		// get the number of channels in the SDL surface
+		GLint nOfColors = surface->format->BytesPerPixel;
 		GLenum texture_format = 0;
-        GLint flipColors = 0;
+		GLint flipColors = 0;
 
 		int w = nextPowerOf2(1, surface->w);
 		int h = nextPowerOf2(1, surface->h);
@@ -1945,23 +1973,23 @@ namespace Base {
 		}
 
 		if (nOfColors == 4)     // contains an alpha channel
-        {
-                if (surface->format->Bmask == 0xff000000)
-                        texture_format = GL_RGBA;
-				else {
-					texture_format = GL_RGBA;
-					flipColors = 1; //texture_format = GL_BGR;
-				}
+		{
+			if (surface->format->Bmask == 0xff000000)
+				texture_format = GL_RGBA;
+			else {
+				texture_format = GL_RGBA;
+				flipColors = 1; //texture_format = GL_BGR;
+			}
 		}
 		else if (nOfColors == 3)     // no alpha channel
-        {
-                if (surface->format->Bmask == 0xff0000)
-                        texture_format = GL_RGB;
-				else {
-					texture_format = GL_RGB;
-					flipColors = 1; //texture_format = GL_BGR;
-				}
-        }
+		{
+			if (surface->format->Bmask == 0xff0000)
+				texture_format = GL_RGB;
+			else {
+				texture_format = GL_RGB;
+				flipColors = 1; //texture_format = GL_BGR;
+			}
+		}
 
 		if(texture_format == 0) {
 			return MA_GL_TEX_IMAGE_2D_INVALID_IMAGE;
@@ -1989,7 +2017,7 @@ namespace Base {
 
 		// Edit the texture object's image data using the information SDL_Surface gives us
 		glTexImage2D( GL_TEXTURE_2D, 0, texture_format, surface->w, surface->h, 0,
-						  texture_format, GL_UNSIGNED_BYTE, data);
+			texture_format, GL_UNSIGNED_BYTE, data);
 
 		if(flipColors) {
 			delete data;
@@ -2004,28 +2032,28 @@ namespace Base {
 	int maOpenGLTexSubImage2D(MAHandle image) {
 		SDL_Surface* surface = gSyscall->resources.get_RT_IMAGE(image);
 
-        GLint nOfColors = surface->format->BytesPerPixel;
+		GLint nOfColors = surface->format->BytesPerPixel;
 		GLenum texture_format = 0;
-        GLint flipColors = 0;
+		GLint flipColors = 0;
 
 		if (nOfColors == 4)     // contains an alpha channel
-        {
-                if (surface->format->Bmask == 0xff000000)
-                        texture_format = GL_RGBA;
-				else {
-					texture_format = GL_RGBA;
-					flipColors = 1; //texture_format = GL_BGR;
-				}
+		{
+			if (surface->format->Bmask == 0xff000000)
+				texture_format = GL_RGBA;
+			else {
+				texture_format = GL_RGBA;
+				flipColors = 1; //texture_format = GL_BGR;
+			}
 		}
 		else if (nOfColors == 3)     // no alpha channel
-        {
-                if (surface->format->Bmask == 0xff0000)
-                        texture_format = GL_RGB;
-				else {
-					texture_format = GL_RGB;
-					flipColors = 1; //texture_format = GL_BGR;
-				}
-        }
+		{
+			if (surface->format->Bmask == 0xff0000)
+				texture_format = GL_RGB;
+			else {
+				texture_format = GL_RGB;
+				flipColors = 1; //texture_format = GL_BGR;
+			}
+		}
 
 		byte* data = (byte*)surface->pixels;
 		if(flipColors) {
@@ -2048,8 +2076,8 @@ namespace Base {
 		}
 
 		// Edit the texture object's image data using the information SDL_Surface gives us
-		glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, surface->w, surface->h, texture_format
-						, GL_UNSIGNED_BYTE, data);
+		glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, surface->w, surface->h, texture_format,
+			GL_UNSIGNED_BYTE, data);
 
 		if(flipColors) {
 			delete data;
@@ -2100,7 +2128,12 @@ namespace Base {
 #endif	//LOGGING_ENABLED
 
 #ifdef SUPPORT_OPENGL_ES
+#define glGetPointerv maGlGetPointerv
 		maIOCtl_IX_OPENGL_ES_caselist;
+		maIOCtl_IX_GL1_caselist;
+		//maIOCtl_IX_GL2_caselist;
+		//maIOCtl_IX_GL_OES_FRAMEBUFFER_OBJECT_caselist;
+#undef glGetPointerv
 #endif	//SUPPORT_OPENGL_ES
 
 			maIOCtl_sinh_case(::sinh);
