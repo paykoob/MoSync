@@ -154,50 +154,50 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unitTestServer", "tests\uni
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{C0FCC21E-6462-4EE3-B5F9-A248D20A0DBC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3dlines", "examples\3dLines\3dlines.vcxproj", "{77BAB7D9-F793-4810-858C-10D956D1C4BE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3dlines", "examples\cpp\3dLines\3dlines.vcxproj", "{77BAB7D9-F793-4810-858C-10D956D1C4BE}"
 	ProjectSection(ProjectDependencies) = postProject
 		{EEED04C3-FD4A-47D1-B918-EDCBD5B122BE} = {EEED04C3-FD4A-47D1-B918-EDCBD5B122BE}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AdvGraphics", "examples\AdvGraphics\AdvGraphics.vcxproj", "{D9661AD1-B163-4D2E-9B9C-5F5979CEEEF9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AdvGraphics", "examples\cpp\AdvGraphics\AdvGraphics.vcxproj", "{D9661AD1-B163-4D2E-9B9C-5F5979CEEEF9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "debugging", "examples\debugging\debugging.vcxproj", "{717BB790-01E2-4CA0-B3E8-B98475CCFE0B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "debugging", "examples\cpp\debugging\debugging.vcxproj", "{717BB790-01E2-4CA0-B3E8-B98475CCFE0B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "flashback", "examples\flashback\flashback.vcxproj", "{4C6F24C9-60D2-4980-A68E-1A973419585B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "flashback", "examples\cpp\flashback\flashback.vcxproj", "{4C6F24C9-60D2-4980-A68E-1A973419585B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MAStx", "examples\MAStx\MAStx.vcxproj", "{365A27E9-7D3A-44CE-9DBD-EB2C15528D0E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MAStx", "examples\cpp\MAStx\MAStx.vcxproj", "{365A27E9-7D3A-44CE-9DBD-EB2C15528D0E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MAUIex", "examples\MAUI\MAUIex\MAUIex.vcxproj", "{7DF834CA-3323-489A-8843-04201D192B4B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MAUIex", "examples\cpp\MAUI\MAUIex\MAUIex.vcxproj", "{7DF834CA-3323-489A-8843-04201D192B4B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoChip", "examples\MoChip\MoChip.vcxproj", "{1D4101AB-82BD-4782-8E33-4278A7EAC2E0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoChip", "examples\cpp\MoChip\MoChip.vcxproj", "{1D4101AB-82BD-4782-8E33-4278A7EAC2E0}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoRaw", "examples\MoRaw\MoRaw.vcxproj", "{BD395CB3-064F-4C22-8B15-526FB99C268D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoRaw", "examples\cpp\MoRaw\MoRaw.vcxproj", "{BD395CB3-064F-4C22-8B15-526FB99C268D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoSketch", "examples\MoSketch\MoSketch.vcxproj", "{07DAF6CC-E4B5-428E-904F-5CE1DAEBF3B7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoSketch", "examples\cpp\MoSketch\MoSketch.vcxproj", "{07DAF6CC-E4B5-428E-904F-5CE1DAEBF3B7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoSound", "examples\MoSound\MoSound.vcxproj", "{FA80DFDC-D749-4B1D-B32E-3301F2E16540}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoSound", "examples\cpp\MoSound\MoSound.vcxproj", "{FA80DFDC-D749-4B1D-B32E-3301F2E16540}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoTris", "examples\MoTris\MoTris.vcxproj", "{6A8055BC-65E1-4237-8D23-56E16E7EB4C2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoTris", "examples\cpp\MoTris\MoTris.vcxproj", "{6A8055BC-65E1-4237-8D23-56E16E7EB4C2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoTrix", "examples\MoTrix\MoTrix.vcxproj", "{E684CC3C-55AF-46C2-9271-C65485C03B6F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoTrix", "examples\cpp\MoTrix\MoTrix.vcxproj", "{E684CC3C-55AF-46C2-9271-C65485C03B6F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OtaLoad", "examples\OtaLoad\OtaLoad.vcxproj", "{8CF26A97-9F31-4370-9D45-07450A73F5B7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OtaLoad", "examples\cpp\OtaLoad\OtaLoad.vcxproj", "{8CF26A97-9F31-4370-9D45-07450A73F5B7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Moblet", "Moblet", "{F40110BC-6B5C-4233-9539-05CE3F35E9D9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Connection", "examples\Moblet\Connection\Connection.vcxproj", "{4B13342D-A142-40A3-A991-786F9D7463D8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Connection", "examples\cpp\Moblet\Connection\Connection.vcxproj", "{4B13342D-A142-40A3-A991-786F9D7463D8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloMoblet", "examples\Moblet\HelloMoblet\HelloMoblet.vcxproj", "{11BCB0CE-22B8-4FF5-A8A7-6C4D8B9258D4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloMoblet", "examples\cpp\Moblet\HelloMoblet\HelloMoblet.vcxproj", "{11BCB0CE-22B8-4FF5-A8A7-6C4D8B9258D4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoTooth", "examples\Moblet\MoTooth\MoTooth.vcxproj", "{417A8F0E-C68B-4FF9-9C71-6EA41029927A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MoTooth", "examples\cpp\Moblet\MoTooth\MoTooth.vcxproj", "{417A8F0E-C68B-4FF9-9C71-6EA41029927A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple", "examples\Moblet\simple\simple.vcxproj", "{60B31297-F305-448A-AAD9-9310322DFE41}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple", "examples\cpp\Moblet\simple\simple.vcxproj", "{60B31297-F305-448A-AAD9-9310322DFE41}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Soap", "examples\Moblet\Soap\Soap.vcxproj", "{1744F547-3B2D-43E7-86AD-398CED78CA47}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Soap", "examples\cpp\Moblet\Soap\Soap.vcxproj", "{1744F547-3B2D-43E7-86AD-398CED78CA47}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Stylus", "examples\Moblet\Stylus\Stylus.vcxproj", "{0DD40CF0-1578-4C30-9FA9-A59FC7959899}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Stylus", "examples\cpp\Moblet\Stylus\Stylus.vcxproj", "{0DD40CF0-1578-4C30-9FA9-A59FC7959899}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "timers", "examples\Moblet\timers\timers.vcxproj", "{DBA9F2B3-07D6-40AD-A8CB-967FED9EE2C1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "timers", "examples\cpp\Moblet\timers\timers.vcxproj", "{DBA9F2B3-07D6-40AD-A8CB-967FED9EE2C1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MATest", "libs\MATest\MATest.vcxproj", "{1DA607CB-3416-4FD1-A9B8-C3917C27054E}"
 EndProject
@@ -241,7 +241,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mosync-extension", "tools\m
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "profiledb", "intlibs\profiledb\profiledb.vcxproj", "{D3EEF668-227E-494E-A9B5-CB6D101767E2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLMoblet_OpenGLES1", "examples\OpenGLES\GLMoblet_OpenGLES1\GLMoblet_OpenGLES1.vcxproj", "{8DF04FFD-6C19-458D-A905-E7981527AF01}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLMoblet_OpenGLES1", "examples\cpp\OpenGLES\GLMoblet_OpenGLES1\GLMoblet_OpenGLES1.vcxproj", "{8DF04FFD-6C19-458D-A905-E7981527AF01}"
 	ProjectSection(ProjectDependencies) = postProject
 		{4DA91033-FE58-4729-8B55-F42614BD8F90} = {4DA91033-FE58-4729-8B55-F42614BD8F90}
 		{C5755F5A-7628-4F47-AF78-CAA339F28D8D} = {C5755F5A-7628-4F47-AF78-CAA339F28D8D}

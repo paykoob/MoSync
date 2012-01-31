@@ -74,6 +74,7 @@ class MyGLMoblet : public GLMoblet {
 private:
 public:
 	MyGLMoblet() : GLMoblet(GLMoblet::GL1) {
+		//setPreferredFramesPerSecond(100);
 	}
 
 
@@ -82,6 +83,7 @@ public:
 	 */
 	void keyPressEvent(int keyCode, int nativeCode)
 	{
+		//lprintfln("%f fps\n", getActualFramesPerSecond());
 		switch (keyCode)
 		{
 			// Close the application if the back key, key 0,
@@ -173,7 +175,6 @@ public:
 
 	    // Wait (blocks) until all GL drawing commands to finish.
 	    glFinish();
-			lprintfln("glFinish()");
 	}
 };
 
