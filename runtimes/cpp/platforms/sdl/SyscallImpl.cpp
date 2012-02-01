@@ -97,11 +97,12 @@ extern "C" {
 #define DONT_WANT_IX_OPENGL_ES_TYPEDEFS
 #include <helpers/CPP_IX_OPENGL_ES.h>
 #include <helpers/CPP_IX_GL1.h>
-//#include <helpers/CPP_IX_GL2.h>
-//#include <helpers/CPP_IX_GL_OES_FRAMEBUFFER_OBJECT.h>
+#include <helpers/CPP_IX_GL2.h>
+#include <helpers/CPP_IX_GL_OES_FRAMEBUFFER_OBJECT.h>
 #include <dgles-0.5/GLES/gl.h>
 #include "../../generated/gl.h.cpp"
 #include "OpenGLES.h"
+#include "OpenGLES2.h"
 #endif
 
 namespace Base {
@@ -1921,11 +1922,12 @@ namespace Base {
 	}
 
 	int maOpenGLInitFullscreen(int glApi) {
-		if(glApi != MA_GL_API_GL1)
+		if(glApi != MA_GL_API_GL1 && glApi != MA_GL_API_GL2)
 			return MA_GL_INIT_RES_UNAVAILABLE_API;
 		TEST_Z(Base::subViewOpen(sSkin->getScreenLeft(), sSkin->getScreenTop(), sSkin->getScreenWidth(), sSkin->getScreenHeight(), sSubView));
 		TEST_Z(Base::openGLInit(sSubView));
 		sOpenGLMode = true;
+		gles2init();
 
 		MAEvent event;
 		event.type = EVENT_TYPE_WIDGET;
@@ -2129,9 +2131,11 @@ namespace Base {
 
 #ifdef SUPPORT_OPENGL_ES
 #define glGetPointerv maGlGetPointerv
+#define GL2_CASE(i) case maIOCtl_##i:
 		maIOCtl_IX_OPENGL_ES_caselist;
 		maIOCtl_IX_GL1_caselist;
-		//maIOCtl_IX_GL2_caselist;
+		maIOCtl_IX_GL2_m_caselist(GL2_CASE)
+			return gles2ioctl(function, a, b, c, argptr);
 		//maIOCtl_IX_GL_OES_FRAMEBUFFER_OBJECT_caselist;
 #undef glGetPointerv
 #endif	//SUPPORT_OPENGL_ES

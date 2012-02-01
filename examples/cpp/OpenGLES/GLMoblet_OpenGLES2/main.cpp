@@ -18,6 +18,7 @@ MA 02110-1301, USA.
 
 #include <MAUtil/GLMoblet.h>
 #include <GLES2/gl2.h>
+#include <GLES/gl.h>
 #include <maheap.h>
 #include <conprint.h>
 #include <mavsprintf.h>
@@ -128,22 +129,24 @@ public:
 	int initGL() {
 
 		char vertexShaderSource[] =
-		"attribute vec4 vPosition;   \n"
-		"void main()                 \n"
-		"{                           \n"
-		"   gl_Position = vPosition; \n"
-		"}                           \n";
+		"attribute vec4 vPosition;\n"
+		"void main()\n"
+		"{\n"
+		"   gl_Position = vPosition;\n"
+		"}\n";
 
 		char fragmentShaderSource[] =
+		"#version 130\n"
 		"precision highp float;\n"
 		"uniform vec2 resolution;\n"
 		"uniform float time;\n"
+		"out vec4 FragColor;\n"
 		"void main(void)\n"
 		"{\n"
 		"float x = gl_FragCoord.x*(resolution.x);\n"
 		"float y = gl_FragCoord.y*(resolution.y);\n"
 		"float c1 = sin((cos(x*6.0+sin(time+y)*7.0))*3.14159+cos(time))*0.5+0.5;\n"
-		"gl_FragColor = vec4( c1*0.2,c1*0.5,c1*0.9,1.0);\n"
+		"FragColor = vec4( c1*0.2,c1*0.5,c1*0.9,1.0);\n"
 		"}\n";
 
 		GLuint vertexShader;
@@ -199,7 +202,7 @@ public:
 		}
 		// Store the program object
 		mShader = programObject;
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.5f, 0.0f, 0.0f, 1.0f);
 
 		mTimeLoc = glGetUniformLocation(mShader, "time");
 		mResolutionLoc = glGetUniformLocation(mShader, "resolution");
@@ -216,7 +219,6 @@ public:
 			maPanic(1, "Failed to initialize!");
 
 		mStartTime = maGetMilliSecondCount();
-
 	}
 
 	void draw() {
@@ -248,7 +250,6 @@ public:
 
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		checkGLError("glDrawArrays");
-
 	}
 };
 

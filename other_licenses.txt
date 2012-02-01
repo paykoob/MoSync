@@ -34,6 +34,7 @@ build-one.rb
 /intlibs/sqlite
 /intlibs/dgles-0.5
 /intlibs/demangle
+/intlibs/glew
 
 /templates
 

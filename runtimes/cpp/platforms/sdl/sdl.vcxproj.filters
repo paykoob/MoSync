@@ -16,6 +16,9 @@
     <Filter Include="hashmap">
       <UniqueIdentifier>{21172c86-3e83-4b26-b82a-a89ebe426654}</UniqueIdentifier>
     </Filter>
+    <Filter Include="glew">
+      <UniqueIdentifier>{7b283831-3893-4c1d-86c6-670bbc7dfd4a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\base\base_errors.cpp">
@@ -156,6 +159,10 @@
     </ClCompile>
     <ClCompile Include="..\..\base\ResourceArray.cpp">
       <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLES2.cpp" />
+    <ClCompile Include="..\..\..\..\intlibs\glew\src\glew.c">
+      <Filter>glew</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -334,6 +341,10 @@
     <ClInclude Include="ThreadPoolImpl.h" />
     <ClInclude Include="windows_errors.h" />
     <ClInclude Include="..\..\base\MoSyncDB.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLES2.h" />
+    <ClInclude Include="..\..\base\GLFixes.h">
       <Filter>base</Filter>
     </ClInclude>
   </ItemGroup>

@@ -88,6 +88,12 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\intlibs\glew\src\glew.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../../../../intlibs/glew/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../../../../intlibs/glew/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="..\..\base\base_errors.cpp" />
     <ClCompile Include="..\..\base\FileStream.cpp" />
     <ClCompile Include="..\..\base\MemStream.cpp" />
@@ -123,6 +129,12 @@
     <ClCompile Include="AmrAudioSource.cpp" />
     <ClCompile Include="AudioEngineSDL.cpp" />
     <ClCompile Include="AudioInterfaceSDL.cpp" />
+    <ClCompile Include="OpenGLES2.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../../../../intlibs/glew/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../../../../intlibs/glew/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="SDLSoundAudioSource.cpp" />
     <ClCompile Include="thread\conditionfactorysdl.cpp" />
     <ClCompile Include="thread\mutexfactorysdl.cpp" />
@@ -152,6 +164,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\base\base_errors.h" />
     <ClInclude Include="..\..\base\FileStream.h" />
+    <ClInclude Include="..\..\base\GLFixes.h" />
     <ClInclude Include="..\..\base\MemStream.h" />
     <ClInclude Include="..\..\base\MoSyncDB.h" />
     <ClInclude Include="..\..\base\networking.h" />
@@ -188,6 +201,7 @@
     <ClInclude Include="..\..\base\thread\timeoutexception.hpp" />
     <ClInclude Include="AmrAudioSource.h" />
     <ClInclude Include="AudioInterfaceSDL.h" />
+    <ClInclude Include="OpenGLES2.h" />
     <ClInclude Include="SDLSoundAudioSource.h" />
     <ClInclude Include="thread\conditionfactorysdl.hpp" />
     <ClInclude Include="thread\mutexfactorysdl.hpp" />

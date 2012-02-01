@@ -705,18 +705,27 @@ static void streamIoctlArg(ostream& stream, const vector<Argument>& args,
 static void streamCaselist(ostream& stream, const Ioctl& ioctl, const string& headerName,
 	int ix, bool syscall)
 {
-	stream << "#define " << ioctl.name << "_" << headerName <<
-		(syscall ? "_syscall" : "") << "_caselist \\\n";
+	stream << "#define " << ioctl.name << "_" << headerName;
+	if(syscall)
+		stream << "_m_caselist(m)";
+	else
+		stream <<"_caselist";
+	stream << " \\\n";
 	for(size_t j=0; j<ioctl.functions.size(); j++) {
 		const IoctlFunction& f(ioctl.functions[j]);
 		if(f.ix != ix)
 			continue;
 		if(syscall)
-			stream << "maIOCtl_syscall_case(" << f.f.name << ") \\\n";
+			stream << "m(" << f.f.name << ") \\\n";
 		else
 			stream << ioctl.name << "_" << f.f.name << "_case(" << f.f.name << ") \\\n";
 	}
 	stream << "\n";
+	if(syscall) {
+		stream << "#define " << ioctl.name << "_" << headerName << "_syscall_caselist " <<
+			 ioctl.name << "_" << headerName << "_m_caselist(maIOCtl_syscall_case)\n";
+		stream << "\n";
+	}
 }
 
 void streamIoctlDefines(ostream& stream, const Interface& inf, const string& headerName,
