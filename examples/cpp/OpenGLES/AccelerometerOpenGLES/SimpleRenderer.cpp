@@ -28,7 +28,7 @@ MA 02110-1301, USA.
 
 
 #include "SimpleRenderer.h"
-#include <gles/gl.h>
+#include <GLES/gl.h>
 #include <madmath.h>
 
 //-------------------------------------------------------

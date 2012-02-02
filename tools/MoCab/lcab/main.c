@@ -111,6 +111,7 @@ int maketempfile( int nof, FILE *fp )
 	int i;
 	FILE *fp2;
 	byte *tmp;
+	int res;
 
 	for( i=0; i<nof; ++i )
 	{
@@ -119,7 +120,9 @@ int maketempfile( int nof, FILE *fp )
 		else
 		{
 			tmp = (byte *) calloc( sizefile( inputfiles[i] ), sizeof( byte ) );
-			fread( tmp, sizefile( inputfiles[i] ), 1, fp2 );
+			res = fread( tmp, sizefile( inputfiles[i] ), 1, fp2 );
+			if(res != 1)
+				abort();
 			fwrite( (byte *) tmp, sizefile( inputfiles[i] ), 1, fp );
 			free( tmp );
 			fclose( fp2 );

@@ -37,6 +37,7 @@ MA 02110-1301, USA.
 // Other includes
 #include <maapi.h>
 #include <MAUtil/String.h>
+#include <mastring.h>
 
 // Namespaces we want to access.
 using namespace MAUtil; // Class Moblet

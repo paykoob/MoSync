@@ -135,7 +135,7 @@ namespace Base {
 	static MAPoint2d gCameraViewFinderPoint, gCameraViewFinderDirection;
 	static SDL_TimerID gCameraViewFinderTimer = NULL;
 
-	static CircularFifo<MAEvent, EVENT_BUFFER_SIZE> gEventFifo;
+	static CircularFifo<MAEventNative, EVENT_BUFFER_SIZE> gEventFifo;
 	static bool gEventOverflow = false, gClosing = false;
 
 	static SDL_TimerID gTimerId = NULL;
@@ -797,7 +797,7 @@ namespace Base {
 					gEventFifo.clear();
 					LOG("EventBuffer overflow!\n");
 				}
-				MAEvent event;
+				MAEventNative event;
 				event.type = type;
 				event.point.x = x;
 				event.point.y = y;
@@ -813,7 +813,7 @@ namespace Base {
 				gEventFifo.clear();
 				LOG("EventBuffer overflow!\n");
 			}
-			MAEvent event;
+			MAEventNative event;
 			event.type = pressed ? EVENT_TYPE_KEY_PRESSED : EVENT_TYPE_KEY_RELEASED;
 
 			int keyBit = MAConvertKeyBitMAK(mak);
@@ -844,7 +844,7 @@ namespace Base {
 		LOGDT("MAHandleCharEvent 0x%x", unicode);
 		if(unicode == 0)
 			return;
-		MAEvent event;
+		MAEventNative event;
 		event.type = EVENT_TYPE_CHAR;
 		event.character = unicode;
 		gEventFifo.put(event);
@@ -887,7 +887,7 @@ namespace Base {
 		//fix up the event queue
 		gEventOverflow = gClosing = true;
 		gReload = false;
-		MAEvent event;
+		MAEventNative event;
 		event.type = EVENT_TYPE_CLOSE;
 		gEventFifo.put(event);
 		gExitTimer = SDL_AddTimer(EVENT_CLOSE_TIMEOUT, ExitCallback, NULL);
@@ -909,7 +909,7 @@ namespace Base {
 		gDrawSurface = gBackBuffer;
 
 		// send event
-		MAEvent e;
+		MAEventNative e;
 		e.type = EVENT_TYPE_SCREEN_CHANGED;
 		gEventFifo.put(e);
 	}
@@ -941,7 +941,7 @@ namespace Base {
 					(event.active.state & SDL_APPINPUTFOCUS) ||
 					(event.active.state & SDL_APPACTIVE)
 					) {
-						MAEvent e;
+						MAEventNative e;
 						if (event.active.gain) {
 							e.type = EVENT_TYPE_FOCUS_GAINED;
 						} else {
@@ -1028,7 +1028,7 @@ namespace Base {
 			case FE_ADD_EVENT:
 				{
 					LOGDT("FE_ADD_EVENT");
-					MAEvent* pe = (MAEvent*)event.user.data1;
+					MAEventNative* pe = (MAEventNative*)event.user.data1;
 					gEventFifo.put(*pe);
 					delete pe;
 				}
@@ -1537,7 +1537,7 @@ namespace Base {
 			SDL_Surface* img = SYSCALL_THIS->resources.extract_RT_IMAGE(handle);
 			gDrawSurface = img;
 #ifdef RESOURCE_MEMORY_LIMIT
-			void* o = (void*)size_RT_IMAGE(img);
+			void* o = (void*)(size_t)size_RT_IMAGE(img);
 #else
 			void* o = NULL;
 #endif
@@ -1619,13 +1619,14 @@ namespace Base {
 		if(gEventFifo.count() == 0) {
 			return 0;
 		}
-		*dst = gEventFifo.get();
+		const MAEventNative& e(gEventFifo.get());
+		memcpy(dst, &e, sizeof(*dst));
 
 		void* cep = SYSCALL_THIS->GetCustomEventPointer();
 
 #define HANDLE_CUSTOM_EVENT(eventType, dataType) if(dst->type == eventType) {\
-		memcpy(cep, (void*)dst->data, sizeof(dataType));\
-		delete (dataType*)dst->data;\
+		memcpy(cep, e.data, sizeof(dataType));\
+		delete (dataType*)e.data;\
 		dst->data = SYSCALL_THIS->TranslateNativePointerToMoSyncPointer(cep); }
 
 		CUSTOM_EVENTS(HANDLE_CUSTOM_EVENT);
@@ -1644,7 +1645,7 @@ namespace Base {
 		DEBUG_ASSERT(gTimerId == NULL);
 		if(timeout > 0) {
 			//LOGD("Setting timer sequence %i\n", gTimerSequence);
-			gTimerId = SDL_AddTimer(timeout, MATimerCallback, (void*)gTimerSequence);
+			gTimerId = SDL_AddTimer(timeout, MATimerCallback, (void*)(size_t)gTimerSequence);
 			DEBUG_ASSERT(gTimerId != NULL);
 		}
 		while(true) {

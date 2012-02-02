@@ -18,7 +18,7 @@ MA 02110-1301, USA.
 
 #include <MAUtil/Moblet.h>
 #include "OpenGLHelpers.h"
-#include "Grid.h"
+#include "grid.h"
 #include <MAUtil/Map.h>
 #include <MAUtil/Vector.h>
 #include "MAHeaders.h"
@@ -151,7 +151,7 @@ void Grid::initContext(int w, int h) {
 	initGL();
 	resizeWindow(0, 0, width, height);
 }
-	
+
 void Grid::setShadingEnabled(bool enabled) {
 	mShadingEnabled = enabled;
 }

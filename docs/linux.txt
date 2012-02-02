@@ -1,0 +1,24 @@
+These packages are required to build MoSync on Xubuntu 11.10:
+
+# 1.9 might work, but no guarantees.
+ruby1.8
+
+g++
+libsdl1.2-dev
+libbluetooth-dev
+libssl-dev
+libexpat1-dev
+
+# libglew1.5-dev should also work.
+libglew1.6-dev
+
+libgtk2.0-dev
+libsdl-image1.2-dev
+libsdl-ttf2.0-dev
+libfreeimage-dev
+
+# for pipe-tool.
+libc6-dev-i386
+lib32z1-dev
+
+gperf

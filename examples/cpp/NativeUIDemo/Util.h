@@ -26,6 +26,7 @@ MA 02110-1301, USA.
 #ifndef UTIL_H_
 #define UTIL_H_
 
+#include <ma.h>
 #include <mastring.h>		// C string functions
 
 #define BUF_MAX 256

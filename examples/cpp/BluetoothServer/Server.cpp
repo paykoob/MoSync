@@ -40,7 +40,7 @@ MA 02110-1301, USA.
 #include <maassert.h>
 #include <conprint.h>
 
-#include "common.h"
+#include "Common.h"
 
 using namespace MAUtil;
 
