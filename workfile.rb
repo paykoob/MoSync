@@ -15,19 +15,16 @@ if(HOST == :win32) then
 	INTLIB_PLATFORM = "windows"
 	PLATFORM_TOOLS = ["tools/makesis-2.0.0", "tools/makesis-4",
 		"tools/MoSyncUpdater"]
-	ADDITIONAL_INTLIBS = ["intlibs/dgles-0.5", "intlibs/profiledb"]
 elsif(HOST == :darwin)
 	INTLIB_PLATFORM = "linux"
 	PLATFORM_TOOLS = ["tools/makesis-2.0.0_unix", "tools/makesis-4_unix",
 		]
-	ADDITIONAL_INTLIBS = ["intlibs/profiledb"]
 else
 	INTLIB_PLATFORM = HOST
 	# todo: add lcab
 	PLATFORM_TOOLS = [
 		'tools/MoCab',
 	]
-	ADDITIONAL_INTLIBS = ["intlibs/profiledb"]
 end
 
 MORE_DIRS = ["intlibs/helpers/platforms/#{INTLIB_PLATFORM}",
@@ -38,12 +35,14 @@ MORE_DIRS = ["intlibs/helpers/platforms/#{INTLIB_PLATFORM}",
 	"intlibs/gsm_amr",
 	"intlibs/net",
 	"intlibs/stabs",
+	"intlibs/dgles-0.5",
+	"intlibs/profiledb",
 	"runtimes/cpp/platforms/sdl",
 	"runtimes/cpp/platforms/sdl/mosynclib",
 	"runtimes/cpp/platforms/sdl/MoRE"
 	]
 
-BASE_DIRS = ADDITIONAL_INTLIBS + MORE_DIRS + PLATFORM_TOOLS
+BASE_DIRS = MORE_DIRS + PLATFORM_TOOLS
 
 PIPE_DIRS = ["tools/protobuild", "tools/pipe-tool", "tools/DefaultSkinGenerator", "libs"]
 EXAM_DIRS = ["tests/unitTest", "examples"]

@@ -1922,7 +1922,7 @@ namespace Base {
 		glGetPointerv(pname, (void**)params);
 	}
 
-	int maOpenGLInitFullscreen(int glApi) {
+	static int maOpenGLInitFullscreen(int glApi) {
 		if(glApi != MA_GL_API_GL1 && glApi != MA_GL_API_GL2)
 			return MA_GL_INIT_RES_UNAVAILABLE_API;
 		TEST_Z(Base::subViewOpen(sSkin->getScreenLeft(), sSkin->getScreenTop(), sSkin->getScreenWidth(), sSkin->getScreenHeight(), sSubView));
@@ -1930,24 +1930,24 @@ namespace Base {
 		sOpenGLMode = true;
 		gles2init();
 
-		MAEvent event;
+		MAEventNative event;
 		event.type = EVENT_TYPE_WIDGET;
 		MAWidgetEventData *eventData = new MAWidgetEventData;
 		eventData->eventType = MAW_EVENT_GL_VIEW_READY;
 		eventData->widgetHandle = 0;
-		event.data = (int)eventData;
+		event.data = eventData;
 		gEventFifo.put(event);
 
 		return 0;
 	}
 
-	int maOpenGLCloseFullscreen() {
+	static int maOpenGLCloseFullscreen() {
 		TEST_Z(Base::openGLClose(sSubView));
 		TEST_Z(Base::subViewClose(sSubView));
 		return 0;
 	}
 
-	int maOpenGLTexImage2D(MAHandle image) {
+	static int maOpenGLTexImage2D(MAHandle image) {
 		SDL_Surface* surface = gSyscall->resources.get_RT_IMAGE(image);
 
 		// get the number of channels in the SDL surface
@@ -2032,7 +2032,7 @@ namespace Base {
 		return MA_GL_TEX_IMAGE_2D_OK;
 	}
 
-	int maOpenGLTexSubImage2D(MAHandle image) {
+	static int maOpenGLTexSubImage2D(MAHandle image) {
 		SDL_Surface* surface = gSyscall->resources.get_RT_IMAGE(image);
 
 		GLint nOfColors = surface->format->BytesPerPixel;

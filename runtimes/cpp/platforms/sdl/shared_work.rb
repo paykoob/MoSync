@@ -5,14 +5,15 @@ def setup_common
 	common_includes = ["../../../base", ".."]
 
 	@LOCAL_LIBS = ["mosync_log_file", "mosync_bluetooth", "net", "filelist", "dll", "sqlite"]
-	common_libraries = ["SDL", "SDL_image", "SDL_ttf"]
+	@LOCAL_DLLS = ['dgles']
+	common_libraries = ["SDL", "SDL_image", "SDL_ttf", "GLEW", 'GL']
 
 	if(HOST == :win32) then
 		@CUSTOM_LIBS = common_libraries.collect do |lib| "#{lib}.lib" end +
 			["libexpat.lib", "SDL_sound.lib", "libbthprops_ex.a", "libuuid.a", "FreeImage.lib",
 				"libeay32.lib", "ssleay32.lib"]
 		@LIBRARIES = ["wsock32", "ws2_32"]
-		@LOCAL_DLLS = ["gsm_amr"]
+		@LOCAL_DLLS << 'gsm_amr'
 		@EXTRA_INCLUDES = ["../../../base", ".."]
 	elsif(HOST == :linux) then
 		@EXTRA_CPPFLAGS = ""
