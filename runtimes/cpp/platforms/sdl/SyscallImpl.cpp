@@ -2347,7 +2347,7 @@ namespace Base {
 					*dst = 0;
 
 					// send event
-					MAEvent e;
+					MAEventNative e;
 					e.type = EVENT_TYPE_TEXTBOX;
 					e.textboxResult = (id == IDOK) ? MA_TB_RES_OK : MA_TB_RES_CANCEL;
 					e.textboxLength = length;

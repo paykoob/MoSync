@@ -4,7 +4,8 @@ require File.expand_path('../../../../rules/native_mosync.rb')
 
 work = NativeMoSyncLib.new
 work.instance_eval do
-	@SOURCES = [".", "./thread", "./Skinning", "../../base", "../../base/thread", "../../../../intlibs/hashmap"]
+	@SOURCES = [".", "./thread", "./Skinning", "../../base", "../../base/thread",
+		"../../../../intlibs/hashmap"]
 	@IGNORED_FILES = ["Image.cpp", "audio.cpp"]
 	common_includes = [".", "../../base", "../../../../intlibs/sqlite"]
 	common_libraries = ["SDL", "SDLmain", "SDL_ttf"]
@@ -15,6 +16,10 @@ work.instance_eval do
 	if(HOST == :win32) then
 		@EXTRA_INCLUDES = common_includes
 		@LIBRARIES = common_libraries
+		@EXTRA_SOURCEFILES = ['../../../../intlibs/glew/src/glew.c']
+		@EXTRA_INCLUDES << '../../../../intlibs/glew/include'
+		@SPECIFIC_CFLAGS['glew.c'] = ' -Wno-attributes -Wno-error -DGLEW_STATIC'
+		@SPECIFIC_CFLAGS['OpenGLES2.cpp'] = ' -DGLEW_STATIC'
 	elsif(HOST == :linux)
 
 		@IGNORED_FILES << "strptime.c"
