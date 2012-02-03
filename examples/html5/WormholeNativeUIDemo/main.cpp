@@ -14,6 +14,7 @@
 #include <Wormhole/Libs/JSNativeUI/NativeUIMessageHandler.h>
 #include <Wormhole/Libs/JSNativeUI/ResourceMessageHandler.h>
 #include "MAHeaders.h"
+#include <mavsprintf.h>
 
 // Namespaces we want to access.
 using namespace MAUtil; // Class Moblet

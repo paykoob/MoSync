@@ -5,14 +5,15 @@ def setup_common
 	common_includes = ["../../../base", ".."]
 
 	@LOCAL_LIBS = ["mosync_log_file", "mosync_bluetooth", "net", "filelist", "dll", "sqlite"]
+	@LOCAL_DLLS = ['dgles']
 	common_libraries = ["SDL", "SDL_image", "SDL_ttf"]
 
 	if(HOST == :win32) then
 		@CUSTOM_LIBS = common_libraries.collect do |lib| "#{lib}.lib" end +
 			["libexpat.lib", "SDL_sound.lib", "libbthprops_ex.a", "libuuid.a", "FreeImage.lib",
 				"libeay32.lib", "ssleay32.lib"]
-		@LIBRARIES = ["wsock32", "ws2_32"]
-		@LOCAL_DLLS = ["gsm_amr"]
+		@LIBRARIES = ["wsock32", "ws2_32", "Opengl32"]
+		@LOCAL_DLLS << 'gsm_amr'
 		@EXTRA_INCLUDES = ["../../../base", ".."]
 	elsif(HOST == :linux) then
 		@EXTRA_CPPFLAGS = ""
@@ -30,12 +31,12 @@ def setup_common
 			@EXTRA_CPPFLAGS += " -D__USE_FULLSCREEN__"
 		end
 		@LIBRARIES = common_libraries + sound_lib + ["gtk-x11-2.0", "bluetooth", "expat", "freeimage",
-			"ssl", "crypto"]
+			"ssl", "crypto", "GLEW", "GL"]
 		@EXTRA_INCLUDES = ["../../../base", ".."]
 
 	elsif(HOST == :darwin)
 		@LOCAL_LIBS << "gsm_amr"
-		@LIBRARIES = common_libraries + ["SDL_sound", "SDLmain", "expat", "freeimage", "ssl", "crypto"]
+		@LIBRARIES = common_libraries + ["SDL_sound", "SDLmain", "expat", "freeimage", "ssl", "crypto", "GLEW", "GL"]
 		@EXTRA_INCLUDES = common_includes + ["/sw/include", "/opt/local/include"]
 	else
 		error "Unsupported platform"

@@ -112,59 +112,59 @@ wrap_glNormalPointer(_type, _stride, _pointer); \
 return 0; \
 } \
 
-const GLvoid* getArrayBufferBindingOffset(const GLvoid *pointer)
+static const GLvoid* getArrayBufferBindingOffset(const GLvoid *pointer)
 {
 	GLint ret;
 	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &ret);
 	if(ret != 0)
 	{
 		if(pointer != NULL)
-			pointer = (const void*)SYSCALL_THIS->TranslateNativePointerToMoSyncPointer((void*)pointer);
+			pointer = (const void*)(size_t)SYSCALL_THIS->TranslateNativePointerToMoSyncPointer((void*)pointer);
 	}
 	return pointer;
 }
 
-void wrap_glNormalPointer(GLenum type, GLsizei stride, const GLvoid * pointer)
+inline void wrap_glNormalPointer(GLenum type, GLsizei stride, const GLvoid * pointer)
 {
 
 	glNormalPointer(type, stride, getArrayBufferBindingOffset(pointer));
 }
 
-void wrap_glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
+inline void wrap_glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
 {
 	glColorPointer(size, type, stride, getArrayBufferBindingOffset(pointer));
 }
 
-void wrap_glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
+inline void wrap_glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
 {
 	glTexCoordPointer(size, type, stride, getArrayBufferBindingOffset(pointer));
 }
 
-void wrap_glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
+inline void wrap_glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer)
 {
 	glVertexPointer(size, type, stride, getArrayBufferBindingOffset(pointer));
 }
 
-void wrap_glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indecies) {
+inline void wrap_glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices) {
 	GLint ret;
 	glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &ret);
 	if(ret != 0)
 	{
-		if(indecies != NULL)
-			indecies = (const void*)SYSCALL_THIS->TranslateNativePointerToMoSyncPointer((void*)indecies);
+		if(indices != NULL)
+			indices = (const void*)(size_t)SYSCALL_THIS->TranslateNativePointerToMoSyncPointer((void*)indices);
 	}
 
-	glDrawElements(mode, count, type, indecies);
+	glDrawElements(mode, count, type, indices);
 }
 
-void wrap_glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* ptr)
+inline void wrap_glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* ptr)
 {
 #ifndef _android_1
 	glVertexAttribPointer(index, size, type, normalized, stride, getArrayBufferBindingOffset(ptr));
 #endif
 }
 
-void wrap_glShaderSource(GLuint shader, GLsizei count, void* strings, const GLint* length) {
+inline void wrap_glShaderSource(GLuint shader, GLsizei count, void* strings, const GLint* length) {
 
 	int* stringsArray = (int*)strings;
 	const GLchar** strCopies = new const GLchar*[count];
@@ -179,7 +179,7 @@ void wrap_glShaderSource(GLuint shader, GLsizei count, void* strings, const GLin
 	delete strCopies;
 }
 
-void wrap_glGetVertexAttribPointerv(GLuint index, GLenum pname, void* pointer) {
+inline void wrap_glGetVertexAttribPointerv(GLuint index, GLenum pname, void* pointer) {
 	GLvoid* outPointer;
 #ifndef _android_1
 	glGetVertexAttribPointerv(index, pname, &outPointer);
@@ -190,7 +190,7 @@ void wrap_glGetVertexAttribPointerv(GLuint index, GLenum pname, void* pointer) {
 	*(int*)pointer = gSyscall->TranslateNativePointerToMoSyncPointer(outPointer);
 }
 
-void wrap_glGetPointerv(GLenum pname, void* pointer) {
+inline void wrap_glGetPointerv(GLenum pname, void* pointer) {
 	GLvoid* outPointer;
 	glGetPointerv(pname, &outPointer);
 

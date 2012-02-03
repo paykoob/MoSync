@@ -135,7 +135,7 @@ namespace Base {
 	static MAPoint2d gCameraViewFinderPoint, gCameraViewFinderDirection;
 	static SDL_TimerID gCameraViewFinderTimer = NULL;
 
-	static CircularFifo<MAEvent, EVENT_BUFFER_SIZE> gEventFifo;
+	static CircularFifo<MAEventNative, EVENT_BUFFER_SIZE> gEventFifo;
 	static bool gEventOverflow = false, gClosing = false;
 
 	static SDL_TimerID gTimerId = NULL;
@@ -797,7 +797,7 @@ namespace Base {
 					gEventFifo.clear();
 					LOG("EventBuffer overflow!\n");
 				}
-				MAEvent event;
+				MAEventNative event;
 				event.type = type;
 				event.point.x = x;
 				event.point.y = y;
@@ -813,7 +813,7 @@ namespace Base {
 				gEventFifo.clear();
 				LOG("EventBuffer overflow!\n");
 			}
-			MAEvent event;
+			MAEventNative event;
 			event.type = pressed ? EVENT_TYPE_KEY_PRESSED : EVENT_TYPE_KEY_RELEASED;
 
 			int keyBit = MAConvertKeyBitMAK(mak);
@@ -844,7 +844,7 @@ namespace Base {
 		LOGDT("MAHandleCharEvent 0x%x", unicode);
 		if(unicode == 0)
 			return;
-		MAEvent event;
+		MAEventNative event;
 		event.type = EVENT_TYPE_CHAR;
 		event.character = unicode;
 		gEventFifo.put(event);
@@ -887,7 +887,7 @@ namespace Base {
 		//fix up the event queue
 		gEventOverflow = gClosing = true;
 		gReload = false;
-		MAEvent event;
+		MAEventNative event;
 		event.type = EVENT_TYPE_CLOSE;
 		gEventFifo.put(event);
 		gExitTimer = SDL_AddTimer(EVENT_CLOSE_TIMEOUT, ExitCallback, NULL);
@@ -909,7 +909,7 @@ namespace Base {
 		gDrawSurface = gBackBuffer;
 
 		// send event
-		MAEvent e;
+		MAEventNative e;
 		e.type = EVENT_TYPE_SCREEN_CHANGED;
 		gEventFifo.put(e);
 	}
@@ -941,7 +941,7 @@ namespace Base {
 					(event.active.state & SDL_APPINPUTFOCUS) ||
 					(event.active.state & SDL_APPACTIVE)
 					) {
-						MAEvent e;
+						MAEventNative e;
 						if (event.active.gain) {
 							e.type = EVENT_TYPE_FOCUS_GAINED;
 						} else {
@@ -1028,7 +1028,7 @@ namespace Base {
 			case FE_ADD_EVENT:
 				{
 					LOGDT("FE_ADD_EVENT");
-					MAEvent* pe = (MAEvent*)event.user.data1;
+					MAEventNative* pe = (MAEventNative*)event.user.data1;
 					gEventFifo.put(*pe);
 					delete pe;
 				}
@@ -1537,7 +1537,7 @@ namespace Base {
 			SDL_Surface* img = SYSCALL_THIS->resources.extract_RT_IMAGE(handle);
 			gDrawSurface = img;
 #ifdef RESOURCE_MEMORY_LIMIT
-			void* o = (void*)size_RT_IMAGE(img);
+			void* o = (void*)(size_t)size_RT_IMAGE(img);
 #else
 			void* o = NULL;
 #endif
@@ -1619,13 +1619,14 @@ namespace Base {
 		if(gEventFifo.count() == 0) {
 			return 0;
 		}
-		*dst = gEventFifo.get();
+		const MAEventNative& e(gEventFifo.get());
+		memcpy(dst, &e, sizeof(*dst));
 
 		void* cep = SYSCALL_THIS->GetCustomEventPointer();
 
 #define HANDLE_CUSTOM_EVENT(eventType, dataType) if(dst->type == eventType) {\
-		memcpy(cep, (void*)dst->data, sizeof(dataType));\
-		delete (dataType*)dst->data;\
+		memcpy(cep, e.data, sizeof(dataType));\
+		delete (dataType*)e.data;\
 		dst->data = SYSCALL_THIS->TranslateNativePointerToMoSyncPointer(cep); }
 
 		CUSTOM_EVENTS(HANDLE_CUSTOM_EVENT);
@@ -1644,7 +1645,7 @@ namespace Base {
 		DEBUG_ASSERT(gTimerId == NULL);
 		if(timeout > 0) {
 			//LOGD("Setting timer sequence %i\n", gTimerSequence);
-			gTimerId = SDL_AddTimer(timeout, MATimerCallback, (void*)gTimerSequence);
+			gTimerId = SDL_AddTimer(timeout, MATimerCallback, (void*)(size_t)gTimerSequence);
 			DEBUG_ASSERT(gTimerId != NULL);
 		}
 		while(true) {
@@ -1921,7 +1922,7 @@ namespace Base {
 		glGetPointerv(pname, (void**)params);
 	}
 
-	int maOpenGLInitFullscreen(int glApi) {
+	static int maOpenGLInitFullscreen(int glApi) {
 		if(glApi != MA_GL_API_GL1 && glApi != MA_GL_API_GL2)
 			return MA_GL_INIT_RES_UNAVAILABLE_API;
 		TEST_Z(Base::subViewOpen(sSkin->getScreenLeft(), sSkin->getScreenTop(), sSkin->getScreenWidth(), sSkin->getScreenHeight(), sSubView));
@@ -1929,24 +1930,24 @@ namespace Base {
 		sOpenGLMode = true;
 		gles2init();
 
-		MAEvent event;
+		MAEventNative event;
 		event.type = EVENT_TYPE_WIDGET;
 		MAWidgetEventData *eventData = new MAWidgetEventData;
 		eventData->eventType = MAW_EVENT_GL_VIEW_READY;
 		eventData->widgetHandle = 0;
-		event.data = (int)eventData;
+		event.data = eventData;
 		gEventFifo.put(event);
 
 		return 0;
 	}
 
-	int maOpenGLCloseFullscreen() {
+	static int maOpenGLCloseFullscreen() {
 		TEST_Z(Base::openGLClose(sSubView));
 		TEST_Z(Base::subViewClose(sSubView));
 		return 0;
 	}
 
-	int maOpenGLTexImage2D(MAHandle image) {
+	static int maOpenGLTexImage2D(MAHandle image) {
 		SDL_Surface* surface = gSyscall->resources.get_RT_IMAGE(image);
 
 		// get the number of channels in the SDL surface
@@ -2031,7 +2032,7 @@ namespace Base {
 		return MA_GL_TEX_IMAGE_2D_OK;
 	}
 
-	int maOpenGLTexSubImage2D(MAHandle image) {
+	static int maOpenGLTexSubImage2D(MAHandle image) {
 		SDL_Surface* surface = gSyscall->resources.get_RT_IMAGE(image);
 
 		GLint nOfColors = surface->format->BytesPerPixel;
@@ -2346,7 +2347,7 @@ namespace Base {
 					*dst = 0;
 
 					// send event
-					MAEvent e;
+					MAEventNative e;
 					e.type = EVENT_TYPE_TEXTBOX;
 					e.textboxResult = (id == IDOK) ? MA_TB_RES_OK : MA_TB_RES_CANCEL;
 					e.textboxLength = length;
