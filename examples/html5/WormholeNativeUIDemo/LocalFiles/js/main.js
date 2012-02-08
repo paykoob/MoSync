@@ -24,7 +24,7 @@ function toggleAccelPhonegap()
 		options.frequency = 1000;
 		accelPhonegapWatch = navigator.accelerometer.watchAcceleration(
 				updateAccelPhonegap, function(ex) {
-					alert("accel fail (" + ex.name + ": " + ex.message + ")");
+					console.log("accel fail (" + ex.name + ": " + ex.message + ")");
 				}, options);
 	}
 }
@@ -58,6 +58,7 @@ function toggleGeolocation()
 {
 	if (geolocationWatch !== null) {
 		navigator.geolocation.clearWatch(geolocationWatch);
+		console.log("Starting location");
 		updateGeolocation({coords:{
 			latitude : " ",
 			longitude : " ",
@@ -92,7 +93,6 @@ function toggleCompass()
 		});
 		compassWatch = null;
 	} else {
-		alert("starting Comapss watch");
 		var options = {};
 		options.frequency = 1000;
 		compassWatch = navigator.compass.watchHeading(
@@ -103,37 +103,6 @@ function toggleCompass()
 }
 
 function updateCompass(a) {
-	alert("updating compass");
 	var data = document.getNativeElementById("CompassLabel");
 	data.setProperty("text" , "Compass Heading: " +  a.magneticHeading);
-}
-
-var latestRecodedVideo = [];
-function captureVideo()
-{
-	navigator.device.capture.captureVideo(
-			function(mediaFiles)
-			{
-				alert(mediaFiles[0].fullPath);
-				latestRecodedVideo = mediaFiles;
-			},
-			function(error)
-			{
-				alert("Error " + error.code);
-			});
-}
-
-var latestCapturedImage = [];
-
-function captureImage()
-{
-	navigator.device.capture.captureImage(
-			function(mediaFiles)
-			{
-				latestCapturedImage = mediaFiles;
-			},
-			function(error)
-			{
-				alert("Error " + error.code);
-			});
 }

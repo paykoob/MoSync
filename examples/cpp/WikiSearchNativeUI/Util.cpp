@@ -30,6 +30,7 @@ MA 02110-1301, USA.
 #include <mastdlib.h>
 #include <mactype.h>
 #include <maxtoa.h>
+#include "mavsprintf.h"
 
 // Include the resources for images.
 //#include "MAHeaders.h"
@@ -55,8 +56,8 @@ MAWidgetHandle createLabel(int width, const char* text,
 {
 	MAWidgetHandle label = maWidgetCreate(MAW_LABEL);
 
-	// Set the label font color.
-	setWidgetProperty(label, MAW_LABEL_FONT_COLOR, fontColor, 16);
+	// Set the label's font color to black.
+	maWidgetSetProperty(label, MAW_LABEL_FONT_COLOR, "0x000000");
 
 	// Set the label font size.
 	setWidgetProperty(label, MAW_LABEL_FONT_SIZE, fontSize);
@@ -272,7 +273,10 @@ int setWidgetProperty(MAWidgetHandle aWidget, const char* aProperty,
 	// Buffer for property values.
 	char buf[10];
 
-	itoa( aValue, buf, base);
+	if(16 == base)
+		sprintf(buf, "0x%.6X", aValue);
+	else
+		itoa( aValue, buf, base);
 	// Apply the property to the widget.
 	return maWidgetSetProperty(aWidget, aProperty, buf);
 }

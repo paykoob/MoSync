@@ -297,4 +297,3 @@ void Grid::updateGrid() {
 		y+=deltaY;
 	}
 }
-

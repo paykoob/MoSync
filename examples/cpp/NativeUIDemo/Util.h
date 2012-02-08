@@ -28,25 +28,35 @@ MA 02110-1301, USA.
 
 #include <ma.h>
 #include <mastring.h>		// C string functions
+#include "mavsprintf.h"
 
 #define BUF_MAX 256
 
+enum platform_code{
+	ANDROID = 0,
+	IOS = 1,
+	WINDOWSPHONE7 = 2
+};
+
 /**
- * Detects if the current platform is Android.
- * @return true if the platform is Android, false otherwise.
+ * Detects the current platform
+ * @return platform_code specific for Android, iPhone OS or WindowsPhone
  */
-static bool isAndroid()
+static int getPlatform()
 {
 	char platform[BUF_MAX];
 	maGetSystemProperty("mosync.device.OS", platform, BUF_MAX);
-	if ( strcmp(platform,"Android") == 0 )
+
+	if(strcmp(platform, "Android") == 0)
 	{
-		return true;
+		return ANDROID;
 	}
 	else
 	{
-		return false;
+		if(strcmp(platform, "iPhone OS") == 0)
+			return IOS;
 	}
+	return WINDOWSPHONE7;
 }
 
 #endif /* UTIL_H_ */

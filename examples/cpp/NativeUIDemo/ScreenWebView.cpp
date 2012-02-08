@@ -71,17 +71,18 @@ ScreenWebView::ScreenWebView():
 	VerticalLayout* mainLayout = new VerticalLayout();
 	setMainWidget(mainLayout);
 
-	if (isAndroid())
+
+	// Get the screen size.
+	MAExtent screenSize = maGetScrSize();
+	mScreenWidth = EXTENT_X(screenSize);
+	mScreenHeight = EXTENT_Y(screenSize);
+
+	if (getPlatform() == ANDROID)
 	{
 		// Set the screen icon for Android.
 		setIcon(RES_TAB_ICON_WEB_VIEW_ANDROID);
-
-		// Get the screen size.
-		MAExtent screenSize = maGetScrSize();
-		mScreenWidth = EXTENT_X(screenSize);
-		mScreenHeight = EXTENT_Y(screenSize);
 	}
-	else
+	else if(getPlatform() == IOS)
 	{
 		// Set the screen icon for iOS.
 		setIcon(RES_TAB_ICON_WEB_VIEW);
