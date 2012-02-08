@@ -31,7 +31,7 @@ LPWSTR MakeUnicodeString(LPCSTR mbStr, UINT codePage, DWORD& length)
 	MultiByteToWideChar(codePage, 0, mbStr, length, unicodeStr, len);
 	unicodeStr[len]='\0';
 	length=len;
-	
+
 	return unicodeStr;
 	}
 
@@ -47,7 +47,7 @@ LPSTR MakeMBCSString(LPCWSTR uniStr, UINT codePage, DWORD& length)
 	WideCharToMultiByte(codePage, 0, uniStr, length, mbStr, len, NULL, NULL);
 	mbStr[len]='\0';
 	length=len;
-	
+
 	return mbStr;
 	}
 
@@ -61,14 +61,14 @@ BOOL FileIsUnicode(LPCWSTR fileName, BOOL& littleEndian)
 	HANDLE hFile = ::MakeSISOpenFile(fileName, GENERIC_READ, OPEN_EXISTING);
 	if(hFile == INVALID_HANDLE_VALUE)
 		throw ErrCannotOpenFile;
-				
+
 	// Make sure we're at the beginning of the file
 	::SetFilePointer(hFile, 0L, NULL, FILE_BEGIN);
 
 	ok=::ReadFile(hFile, (LPVOID)&pBuf, sizeof(WCHAR), &dwNumBytes, NULL);
 
 	::CloseHandle(hFile);
-	
+
 	if (!ok) throw ErrCannotReadFile;
 
 	if (dwNumBytes==sizeof(WCHAR) && pBuf==0xFEFF)
@@ -159,7 +159,7 @@ LPWSTR ConvertFileToUnicode(LPCWSTR fileName)
 
 	// convert text to unicode
 	const UTF8* sourceStart=(UTF8*)pNarrowBuf;
-	const UTF8* sourceEnd=sourceStart+fileSize; 
+	const UTF8* sourceEnd=sourceStart+fileSize;
 	UTF16* targetStart;
 	UTF16* targetEnd;
 	while (ok && sourceStart<sourceEnd)
@@ -197,7 +197,7 @@ LPWSTR TempFileName(LPCWSTR fileName)
 		// now create a unique sub-directory
 		for (WORD i=0; i<10000;i++)
 			{
-			(void)swprintf(tmpPath, sizeof(tmpPath), L"%S/MKS%d",tmpDir,i);
+			(void)swprintf(tmpPath, sizeof(tmpPath) / sizeof(WCHAR), L"%S/MKS%d",tmpDir,i);
 			if (::CreateDirectoryW(tmpPath,NULL)) break;
 			}
 #else
@@ -226,13 +226,13 @@ LPWSTR TempFileName(LPCWSTR fileName)
 		if(index > 0)
 			fileName = &fileName[index+1];
 
-		(void)swprintf(tmpFileName, sizeof(tmpFileName), L"%S\\%S",tmpPath,fileName);
+		(void)swprintf(tmpFileName, sizeof(tmpFileName) / sizeof(WCHAR), L"%S\\%S",tmpPath,fileName);
 		for (WORD i=0; i<10000;i++)
 			{
 			hFile = ::MakeSISOpenFile(tmpFileName, GENERIC_READ, OPEN_EXISTING);
 			if (hFile==INVALID_HANDLE_VALUE) break;
 			CloseHandle(hFile);
-			(void)swprintf(tmpFileName, sizeof(tmpFileName), L"%S\\%S%d",tmpPath,fileName,i);
+			(void)swprintf(tmpFileName, sizeof(tmpFileName) / sizeof(WCHAR), L"%S\\%S%d",tmpPath,fileName,i);
 			}
 		/** Convert backslash to underscore for the generated filename */
 		WCHAR *tmp = &tmpFileName[0];
@@ -267,7 +267,7 @@ HANDLE MakeSISOpenFile(LPCWSTR pszFilename, DWORD dwAccessMode, DWORD dwCreateFl
 	HANDLE hFile;
 	char pszMultiByte[MAX_PATH] = "\0";
 	LPWSTR p=(LPWSTR)pszFilename;
-		
+
 	if (!wcsncmp(pszFilename,L"./",2))
 	  p+=2;
 	::WideCharToMultiByte(CP_OEMCP,				// code page
@@ -278,7 +278,7 @@ HANDLE MakeSISOpenFile(LPCWSTR pszFilename, DWORD dwAccessMode, DWORD dwCreateFl
 			      MAX_PATH,		// size of buffer
 			      NULL,				// address of default for unmappable characters
 			      NULL);				// address of flag set when default char. used
-		
+
 	hFile = ::CreateFileA(pszMultiByte, dwAccessMode, 0, NULL,
 			      dwCreateFlags, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -291,7 +291,7 @@ int FullPath(LPWSTR pszAbsolutePath, LPCWSTR pszRelativePath, size_t maxLength)
 	char pszMultiByteRelative[MAX_PATH] = "\0";
 	char pszMultiByteAbsolute[MAX_PATH] = "\0";
 	LPWSTR p=(LPWSTR)pszRelativePath;
-	
+
 	if (!wcsncmp(pszRelativePath,L"./",2)) p+=2;
 	::WideCharToMultiByte(CP_OEMCP,				// code page
 		0,					// performance and mapping flags
@@ -301,7 +301,7 @@ int FullPath(LPWSTR pszAbsolutePath, LPCWSTR pszRelativePath, size_t maxLength)
 		MAX_PATH,		// size of buffer
 		NULL,				// address of default for unmappable characters
 		NULL);				// address of flag set when default char. used
-	
+
 	int returnValue = _fullpath(pszMultiByteAbsolute, pszMultiByteRelative, maxLength)
 			? 1 : 0;
 
@@ -311,6 +311,6 @@ int FullPath(LPWSTR pszAbsolutePath, LPCWSTR pszRelativePath, size_t maxLength)
 		-1,
 		pszAbsolutePath,
 		MAX_PATH);
-	
+
 	return returnValue;
 	}

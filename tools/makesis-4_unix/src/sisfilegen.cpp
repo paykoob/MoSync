@@ -48,6 +48,7 @@
 extern "C" {
 #include "crc.h"
 }
+#include "utils.h"
 
 using std::stack;
 
@@ -187,7 +188,7 @@ SISCapabilities* CSISFileGenerator::GetE32Capabilities(const char* filename) {
 	fseek(in, 16, SEEK_SET);
 	char buf[4];
 	memset(buf, 0, sizeof(buf));
-	fread(buf, 1, 4, in);
+	fread_full(buf, 1, 4, in);
 	if (memcmp(buf, "EPOC", 4)) {
 		fclose(in);
 		return NULL;
@@ -217,32 +218,32 @@ SISCapabilities* CSISFileGenerator::GetPECapabilities(const char* filename) {
 	}
 	uint8_t buf[4];
 	memset(buf, 0, sizeof(buf));
-	fread(buf, 1, 2, in);
+	fread_full(buf, 1, 2, in);
 	if (memcmp(buf, "MZ", 2)) {
 		fclose(in);
 		return NULL;
 	}
 	fseek(in, 0x3c, SEEK_SET);
 	uint8_t coffOffset;
-	fread(&coffOffset, 1, 1, in);
+	fread_full(&coffOffset, 1, 1, in);
 	fseek(in, coffOffset, SEEK_SET);
-	fread(buf, 1, 4, in);
+	fread_full(buf, 1, 4, in);
 	if (memcmp(buf, "PE\0\0", 4)) {
 		fclose(in);
 		return NULL;
 	}
 	fseek(in, 2, SEEK_CUR);
-	fread(buf, 1, 2, in);
+	fread_full(buf, 1, 2, in);
 	uint16_t numberOfSections = buf[0] | (buf[1] << 8);
 	bool found = false;
 	uint32_t sectionOffset = 0;
 	for (uint16_t i = 0; i < numberOfSections; i++) {
 		fseek(in, coffOffset + 248 + 40*i, SEEK_SET);
 		uint8_t nameBuf[8];
-		fread(nameBuf, 1, 8, in);
+		fread_full(nameBuf, 1, 8, in);
 		if (!memcmp(nameBuf, ".SYMBIAN", 8)) {
 			fseek(in, 12, SEEK_CUR);
-			fread(buf, 1, 4, in);
+			fread_full(buf, 1, 4, in);
 			found = true;
 			sectionOffset = buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
 			break;
@@ -422,17 +423,17 @@ static SISContents* LoadSISFile(const wchar_t* name, uint32_t uid) {
 	wcstombs(sourceFile, name, sizeof(sourceFile));
 	sourceFile[MAX_PATH-1] = '\0';
 
-        FILE* in = fopen(sourceFile, "rb");
-        if (!in) {
-                perror(sourceFile);
+	FILE* in = fopen(sourceFile, "rb");
+	if (!in) {
+		perror(sourceFile);
 		throw ErrSISFileNotFound;
-        }
-        fseek(in, 0, SEEK_END);
-        uint32_t len = ftell(in);
-        fseek(in, 0, SEEK_SET);
-        uint8_t* buffer = new uint8_t[len];
-        fread(buffer, 1, len, in);
-        fclose(in);
+	}
+	fseek(in, 0, SEEK_END);
+	uint32_t len = ftell(in);
+	fseek(in, 0, SEEK_SET);
+	uint8_t* buffer = new uint8_t[len];
+	fread_full(buffer, 1, len, in);
+	fclose(in);
 	const uint8_t* uidPtr = buffer + 8;
 	uint32_t fileUid = uidPtr[0] | (uidPtr[1] << 8) | (uidPtr[2] << 16) | (uidPtr[3] << 24);
 	if (fileUid != uid) {
@@ -440,8 +441,8 @@ static SISContents* LoadSISFile(const wchar_t* name, uint32_t uid) {
 		throw ErrUIDMismatch;
 	}
 
-        const uint8_t* ptr = buffer + 16;
-        len -= 16;
+	const uint8_t* ptr = buffer + 16;
+	len -= 16;
 	SISField* field = NULL;
 	try {
 		field = SISField::LoadOneField(ptr, len);

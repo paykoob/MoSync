@@ -44,6 +44,7 @@
 #include <openssl/err.h>
 #include <unistd.h>
 #include "sisfield.h"
+#include "utils.h"
 
 #ifdef WIN32
 char passwordBuffer[200];
@@ -89,7 +90,7 @@ char* loadTextFile(const char* name) {
 	uint32_t len = ftell(in);
 	fseek(in, 0, SEEK_SET);
 	char* buffer = new char[len + 1];
-	fread(buffer, 1, len, in);
+	fread_full(buffer, 1, len, in);
 	fclose(in);
 	buffer[len] = '\0';
 	return buffer;

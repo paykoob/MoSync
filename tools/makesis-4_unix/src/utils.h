@@ -12,6 +12,7 @@
 // ===========================================================================
 
 #include <windows.h>
+#include <stdio.h>
 
 enum TUtilsException
 	{ErrNotEnoughMemory	=-1,
@@ -45,5 +46,6 @@ HANDLE MakeSISOpenFile(LPCWSTR pszFilename, DWORD dwAccessMode, DWORD dwCreateFl
 // Converts a relative path to an absolute path under Win95 and WinNT
 int FullPath(LPWSTR pszAbsolutePath, const LPCWSTR pszRelativePath, size_t maxLength);
 
+void fread_full(void* dst, size_t size, size_t num, FILE* stream);
 
 #endif

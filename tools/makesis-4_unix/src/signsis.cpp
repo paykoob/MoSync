@@ -41,6 +41,7 @@ extern "C" {
 }
 #include <getopt.h>
 #include <sys/stat.h>
+#include "utils.h"
 
 #include "selfsigned.cer.h"
 #include "selfsigned.key.h"
@@ -56,7 +57,7 @@ static SISContents* loadSISFile(const char* name, uint8_t* header) {
 	uint32_t len = ftell(in);
 	fseek(in, 0, SEEK_SET);
 	uint8_t* buffer = new uint8_t[len];
-	fread(buffer, 1, len, in);
+	fread_full(buffer, 1, len, in);
 	fclose(in);
 	memcpy(header, buffer, 16);
 	const uint8_t* ptr = buffer + 16;
