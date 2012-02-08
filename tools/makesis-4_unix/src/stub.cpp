@@ -62,7 +62,7 @@ HANDLE CreateFileA(LPCSTR filename, DWORD access, DWORD sharing,
 		return INVALID_HANDLE_VALUE;
 	}
 	else
-		return (void *)fd;
+		return (void *)(size_t)fd;
 }
 
 
@@ -102,7 +102,7 @@ DWORD WINAPI GetFileSize(HANDLE h, LPDWORD)
 		printf("GetFileSize: %s\n", strerror(errno));
 		return 0;
 	}
-  
+
 	return s.st_size;
 }
 

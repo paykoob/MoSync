@@ -18,12 +18,12 @@ if(HOST == :win32) then
 elsif(HOST == :darwin)
 	INTLIB_PLATFORM = "linux"
 	PLATFORM_TOOLS = ["tools/makesis-2.0.0_unix", "tools/makesis-4_unix",
-		]
+	]
 else
 	INTLIB_PLATFORM = HOST
 	# todo: add lcab
 	PLATFORM_TOOLS = [
-		'tools/MoCab',
+		'tools/MoCab', 'tools/makesis-2.0.0_unix', 'tools/makesis-4_unix',
 	]
 end
 

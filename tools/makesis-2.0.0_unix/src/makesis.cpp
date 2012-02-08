@@ -44,7 +44,7 @@ m_fVerbose(FALSE)
 
 int CMakeSIS::Run(int argc, _TCHAR* argv[], _TCHAR** /*envp*/)
 // Inputs   : argc, argv, envp - The command line passed to the process
-	{	
+	{
 	int err=1;
 	try
 		{
@@ -62,8 +62,8 @@ int CMakeSIS::Run(int argc, _TCHAR* argv[], _TCHAR** /*envp*/)
 			{
 			m_SISWriter.SetCmdPassword(m_CmdOptions.GetPassword());
 			}
-		
-		
+
+
 
 		if(ParseSource() && WriteTarget())
 			{
@@ -91,7 +91,7 @@ int CMakeSIS::Run(int argc, _TCHAR* argv[], _TCHAR** /*envp*/)
 		}
 	m_SISWriter.Release();
 	return err;
-	
+
 	}
 
 BOOL CMakeSIS::ParseSource()
@@ -144,14 +144,14 @@ BOOL CMakeSIS::ParseSource()
 		ShowParseError(x);
 		fResult = FALSE;
 		}
-	
+
 	if (hFile) ::CloseHandle(hFile);
-	
+
 	if (converted)
 		{
 		_wunlink(pszTempSource);
 		}
-	
+
 	return fResult;
 	}
 
@@ -160,7 +160,7 @@ BOOL CMakeSIS::WriteTarget()
 	{
 	// Turn off line number output...
 	m_wLineNo = 0;
-	
+
 	BOOL fResult = TRUE;
 	try
 		{
@@ -184,7 +184,7 @@ void CMakeSIS::ShowBanner()
 	{
 	short major = KInstallerVersion / 100,
 		minor = KInstallerVersion % 100;
-	
+
 	// Show the title
 	OUT << endl << __T("MakeSIS, version ") << major << __T(".") << minor << endl;
 	OUT << __T("A utility for creating Software Installation (SIS) files.") << endl;
@@ -196,7 +196,7 @@ void CMakeSIS::ShowBanner()
 	}
 
 void CMakeSIS::ShowUtilsError(TUtilsException err)
-// Purpose  : Write message for any error which occured whilst parsing the input pkg file 
+// Purpose  : Write message for any error which occured whilst parsing the input pkg file
 // Inputs   : err - the error ID
 	{
 	switch(err)
@@ -225,7 +225,7 @@ void CMakeSIS::ShowUtilsError(TUtilsException err)
 	}
 
 void CMakeSIS::ShowParseError(TParseException err)
-// Purpose  : Write message for any error which occured whilst parsing the input pkg file 
+// Purpose  : Write message for any error which occured whilst parsing the input pkg file
 // Inputs   : err - the error ID
 	{
 	switch(err)
@@ -386,13 +386,13 @@ void CMakeSIS::ShowParseError(TParseException err)
 	}
 
 void CMakeSIS::ShowGeneratorError(TGeneratorException err)
-// Purpose  : Write message for any error which occured whilst generating the output SIS file (or 
+// Purpose  : Write message for any error which occured whilst generating the output SIS file (or
 //			  stub)(to STDOUT (cout/wcout) - naturally)
 // Inputs   : err - the error ID
 	{
 	switch(err)
 		{
-		case ErrFailedToWriteHeader:		
+		case ErrFailedToWriteHeader:
 			DoErrMsg(__T("failed whilst writing HEADER block"));
 			break;
 		case ErrFailedToWriteLanguages:
@@ -422,6 +422,7 @@ void CMakeSIS::ShowGeneratorError(TGeneratorException err)
 		case ErrFailedCompression:
 			DoErrMsg(__T("Failed to compress Files"));
 			break;
+#if 0
 		case ErrCannotOpenFile:
 			DoErrMsg(__T("unable to open file"));
 			break;
@@ -431,6 +432,7 @@ void CMakeSIS::ShowGeneratorError(TGeneratorException err)
 		case ErrCannotWriteFile:
 			DoErrMsg(__T("failed whilst writing file"));
 			break;
+#endif
 		default:
 			DoErrMsg(__T("internal error"));
 			break;
@@ -438,7 +440,7 @@ void CMakeSIS::ShowGeneratorError(TGeneratorException err)
 	};
 
 void CMakeSIS::ShowCommandLineError(TCommandLineException err)
-// Purpose  : Write message for any error which occured whilst processing the command line (to 
+// Purpose  : Write message for any error which occured whilst processing the command line (to
 //            STDOUT (cout/wcout) - naturally)
 // Inputs   : err - the error ID
 	{
@@ -585,7 +587,7 @@ void CMakeSIS::DoMsg(const _TCHAR* pszText1, const _TCHAR* pszText2) const
 #endif
 		OUT << __T("(")  << m_wLineNo << __T(")") << __T(" : ");
 		}
-	
+
 	OUT << pszText1 << pszText2 << endl;
 	}
 

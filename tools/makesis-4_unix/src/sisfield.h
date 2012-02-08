@@ -35,6 +35,9 @@
 #ifndef __SISFIELD_H
 #define __SISFIELD_H
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -436,7 +439,7 @@ public:
 		uint64_t n = fread(aPtr, 1, iLength, fp);
 		aPtr += n;
 		if (n != iLength) {
-			fprintf(stderr, "Not enough data returned from file %s (requested %lld bytes, got %lld bytes)\n", iName, iLength, n);
+			fprintf(stderr, "Not enough data returned from file %s (requested %"PRIu64" bytes, got %"PRIu64" bytes)\n", iName, iLength, n);
 			throw SISFieldBadSourceFile;
 		}
 		fclose(fp);

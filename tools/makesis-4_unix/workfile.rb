@@ -8,8 +8,11 @@ class SisWork < MoSyncExe
 		@EXTRA_INCLUDES = ["include", "src"]
 		@IGNORED_FILES = ["makekeys.cpp", "dumptree.cpp", "dumpcontroller.cpp", "finddatetime.cpp"]
 		@EXTRA_CPPFLAGS = " -Wno-shadow -Wno-unreachable-code"
+		@SPECIFIC_CFLAGS = {
+			#'sisfilegen.cpp' => ' -fpermissive -Wno-error'
+		}
 		if(!@GCC_IS_V4 && CONFIG == "")	#buggy compiler, I think.
-			@SPECIFIC_CFLAGS = {"crc.c" => " -Wno-unreachable-code"}
+			@SPECIFIC_CFLAGS['crc.c'] = ' -Wno-unreachable-code'
 		end
 		@LIBRARIES = ["z", "crypto"]
 		@CUSTOM_LIBS = ["libeay32.lib"]
