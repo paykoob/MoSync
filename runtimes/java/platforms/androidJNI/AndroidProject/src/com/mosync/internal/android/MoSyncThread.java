@@ -1697,7 +1697,7 @@ public class MoSyncThread extends Thread
 		if (imageResource == null)
 		{
 			logError("maGetImageSize : no such resource");
-			return -1;
+			maPanic(0, "PANIC, Checking image size for non image resource");
 		}
 
 		return EXTENT(
@@ -2246,7 +2246,9 @@ public class MoSyncThread extends Thread
 		// Try to load the resource file, if we get an exception
 		// it just means that this application has no resource file
 		// and that is not an error.
-		if (((flag & MA_RESOURCE_OPEN) != 0) && (mResourceFd == null)) {
+		if (((mResourceFd != null) && (!mResourceFd.valid())) ||
+				(((flag & MA_RESOURCE_OPEN) != 0) && (mResourceFd == null)))
+		{
 			mResourceFd = getResourceFileDesriptor();
 		}
 
@@ -2714,7 +2716,10 @@ public class MoSyncThread extends Thread
 			}
 
 			SYSLOG("Decode a bitmap!");
-			Bitmap bitmap = BitmapFactory.decodeByteArray(ra, 0, length);
+
+			Bitmap bitmap = decodeImageFromData(ra, null);
+
+			//Bitmap bitmap = BitmapFactory.decodeByteArray(ra, 0, length);
 			if(bitmap != null)
 			{
 				SYSLOG("Bitmap was created!");
@@ -3698,6 +3703,11 @@ public class MoSyncThread extends Thread
 	int maAudioSetVolume(int audio, float volume)
 	{
 		return mMoSyncAudio.maAudioSetVolume(audio, volume);
+	}
+
+	int maAudioPause(int audio)
+	{
+		return mMoSyncAudio.maAudioPause(audio);
 	}
 
 	int maAudioStop(int audio)
