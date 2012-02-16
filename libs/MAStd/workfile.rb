@@ -28,9 +28,15 @@ mod.class_eval do
 
 	def setup_pipe
 		setup_base
-		@SOURCES = [".", "../libsupc++", "libgcc"]
+		@SOURCES = ['.', '../libsupc++']
+		if(@GCC_IS_ARM)
+			@IGNORED_FILES << 'matask.c'
+			@IGNORED_FILES << 'macpp.cpp'
+		else
+			@SOURCES << 'libgcc'
+		end
 		@EXTRA_INCLUDES = []
-		@IGNORED_FILES = ["new_handler.cc"]
+		@IGNORED_FILES << 'new_handler.cc'
 		@SPECIFIC_CFLAGS = @pipe_specific_cflags
 		if(CONFIG=="debug")
 			@EXTRA_CFLAGS = " -DMOSYNCDEBUG"
@@ -44,6 +50,7 @@ mod.class_eval do
 	end
 
 	def setup_base
+		@IGNORED_FILES = []
 		if(CONFIG == "" && @GCC_IS_V4)
 			#broken compiler/stdlib
 			native_specflags = {"conprint.c" => " -Wno-unreachable-code"}
@@ -80,7 +87,7 @@ mod.class_eval do
 			"madmath.c" => " -Wno-missing-prototypes -Wno-missing-declarations",
 			"maint64.c" => " -fno-strict-aliasing -Wno-missing-prototypes -Wno-missing-declarations",
 			"libgcc2.c" => " -Wno-unreachable-code",
-			"strtod.c" => " -Wno-float-equal",
+			"strtod.c" => " -Wno-float-equal" + @GCC_WNO_UNUSED_BUT_SET_VARIABLE,
 			"e_log.c" => " -Wno-float-equal",
 			"s_atan.c" => " -fno-strict-aliasing",
 			"e_atan2.c" => " -fno-strict-aliasing",

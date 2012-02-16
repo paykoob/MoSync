@@ -2,8 +2,8 @@
 
 require File.expand_path('../../rules/mosync_lib.rb')
 
-work = PipeLibWork.new
-work.instance_eval do
+mod = Module.new
+mod.class_eval do
 	def setup_pipe
 		@SOURCES = [
 			".",
@@ -34,4 +34,4 @@ work.instance_eval do
 	end
 end
 
-work.invoke
+MoSyncLib.invoke(mod)

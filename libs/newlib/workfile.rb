@@ -7,8 +7,8 @@ if(!USE_NEWLIB)
 	error "Must USE_NEWLIB!"
 end
 
-work = PipeLibWork.new
-work.instance_eval do
+mod = Module.new
+mod.class_eval do
 	def copyHeaderDir(name)
 		@INSTALL_INCDIR = name
 		@HEADER_DIRS = ["libc/include/" + name]
@@ -28,11 +28,21 @@ work.instance_eval do
 	end
 
 	def setup_pipe
-		@SOURCES = ["libc/sys/mosync", "libc/sys/mosync/libgcc", "../libsupc++", "libc/sys/mosync/quad",
+		@IGNORED_FILES = []
+		@SOURCES = ["libc/sys/mosync", "../libsupc++", "libc/sys/mosync/quad",
 			"libc/misc", "libc/unix", "libc/posix", "libc/locale", "libc/reent", "libc/stdio",
 			"libc/search", "libc/stdlib", "libc/string", "libc/time", "libc/ctype", "libc/errno",
 			"libm/math", "libm/common"]
 		@EXTRA_INCLUDES = ["libc/include", "libc/sys/mosync", "libm/common"]
+
+		if(@GCC_IS_ARM)
+			#@IGNORED_FILES << 'matask.c'
+			@IGNORED_FILES << 'macpp.cpp'
+		else
+			@SOURCES << 'libc/sys/mosync/libgcc'
+		end
+
+		@IGNORED_FILES << 'engine.c'
 
 		@EXTRA_CFLAGS = " -DUSE_EXOTIC_MATH -Wno-float-equal -Wno-unreachable-code -Wno-sign-compare -Wno-old-style-definition"
 		if(CONFIG=="")
@@ -47,10 +57,13 @@ work.instance_eval do
 			"ldtoa.c" => " -Wno-shadow",
 			"vfprintf.c" => " -Wno-shadow -Wno-missing-format-attribute -Wno-write-strings -Wno-missing-declarations -Wno-missing-prototypes",
 			"svfprintf.c" => " -Wno-shadow -Wno-missing-format-attribute -Wno-write-strings -Wno-missing-declarations -Wno-missing-prototypes",
-			"vfwprintf.c" => " -Wno-shadow -Wno-missing-format-attribute -Wno-write-strings",
-			"svfwprintf.c" => " -Wno-shadow -Wno-missing-format-attribute -Wno-write-strings",
-			"vfscanf.c" => " -Wno-shadow -Wno-missing-declarations -Wno-missing-prototypes",
-			"svfscanf.c" => " -Wno-shadow -Wno-missing-declarations -Wno-missing-prototypes",
+			"vfwprintf.c" => " -Wno-shadow -Wno-missing-format-attribute -Wno-write-strings" + @GCC_WNO_POINTER_SIGN,
+			"svfwprintf.c" => " -Wno-shadow -Wno-missing-format-attribute -Wno-write-strings" + @GCC_WNO_POINTER_SIGN,
+			"vfscanf.c" => " -Wno-shadow -Wno-missing-declarations -Wno-missing-prototypes" + @GCC_WNO_POINTER_SIGN,
+			"svfscanf.c" => " -Wno-shadow -Wno-missing-declarations -Wno-missing-prototypes" + @GCC_WNO_POINTER_SIGN,
+			"collate.c" => @GCC_WNO_POINTER_SIGN,
+			"vasprintf.c" => @GCC_WNO_POINTER_SIGN,
+			"asprintf.c" => @GCC_WNO_POINTER_SIGN,
 			"impure.c" => " -Wno-extra",
 			"madmath.c" => " -Wno-missing-prototypes -Wno-missing-declarations",
 			"maint.c" => " -Wno-missing-prototypes -Wno-missing-declarations",
@@ -82,8 +95,6 @@ work.instance_eval do
 			"mktemp.c" => " -DHAVE_MKDIR",
 		}
 
-		@IGNORED_FILES = ["engine.c"]
-
 		@EXTRA_OBJECTS = [FileTask.new(self, "libc/sys/mosync/crtlib.s")]
 
 		# copy subdirs
@@ -104,4 +115,4 @@ work.instance_eval do
 	end
 end
 
-work.invoke
+MoSyncLib.invoke(mod)

@@ -84,7 +84,7 @@ namespace Wormhole
 		 *
 		 * @return true if message was handled, false if not.
 		 */
-		bool PhoneGapMessageHandler::handlePhoneGapMessage(JSONMessage& message);
+		bool handlePhoneGapMessage(JSONMessage& message);
 
 		/**
 		 * Called whenever sensor data is ready
@@ -158,7 +158,7 @@ namespace Wormhole
 		 * @param errorMessage Optional error message.
 		 * @param keepCallback true if this callback should be kept by PhoneGap.
 		 */
-		void PhoneGapMessageHandler::callError(
+		void callError(
 			const MAUtil::String& callbackID,
 			const MAUtil::String& errorCode,
 			const MAUtil::String& errorMessage = "",
@@ -176,7 +176,7 @@ namespace Wormhole
 		 * @param castFunction Name of an optional JS function that
 		 * will convert the JSON args to a JS object.
 		 */
-		void PhoneGapMessageHandler::callCallback(
+		void callCallback(
 			const MAUtil::String& callbackFunction,
 			const MAUtil::String& callbackID,
 			const MAUtil::String& status,

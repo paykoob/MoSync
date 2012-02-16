@@ -35,7 +35,6 @@ MA 02110-1301, USA.
 namespace Wormhole
 {
 	// Forward declaration
-	class Notification::PushNotification;
 
 	class PhoneGapMessageHandler;
 

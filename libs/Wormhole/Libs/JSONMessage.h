@@ -52,9 +52,9 @@ namespace Wormhole
 		/**
 		 * Make a JSON stringified string.
 		 */
-		static MAUtil::String JSONMessage::JSONStringify(const char* str);
+		static MAUtil::String JSONStringify(const char* str);
 
-		static MAUtil::String JSONMessage::base64Encode(const char* input);
+		static MAUtil::String base64Encode(const char* input);
 
 		/**
 		 * Constructor.

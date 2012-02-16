@@ -1188,7 +1188,7 @@ _DEFUN (strtof, (s00, se),
 {
   double retval = _strtod_r (_REENT, s00, se);
   if (isnan (retval))
-    return nanf (NULL);
+    return nanf ("");
   return (float)retval;
 }
 

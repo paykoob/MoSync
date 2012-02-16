@@ -124,6 +124,9 @@ class Work < TaskBase
 			if(USE_NEWLIB)
 				args << ' USE_NEWLIB='
 			end
+			if(USE_ARM)
+				args << ' USE_ARM='
+			end
 			if(FULLSCREEN == "true")
 				args << " FULLSCREEN=\"true\""
 			end

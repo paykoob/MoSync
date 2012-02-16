@@ -24,6 +24,8 @@
 # define WEOF ((wint_t)-1)
 #endif
 
+#ifndef __arm__
+
 #ifndef WCHAR_MIN
 #define WCHAR_MIN 0
 #endif
@@ -35,6 +37,8 @@
 #define WCHAR_MAX 0x7fffffffu
 #endif
 #endif
+
+#endif	//__arm__
 
 _BEGIN_STD_C
 
@@ -51,7 +55,7 @@ wint_t	_EXFUN(btowc, (int));
 int	_EXFUN(wctob, (wint_t));
 size_t	_EXFUN(mbrlen, (const char * , size_t, mbstate_t *));
 size_t	_EXFUN(mbrtowc, (wchar_t * , const char * , size_t, mbstate_t *));
-size_t	_EXFUN(_mbrtowc_r, (struct _reent *, wchar_t * , const char * , 
+size_t	_EXFUN(_mbrtowc_r, (struct _reent *, wchar_t * , const char * ,
 			size_t, mbstate_t *));
 int	_EXFUN(mbsinit, (const mbstate_t *));
 size_t	_EXFUN(mbsnrtowcs, (wchar_t * , const char ** , size_t, size_t,
@@ -64,10 +68,10 @@ size_t	_EXFUN(wcrtomb, (char * , wchar_t, mbstate_t *));
 size_t	_EXFUN(_wcrtomb_r, (struct _reent *, char * , wchar_t, mbstate_t *));
 size_t	_EXFUN(wcsnrtombs, (char * , const wchar_t ** , size_t, size_t,
 			mbstate_t *));
-size_t	_EXFUN(_wcsnrtombs_r, (struct _reent *, char * , const wchar_t ** , 
+size_t	_EXFUN(_wcsnrtombs_r, (struct _reent *, char * , const wchar_t ** ,
 			size_t, size_t, mbstate_t *));
 size_t	_EXFUN(wcsrtombs, (char * , const wchar_t ** , size_t, mbstate_t *));
-size_t	_EXFUN(_wcsrtombs_r, (struct _reent *, char * , const wchar_t ** , 
+size_t	_EXFUN(_wcsrtombs_r, (struct _reent *, char * , const wchar_t ** ,
 			size_t, mbstate_t *));
 int	_EXFUN(wcscasecmp, (const wchar_t *, const wchar_t *));
 wchar_t	*_EXFUN(wcscat, (wchar_t * , const wchar_t *));

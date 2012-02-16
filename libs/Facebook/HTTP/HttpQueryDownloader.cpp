@@ -33,13 +33,15 @@ using namespace MAUtil;
 // code found here:
 // http://www.geekhideout.com/urlcode.shtml
 
+#if 0
 /* Converts a hex character to its integer value */
-char from_hex(char ch) {
+static char from_hex(char ch) {
 	return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
 }
+#endif
 
 /* Converts an integer value to its hex character*/
-char to_hex(char code) {
+static char to_hex(char code) {
 	static char hex[] = "0123456789abcdef";
 	return hex[code & 15];
 }
@@ -63,9 +65,10 @@ char *url_encode(const char *str) {
 	return buf;
 }
 
+#if 0
 /* Returns a url-decoded version of str */
 /* IMPORTANT: be sure to free() the returned string after use */
-char *url_decode(const char *str) {
+static char *url_decode(const char *str) {
 	const char *pstr = str;
 	char *buf = (char*)malloc(strlen(str) + 1), *pbuf = buf;
 	while (*pstr)
@@ -91,6 +94,7 @@ char *url_decode(const char *str) {
 	*pbuf = '\0';
 	return buf;
 }
+#endif
 
 //------------------------------------------------------------------------------------
 
@@ -124,7 +128,7 @@ HttpQueryDownloader::HttpQueryDownloader() :
 		mMultipartFormDataBoundary("----------------------------5e9f6e177b97")
 {
 
-	mDownloader = new HeaderDownloader();
+	mDownloader = new MyHeaderDownloader();
 	mDownloader->addDownloadListener(this);
 	mDataPlaceholder = maCreatePlaceholder();
 	mHttpConnection =  new HttpConnection(this);
@@ -390,7 +394,7 @@ void HttpQueryDownloader::error(Downloader* downloader, int code)
 	if (code == 301 || code == 302)
 	{
 		String url;
-		HeaderDownloader* headerDownloader = (HeaderDownloader*) downloader;
+		MyHeaderDownloader* headerDownloader = (MyHeaderDownloader*) downloader;
 		headerDownloader->getResponseHeader("Location", url);
 		LOG("\t\tRedirect. New URL = %s", url.c_str());
 		headerDownloader->closeConnection();

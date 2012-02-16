@@ -280,14 +280,15 @@ struct KeyString {
 
 Stack<KeyString> sKeyStack;
 
-Value* validateValue(Value* value, Value::Type type) {
+static Value* validateValue(Value* value, Value::Type type) {
 	if (value->getType() != type)
 		maPanic(1, "Invalid value!");
 	else
 		return value;
 }
 
-void printValue(Value* value) {
+#if 0
+static void printValue(Value* value) {
 
 	if(!value) {
 		printf("NULL pointer!!\n");
@@ -303,8 +304,9 @@ void printValue(Value* value) {
 		case Value::STRING: printf("STRING\n"); break;
 	}
 }
+#endif
 
-void pushValue(Value *value) {
+static void pushValue(Value *value) {
 	Value* parent;
 
 	if (value == NULL)
@@ -367,7 +369,7 @@ void pushValue(Value *value) {
 		sValueStack.push(value);
 }
 
-void popValue() {
+static void popValue() {
 	sValueStack.pop();
 }
 
@@ -440,16 +442,18 @@ static yajl_callbacks callbacks = { parse_null, parse_boolean, NULL, NULL,
 		parse_number, parse_string, parse_start_map, parse_map_key,
 		parse_end_map, parse_start_array, parse_end_array };
 
-void parseError(yajl_handle hand, int verbose, const unsigned char* jsonText,
+static void parseError(yajl_handle hand, int verbose, const unsigned char* jsonText,
 		size_t jsonTextLength) {
 	unsigned char * str = yajl_get_error(hand, 1, jsonText, jsonTextLength);
 	printf("%s\n", str);
 	yajl_free_error(hand, str);
 }
 
-void gen_print(void *ctx, const char *str, unsigned int len) {
+#if 0
+static void gen_print(void *ctx, const char *str, unsigned int len) {
 	printf("%.*s", len, str);
 }
+#endif
 
 Value* parse(const unsigned char* jsonText, size_t jsonTextLength) {
 	yajl_handle hand;

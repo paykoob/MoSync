@@ -95,7 +95,7 @@ void InitConsole(void)
 	maSetClipRect(0, 0, EXTENT_X(sConsole.screenSize), EXTENT_Y(sConsole.screenSize));
 
 	//sConsole.fontHeight = EXTENT_Y(maGetTextSize("gl"));
-	
+
 	// this is more safe:
 	for(i = 1; i < 128; i++) string[i-1] = i;
 	string[127] = 0;
@@ -140,7 +140,7 @@ void DisplayConsole(void)
 void PrintConsole(const char *str)
 {
 	int length, pos = 0;
-	wchar* line;
+	//wchar* line;
 
 	if (gConsoleLogging)
 	{
@@ -184,8 +184,8 @@ void PrintConsole(const char *str)
 		}
 		else
 		{
-			line = sConsole.lines[(sConsole.cursorPos.y + sConsole.firstLine) %
-				sConsole.height].line;
+			//line = sConsole.lines[(sConsole.cursorPos.y + sConsole.firstLine) %
+				//sConsole.height].line;
 
 			if (sConsole.cursorPos.x >= CONSOLE_WIDTH)
 			{

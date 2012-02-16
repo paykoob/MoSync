@@ -26,7 +26,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 * Note all functions are implemented as macros.
 */
 
-#ifdef MAPIP
+#if defined(MAPIP) && !defined(__arm__)
 
 #ifndef MAARG_H
 #define MAARG_H

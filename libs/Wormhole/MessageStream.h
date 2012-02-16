@@ -91,7 +91,7 @@ protected:
 	/**
 	 * Read data and initialise the stream.
 	 */
-	void MessageStream::initialize(MAHandle dataHandle);
+	void initialize(MAHandle dataHandle);
 
 	/**
 	 * TODO: Add error handling.

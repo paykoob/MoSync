@@ -33,7 +33,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define DURATION 250
 
 namespace MAUI {
-	ListBox::ListBox(int x, int y, int width, int height, Widget *parent) : 
+	ListBox::ListBox(int x, int y, int width, int height, Widget *parent) :
 	Widget(x, y, width, height, parent),
 		mustRebuild(false),
 		wrapping(true),
@@ -149,7 +149,7 @@ namespace MAUI {
 			if(autoSize)
 				children[children.size()-1]->setHeight(paddedBounds.height);
 		}
-		
+
 		//listen
 		child->addWidgetListener(this);
 
@@ -225,7 +225,7 @@ namespace MAUI {
 	}
 
 	void ListBox::update() {
-		Widget::update();	
+		Widget::update();
 		if(mustRebuild) rebuild();
 	}
 
@@ -258,7 +258,7 @@ namespace MAUI {
 			//bounds.width, bounds.height);
 			Gfx_pushMatrix();
 			Gfx_translate(relX, relY);
-				
+
 			BOOL res = Gfx_intersectClipRect(0, 0, bounds.width, bounds.height);
 
 			if(res) {
@@ -267,16 +267,16 @@ namespace MAUI {
 				}
 
 				//bool res = engine.pushClipRectIntersect(paddedBounds.x, paddedBounds.y,
-				//paddedBounds.width, paddedBounds.height);	
+				//paddedBounds.width, paddedBounds.height);
 				Gfx_translate(paddingLeft, paddingTop);
 				res = Gfx_intersectClipRect(0, 0, paddedBounds.width, paddedBounds.height);
 
-				MAPoint2d tBefore = Gfx_getTranslation();
+				//MAPoint2d tBefore = Gfx_getTranslation();
 				Gfx_translate(0, (yOffset>>16));
-				MAPoint2d translation = Gfx_getTranslation();
-				
-				if(res) 
-				{	
+				//MAPoint2d translation = Gfx_getTranslation();
+
+				if(res)
+				{
 					srand(1);
 					for(i = 0; i < children.size(); i++)
 					{
@@ -311,26 +311,26 @@ namespace MAUI {
 
 			//printf("numWidgets: %d\n", size);
 
-			//bool res = engine.pushClipRectIntersect(bounds.x, bounds.y, bounds.width, bounds.height);	
-			Gfx_pushMatrix();	
+			//bool res = engine.pushClipRectIntersect(bounds.x, bounds.y, bounds.width, bounds.height);
+			Gfx_pushMatrix();
 			Gfx_translate(relX, relY);
-			BOOL res = Gfx_intersectClipRect(0, 0, bounds.width, bounds.height);	
+			BOOL res = Gfx_intersectClipRect(0, 0, bounds.width, bounds.height);
 
-			if(res) 
+			if(res)
 			{
 				if((isDirty() || forceDraw) && shouldDrawBackground) {
 					drawBackground();
 				}
-	
-				//bool res = engine.pushClipRectIntersect(paddedBounds.x, paddedBounds.y,	
-				//paddedBounds.width, paddedBounds.height);	
-				Gfx_translate(paddingLeft, paddingTop);
-				res = Gfx_intersectClipRect(0, 0, paddedBounds.width, paddedBounds.height);	
 
-				MAPoint2d tBefore = Gfx_getTranslation();
+				//bool res = engine.pushClipRectIntersect(paddedBounds.x, paddedBounds.y,
+				//paddedBounds.width, paddedBounds.height);
+				Gfx_translate(paddingLeft, paddingTop);
+				res = Gfx_intersectClipRect(0, 0, paddedBounds.width, paddedBounds.height);
+
+				//MAPoint2d tBefore = Gfx_getTranslation();
 				Gfx_translate((yOffset>>16), 0);
-				MAPoint2d translation = Gfx_getTranslation();
-				if(res) 
+				//MAPoint2d translation = Gfx_getTranslation();
+				if(res)
 				{
 					for(i = 0; i < children.size(); i++)
 					{
@@ -349,7 +349,7 @@ namespace MAUI {
 				//engine.popClipRect();
 				Gfx_popClipRect();
 			}
-	
+
 			Gfx_popMatrix();
 			//engine.popClipRect();
 			Gfx_popClipRect();
@@ -387,7 +387,7 @@ namespace MAUI {
 				selectNextItem(false);
 			}
 		}
-		Widget *selectedWidget = children[this->selectedIndex]; 
+		Widget *selectedWidget = children[this->selectedIndex];
 		selectedWidget->setSelected(true);
 
 		Vector_each(ItemSelectedListener*, i, itemSelectedListeners) {
@@ -515,15 +515,15 @@ namespace MAUI {
 
 		int pos = 0;
 		int bound = 0;
-		int newPos = 0;
+		//int newPos = 0;
 		switch(orientation) {
 			case LBO_VERTICAL:
-				newPos = c->getPosition().y<<16;
+				//newPos = c->getPosition().y<<16;
 				pos = ((c->getPosition().y + c->getHeight())<<16);
 				bound =  (paddedBounds.height<<16);
 				break;
 			case LBO_HORIZONTAL:
-				newPos = c->getPosition().x<<16;
+				//newPos = c->getPosition().x<<16;
 				pos = ((c->getPosition().x + c->getWidth())<<16);
 				bound =  (paddedBounds.width<<16);
 				break;

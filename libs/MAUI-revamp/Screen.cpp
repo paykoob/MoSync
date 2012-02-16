@@ -15,7 +15,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.
 */
 
-/** 
+/**
  * \file Screen.cpp
  * \brief A full screen container for widgets.
  * \author Patrick Broman and Niklas Nummelin
@@ -28,17 +28,17 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 namespace MAUI {
 
 	Screen* Screen::sCurrentScreen = NULL;
-	
+
 	Screen::Screen() : mMain(0), mFocusedWidget(0) {
 		hide();
 		MAExtent scrSize = maGetScrSize();
 		mScreenWidth = EXTENT_X(scrSize);
 		mScreenHeight = EXTENT_Y(scrSize);
 	}
-	
+
 	void Screen::show() {
 		//printf("showing screen!\n");
-		
+
 		if(!mMain) {
 			return;
 		}
@@ -56,7 +56,7 @@ namespace MAUI {
 		Environment::getEnvironment().addKeyListener(this);
 		Environment::getEnvironment().addPointerListener(this);
 	}
-	
+
 	void Screen::setMain(Widget* main) {
 		this->mMain = main;
 		if(sCurrentScreen == this)
@@ -107,7 +107,7 @@ namespace MAUI {
 		return sCurrentScreen;
 	}
 
-	Widget* getFocusableWidget(Widget *w) {
+	static Widget* getFocusableWidget(Widget *w) {
 		if(w->isFocusable()) {
 			return w;
 		}
@@ -116,7 +116,7 @@ namespace MAUI {
 		for(int i = 0; i < children.size(); i++) {
 			if(children[i]->isFocusable()) {
 				return children[i];
-			} 
+			}
 			else {
 				Widget* c = getFocusableWidget(children[i]);
 				if(c) {
@@ -159,29 +159,29 @@ namespace MAUI {
 			InputPolicy* ip = mFocusedWidget->getInputPolicy();
 			if(ip) {
 				ip->keyPressed(keyCode, nativeCode);
-			} 
+			}
 			else {
 				mFocusedWidget->keyPressed(keyCode, nativeCode);
 			}
 		}
 	}
-	
+
 	void Screen::keyReleaseEvent(int keyCode, int nativeCode) {
 		if(mFocusedWidget) {
 			InputPolicy* ip = mFocusedWidget->getInputPolicy();
 			if(ip) {
 				ip->keyReleased(keyCode, nativeCode);
-			} 
+			}
 			else {
 				mFocusedWidget->keyReleased(keyCode, nativeCode);
 			}
 		}
 	}
-	
+
 	void Screen::pointerPressEvent(MAPoint2d point) {
-		// If a key has been pressed previously focus has been gained, 
+		// If a key has been pressed previously focus has been gained,
 		// this should be removed now.
-		setFocusedWidget(NULL); 
+		setFocusedWidget(NULL);
 		Point p;
 		Widget* root = Engine::getSingleton().currentOverlay(p);
 		Widget* newFocus;
@@ -210,7 +210,7 @@ namespace MAUI {
 				if(!ip->pointerPressed(point, 0)) {
 					setFocusedWidget(NULL);
 				}
-			} 
+			}
 			else {
 				if(!newFocus->pointerPressed(point, 0)) {
 					setFocusedWidget(NULL);
@@ -219,14 +219,14 @@ namespace MAUI {
 		}
 
 	}
-	
+
 	void Screen::pointerReleaseEvent(MAPoint2d point) {
 		bool keepFocus = false;
 		if(mFocusedWidget) {
 			InputPolicy* ip = mFocusedWidget->getInputPolicy();
 			if(ip) {
 				keepFocus = ip->pointerReleased(point, 0);
-			} 
+			}
 			else {
 				mFocusedWidget->pointerPressed(point, 0);
 			}
@@ -235,7 +235,7 @@ namespace MAUI {
 		if(!keepFocus)
 			setFocusedWidget(NULL);
 	}
-	
+
 	void Screen::pointerMoveEvent(MAPoint2d point) {
 		if(mFocusedWidget) {
 			InputPolicy* ip = mFocusedWidget->getInputPolicy();

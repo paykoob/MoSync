@@ -51,14 +51,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define SCALE_TO_MAG(scale) (log(scale)/log(2.0))
 #define MAG_TO_SCALE(mag) (pow(2.0, mag))
 
-MAPoint2d calculateVector(const MAPoint2d& p1, const MAPoint2d& p2) {
+static MAPoint2d calculateVector(const MAPoint2d& p1, const MAPoint2d& p2) {
 	MAPoint2d vec;
 	vec.x = p2.x - p1.x;
 	vec.y = p2.y - p1.y;
 	return vec;
 }
 
-double calculateDistance(MAPoint2d touch1, MAPoint2d touch2) {
+static double calculateDistance(MAPoint2d touch1, MAPoint2d touch2) {
 	MAPoint2d vector = calculateVector(touch1, touch2);
 	double distance = sqrt((double)(vector.x*vector.x + vector.y*vector.y));
 	return distance;
@@ -535,7 +535,7 @@ namespace MAP
 	}
 
 	//-------------------------------------------------------------------------
-	int getAlphaForTile(MapTile* tile)
+	static int getAlphaForTile(MapTile* tile)
 	//-------------------------------------------------------------------------
 	{
 		int timeSinceCreated = tile->getMilliSecondsSinceCreated();

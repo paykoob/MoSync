@@ -31,6 +31,8 @@ MA 02110-1301, USA.
 
 #define CONNECTION_BUFFER_SIZE 2048
 
+class HttpQueryDownloader;
+
 char *url_encode(const char *str);
 
 class HttpQueryField {
@@ -114,8 +116,8 @@ private:
 	MAUtil::Vector<HttpQueryField> 				mFields;
 	MAUtil::Map<MAUtil::String, MAUtil::String> mHeaders;
 
-	typedef HeaderDownloader<MAUtil::Downloader> HeaderDownloader;
-	HeaderDownloader* 							mDownloader;
+	typedef HeaderDownloader<MAUtil::Downloader> MyHeaderDownloader;
+	MyHeaderDownloader* mDownloader;
 
 	MAUtil::HttpConnection* 					mHttpConnection;
 	char 										mHttpConnectionBuffer[CONNECTION_BUFFER_SIZE];

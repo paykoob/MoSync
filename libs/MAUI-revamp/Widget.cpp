@@ -100,7 +100,7 @@ namespace MAUI {
 	const Rect& Widget::getBounds() {
 		return mBounds;
 	}
-	
+
 	bool Widget::contains(const Point& p) {
 		return mBounds.contains(p);
 	}
@@ -112,19 +112,19 @@ namespace MAUI {
 	void Widget::draw(bool forceDraw) {
 		if(!mEnabled && !forceDraw)
 			return;
-	
+
 		//Engine &engine = Engine::getSingleton();
 
 		//bool res = engine.pushClipRectIntersect(mBounds.x, mBounds.y,
 		//	mBounds.width, mBounds.height);
-		
+
 		Gfx_pushMatrix();
 		Gfx_translate(mRelX, mRelY);
 		BOOL res = Gfx_intersectClipRect(0, 0, mBounds.width, mBounds.height);
 
-		if(res) 
+		if(res)
 		{
-			if(isDirty() || forceDraw) 
+			if(isDirty() || forceDraw)
 			{
 				drawBackground();
 			}
@@ -301,7 +301,7 @@ namespace MAUI {
 	void Widget::requestRepaint() {
 		//if(mDirty) return;
 
-		
+
 		setDirty();
 
 
@@ -386,12 +386,12 @@ namespace MAUI {
 		mPaddedBounds.width-=mPaddingLeft+mPaddingRight;
 		mPaddedBounds.height-=mPaddingTop+mPaddingBottom;
 		if(opbounds.x != mPaddedBounds.x || opbounds.y != mPaddedBounds.y || opbounds.width != mPaddedBounds.width || opbounds.height != mPaddedBounds.height)
-			requestUpdate();	
+			requestUpdate();
 	}
 
 	// fixme, precalc absolute for mParent
 	void Widget::updateAbsolutePosition() {
-		MAUtil::Rect pbounds = mBounds;	
+		MAUtil::Rect pbounds = mBounds;
 		Widget *p = this;
 		mBounds.x = mRelX;
 		mBounds.y = mRelY;
@@ -428,7 +428,7 @@ namespace MAUI {
 
 		requestRepaint();
 	}
-	
+
 	bool Widget::isFocused() const {
 		return mFocused;
 	}
@@ -440,7 +440,7 @@ namespace MAUI {
 
 		requestRepaint();
 	}
-	
+
 	bool Widget::isEnabled() const {
 		return mEnabled;
 	}
@@ -529,7 +529,7 @@ namespace MAUI {
 		mFocusable = on;
 	}
 
-	bool isToDirectionOf(Direction direction, Rect src, Rect dest) {
+	static bool isToDirectionOf(Direction direction, Rect src, Rect dest) {
 		switch (direction) {
 		case LEFT:
 			return src.x >= (dest.width+dest.x);

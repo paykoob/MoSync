@@ -30,7 +30,6 @@ MA 02110-1301, USA.
 #include "ErrorListener.h"
 
 class FacebookRequest;
-class MAUtil::YAJLDom::Value;
 
 /**
  * \brief Listener for the retrieving data from the server.

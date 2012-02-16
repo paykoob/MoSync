@@ -11,7 +11,7 @@ btowc (int c)
   mbstate_t mbs;
   int retval = 0;
   wchar_t pwc;
-  unsigned char b;
+  char b;
 
   if (c == EOF)
     return WEOF;

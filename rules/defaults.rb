@@ -90,7 +90,7 @@ def set_defaults
 	# Useful if you often switch between different versions of GCC.
 	default_const(:USE_GCC_VERSION_IN_BUILDDIR_NAME, false)
 	if(USE_GCC_VERSION_IN_BUILDDIR_NAME)
-		builddir_postfix = '_'+@gcc_version.strip
+		builddir_postfix = '_'+@gcc_version_info[:string]
 	else
 		builddir_postfix = ''
 	end

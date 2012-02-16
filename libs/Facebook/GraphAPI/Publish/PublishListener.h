@@ -28,9 +28,6 @@ MA 02110-1301, USA.
 #include <MAUtil/String.h>
 #include "../ErrorListener.h"
 
-class MAUtil::YAJLDom::Value;
-
-
 /**
  * \brief Listener for the FacebookPublisher2 class
  * If you register a PublishingListener to a FacebookPublisher2 object

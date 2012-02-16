@@ -497,11 +497,13 @@ void FacebookPublisher2::FacebookPublisher2::queryError(int code, const MAUtil::
 //	multipartFormData += String(crlf + "--" + mMultipartFormBoundary + "--" + crlf);
 //}
 
-void getMultipartFormData2(int *pixels, MAUtil::String &multipartFormData,
+#if 0
+static void getMultipartFormData2(int *pixels, MAUtil::String &multipartFormData,
 		const MAUtil::String &filename, const MAUtil::String &imageOrVideoType)
 {
 
 }
+#endif
 
 /*
  * Converts an array of ints into a string object.

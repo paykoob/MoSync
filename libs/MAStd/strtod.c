@@ -95,9 +95,9 @@
     defined(__x86_64__) || (defined(__arm__) && defined(__VFP_FP__))
 #include <sys/types.h>
 #if BYTE_ORDER == BIG_ENDIAN
-#define IEEE_BIG_ENDIAN
+#define IEEE_BIG_ENDIAN 1
 #else
-#define IEEE_LITTLE_ENDIAN
+#define IEEE_LITTLE_ENDIAN 1
 #endif
 #endif
 
@@ -107,7 +107,7 @@
  * byte and word endianness. The byte order is still little endian
  * but the word order is big endian.
  */
-#define IEEE_BIG_ENDIAN
+#define IEEE_BIG_ENDIAN 1
 #endif
 
 #ifdef __vax__
@@ -140,15 +140,17 @@ extern void *MALLOC(size_t);
 
 #include "mactype.h"
 //#include "errno.h"
-#define IEEE_LITTLE_ENDIAN
+#if !defined(__arm__)
+#define IEEE_LITTLE_ENDIAN 1
+#endif
 #define Bad_float_h
 
 #ifdef Bad_float_h
 #ifdef IEEE_BIG_ENDIAN
-#define IEEE_ARITHMETIC
+#define IEEE_ARITHMETIC 1
 #endif
 #ifdef IEEE_LITTLE_ENDIAN
-#define IEEE_ARITHMETIC
+#define IEEE_ARITHMETIC 1
 #endif
 
 #ifdef IEEE_ARITHMETIC
@@ -208,6 +210,18 @@ extern "C" {
 
 #if defined(IEEE_LITTLE_ENDIAN) + defined(IEEE_BIG_ENDIAN) + defined(VAX) + \
     defined(IBM) != 1
+#if defined(IEEE_LITTLE_ENDIAN)
+	#error IEEE_LITTLE_ENDIAN
+#endif
+#if defined(IEEE_BIG_ENDIAN)
+	#error IEEE_BIG_ENDIAN
+#endif
+#if defined(VAX)
+	#error VAX
+#endif
+#if defined(IBM)
+	#error IBM
+#endif
 Exactly one of IEEE_LITTLE_ENDIAN IEEE_BIG_ENDIAN, VAX, or
 IBM should be defined.
 #endif
@@ -995,7 +1009,7 @@ d2b(double _d, int *e, int *bits)
 		i = b->wds = 1;
 		k += 32;
 		}
-#else
+#else	//Pack_32
 	if (y = d1) {
 		if (k = lo0bits(&y))
 			if (k >= 16) {
@@ -1039,7 +1053,7 @@ d2b(double _d, int *e, int *bits)
 	while(!x[i])
 		--i;
 	b->wds = i + 1;
-#endif
+#endif	//Pack_32
 #ifndef Sudden_Underflow
 	if (de) {
 #endif
@@ -1060,7 +1074,7 @@ d2b(double _d, int *e, int *bits)
 		*bits = (i+2)*16 - hi0bits(x[i]);
 #endif
 		}
-#endif
+#endif	//Sudden_Underflow
 	return b;
 	}
 #undef d0

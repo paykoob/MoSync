@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 
-#ifndef _REENT_ONLY
+#if !defined(_REENT_ONLY) && !defined(NO_REENT_MALLOC)
 
 size_t
 _DEFUN (malloc_usable_size, (ptr),

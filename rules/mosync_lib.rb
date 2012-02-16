@@ -20,6 +20,7 @@
 # which has the setup_native and setup_pipe methods defined.
 
 require "#{File.dirname(__FILE__)}/dll.rb"
+require "#{File.dirname(__FILE__)}/native_lib.rb"
 require "#{File.dirname(__FILE__)}/pipe.rb"
 
 module MoSyncMod
@@ -70,6 +71,32 @@ class MoSyncDllWork < DllWork
 	end
 end
 
+class MoSyncArmLibWork < NativeLibWork
+	include MoSyncMod
+	def gcc; ARM_DRIVER_NAME; end
+	def host_flags
+		flags = super
+		flags << ' -DUSE_NEWLIB' if(USE_NEWLIB)
+		return flags
+	end
+	def set_defaults
+		default(:BUILDDIR_PREFIX, "")
+		default(:COMMOM_BUILDDDIR_PREFIX, "")
+		if(USE_NEWLIB)
+			@BUILDDIR_PREFIX << "newlib_"
+			@COMMOM_BUILDDDIR_PREFIX << "newlib_"
+		end
+		super
+	end
+	def setup
+		set_defaults
+		setup_pipe
+		modSetup
+		copyHeaders
+		super
+	end
+end
+
 class PipeLibWork < PipeGccWork
 	include MoSyncMod
 	def setup
@@ -112,6 +139,9 @@ def MoSyncLib.invoke(mod)
 	end
 	target :native do
 		MoSyncLib.inin(MoSyncDllWork.new, mod)
+	end
+	target :arm do
+		MoSyncLib.inin(MoSyncArmLibWork.new, mod)
 	end
 	target :default => [:pipe]
 	target :clean do

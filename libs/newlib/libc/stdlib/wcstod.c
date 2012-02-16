@@ -71,7 +71,7 @@ DESCRIPTION
 	round-even rule.  However, <<wcstof>> is currently subject to
 	double rounding errors.
 
-	The alternate functions <<_wcstod_r>> and <<_wcstof_r>> are 
+	The alternate functions <<_wcstod_r>> and <<_wcstof_r>> are
 	reentrant versions of <<wcstod>> and <<wcstof>>, respectively.
 	The extra argument <[reent]> is a pointer to a reentrancy structure.
 
@@ -203,7 +203,7 @@ _DEFUN (_wcstof_r, (ptr, nptr, endptr),
 {
   double retval = _wcstod_r (ptr, nptr, endptr);
   if (isnan (retval))
-    return nanf (NULL);
+    return nanf ("");
   return (float)retval;
 }
 
@@ -223,7 +223,7 @@ _DEFUN (wcstof, (nptr, endptr),
 {
   double retval = _wcstod_r (_REENT, nptr, endptr);
   if (isnan (retval))
-    return nanf (NULL);
+    return nanf ("");
   return (float)retval;
 }
 

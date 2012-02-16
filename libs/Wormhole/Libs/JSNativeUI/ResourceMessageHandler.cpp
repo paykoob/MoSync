@@ -128,14 +128,14 @@ namespace Wormhole
 
 		MAHandle fileData = maCreatePlaceholder();
 
-		int res = maCreateData(fileData, fileSize);
+		maCreateData(fileData, fileSize);
 
-		res = maFileReadToData(imageFile, fileData, 0, fileSize);
+		maFileReadToData(imageFile, fileData, 0, fileSize);
 		maFileClose(imageFile);
 
 		MAHandle imageHandle = maCreatePlaceholder();
 
-		res = maCreateImageFromData(
+		maCreateImageFromData(
 				imageHandle,
 				fileData,
 				0,

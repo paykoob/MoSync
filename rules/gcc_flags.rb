@@ -63,6 +63,7 @@ c_flags = " -std=gnu99"
 version_warnings = ""
 base_flags = ""
 cpp_flags = ""
+end_flags = ''
 
 if(PROFILING)
 	base_flags += " -pg"
@@ -71,6 +72,11 @@ end
 if(@GCC_IS_CLANG)
 	base_flags << ' -ccc-host-triple mapip-unknown-unknown -ccc-clang-archs mapip -DMAPIP -v'
 	version_warnings << ' -Wno-error'
+end
+
+if(@GCC_IS_ARM)
+	base_flags << ' -DMAPIP -fshort-wchar'
+	end_flags << ' -Wno-vla'
 end
 
 if(@GCC_IS_V4) then
@@ -119,9 +125,9 @@ end
 flags_base = config_flags + base_flags + include_flags + standard_warnings + lesser_warnings +
 	pedantic_warnings + version_warnings
 
-cflags_base = c_flags + flags_base + lesser_conly + pendantic_c_warnings
+cflags_base = c_flags + flags_base + lesser_conly + pendantic_c_warnings + end_flags
 
-cppflags_base = cpp_flags + " -fno-rtti" + flags_base
+cppflags_base = cpp_flags + " -fno-rtti" + flags_base + end_flags
 # -Wno-deprecated
 
 @CFLAGS = cflags_base + @EXTRA_CFLAGS

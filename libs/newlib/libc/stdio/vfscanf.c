@@ -1590,7 +1590,7 @@ _DEFUN(__SVFSCANF_R, (rptr, fp, fmt0, ap),
 		{
 		  flp = GET_ARG (N, ap, float *);
 		  if (isnan (res))
-		    *flp = nanf (NULL);
+		    *flp = nanf ("");
 		  else
 		    *flp = res;
 		}

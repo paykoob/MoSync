@@ -2,8 +2,8 @@
 
 require File.expand_path('../../rules/mosync_lib.rb')
 
-work = PipeLibWork.new
-work.instance_eval do
+mod = Module.new
+mod.class_eval do
 	def copyFilesSubDir(name)
 		@INSTALL_INCDIR = 'Facebook/' + name
 		@HEADER_DIRS = [ name ]
@@ -31,4 +31,4 @@ work.instance_eval do
 	end
 end
 
-work.invoke
+MoSyncLib.invoke(mod)

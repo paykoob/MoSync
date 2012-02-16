@@ -20,19 +20,29 @@ require "#{File.dirname(__FILE__)}/gcc_flags.rb"
 require "#{File.dirname(__FILE__)}/loader_md.rb"
 require "#{File.dirname(__FILE__)}/flags.rb"
 
-def get_gcc_version_string(gcc)
+def get_gcc_version_info(gcc)
 	puts "get_gcc_version_string(#{gcc})"
+	info = {}
 	file = open("|#{gcc} -v 2>&1")
 	file.each do |line|
 		parts = line.split(/ /)
 		#puts "yo: #{parts.inspect}"
+		if(parts[0] == 'Target:' && parts[1].strip == 'arm-elf')
+			info[:arm] = true
+		end
 		if(parts[0] == "gcc" && parts[1] == "version")
-			return parts[2].strip
+			info[:ver] = parts[2].strip
 		elsif(parts[0] == 'clang' && parts[1] == 'version')
-			return "clang#{parts[2].strip}"
+			info[:clang] = true
+			info[:ver] = parts[2].strip
 		end
 	end
-	error("Could not find gcc version.")
+	error("Could not find gcc version.") if(!info[:ver])
+	info[:string] = ''
+	info[:string] << 'arm-' if(info[:arm])
+	info[:string] << 'clang-' if(info[:clang])
+	info[:string] << info[:ver]
+	return info
 end
 
 #warning("GCC version: #{GCC_VERSION}")
@@ -98,32 +108,41 @@ end
 module GccVersion
 	def set_defaults
 		if(!gccVersionClass.class_variable_defined?(:@@GCC_IS_V4))
-			gcc_version = get_gcc_version_string(gcc)
-			@@gcc_version = gcc_version
-			is_v4 = gcc_version[0] == "4"[0]
+			gcc_version_info = get_gcc_version_info(gcc)
+			@@gcc_version_info = gcc_version_info
+			is_v4 = gcc_version_info[:ver][0] == "4"[0]
 			set_class_var(gccVersionClass, :@@GCC_IS_V4, is_v4)
 			if(is_v4)
-				set_class_var(gccVersionClass, :@@GCC_V4_SUB, gcc_version[2, 1].to_i)
+				set_class_var(gccVersionClass, :@@GCC_V4_SUB, gcc_version_info[:ver][2, 1].to_i)
 			end
-			warning("GCC version: #{gcc_version.inspect}")
+			warning("GCC version: #{gcc_version_info.inspect}")
 			warning("GCC_IS_V4: #{is_v4}")
 			if(is_v4)
-				warning("GCC sub-version: #{gcc_version[2, 1].to_i}")
+				warning("GCC sub-version: #{gcc_version_info[:ver][2, 1].to_i}")
 			end
 
 			# Assuming for the moment that clang is command-line-compatible with gcc 4.2.
-			isClang = gcc_version.start_with?('clang')
+			isClang = gcc_version_info[:clang]
 			if(isClang)
 				set_class_var(gccVersionClass, :@@GCC_IS_V4, true)
 				set_class_var(gccVersionClass, :@@GCC_V4_SUB, 2)
 			end
 			set_class_var(gccVersionClass, :@@GCC_IS_CLANG, isClang)
+			set_class_var(gccVersionClass, :@@GCC_IS_ARM, gcc_version_info[:arm])
 		end
-		@gcc_version = @@gcc_version
+		@gcc_version_info = @@gcc_version_info
 		@GCC_IS_CLANG = get_class_var(gccVersionClass, :@@GCC_IS_CLANG)
+		@GCC_IS_ARM = get_class_var(gccVersionClass, :@@GCC_IS_ARM)
 		@GCC_IS_V4 = get_class_var(gccVersionClass, :@@GCC_IS_V4)
 		if(@GCC_IS_V4)
 			@GCC_V4_SUB = get_class_var(gccVersionClass, :@@GCC_V4_SUB)
+		end
+
+		@GCC_WNO_UNUSED_BUT_SET_VARIABLE = ''
+		@GCC_WNO_POINTER_SIGN = ''
+		if(@GCC_IS_V4 && @GCC_V4_SUB >= 6)
+			@GCC_WNO_UNUSED_BUT_SET_VARIABLE = ' -Wno-unused-but-set-variable'
+			@GCC_WNO_POINTER_SIGN = ' -Wno-pointer-sign'
 		end
 		super
 	end

@@ -158,7 +158,8 @@ static struct LOW_FD* getLowFd(int __fd) {
 	return sFda[__fd];
 }
 
-#define LOWFD int lfd; DECLARE_PLOWFD(plfd, __fd); lfd = plfd->lowFd;
+#define DLOWFD DECLARE_PLOWFD(plfd, __fd)
+#define LOWFD int lfd; DLOWFD; lfd = plfd->lowFd;
 
 #define DECLARE_PLOWFD(pldf, fd) struct LOW_FD* plfd; \
 	/*LOGD("LOWFD(%i) in %s", fd, __FUNCTION__);*/ \
@@ -186,7 +187,7 @@ static int findFreeFd(void) {
 static int getRealPath(int __fd, char *buf, const char* path, int size) {
 	if(__fd != AT_FDCWD) {
 		// temporarily change cwd.
-		LOWFD;
+		DLOWFD;
 		FAILIF(!(plfd->flags & O_DIRECTORY), ENOTDIR);
 		sCwd = plfd->name;
 	} else {
@@ -227,7 +228,7 @@ static MAHandle errnoFileOpen(const char* path, int ma_mode) {
 
 int dup(int __fd) {
 	int newFd;
-	LOWFD;
+	DLOWFD;
 	newFd = findFreeFd();
 	CHECK(newFd, EMFILE);
 	sFda[newFd] = plfd;
@@ -237,7 +238,7 @@ int dup(int __fd) {
 
 int dup2(int __fd, int newFd) {
 	struct LOW_FD* newLfd;
-	LOWFD;
+	DLOWFD;
 	LOGD("dup2(%i, %i)", __fd, newFd);
 	if(__fd == newFd)
 		return newFd;
@@ -448,7 +449,7 @@ static int closeLfd(struct LOW_FD* plfd) {
 
 int close(int __fd) {
 	int res;
-	LOWFD;
+	DLOWFD;
 	LOGD("close(%i)", __fd);
 	res = closeLfd(plfd);
 	sFda[__fd] = NULL;
@@ -745,7 +746,7 @@ int chdir(const char *filename) {
 }
 
 int fchdir(int __fd) {
-	LOWFD;
+	DLOWFD;
 	LOGD("fchdir(%i) (%s)\n", __fd, plfd->name);
 	FAILIF(!(plfd->flags & O_DIRECTORY), ENOTDIR);
 	FAILIF(strncmp(sCwdRoot, plfd->name, sCwdRootLen) != 0, EACCES);
@@ -824,7 +825,7 @@ int nice(int incr) {
 
 int getdents(int __fd, dirent* dp, int count) {
 	//int res;
-	LOWFD;
+	DLOWFD;
 	MAASSERT(count >= sizeof(dirent));
 	LOGD("getdents(%i)\n", __fd);
 

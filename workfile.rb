@@ -44,7 +44,7 @@ MORE_DIRS = ["intlibs/helpers/platforms/#{INTLIB_PLATFORM}",
 
 BASE_DIRS = MORE_DIRS + PLATFORM_TOOLS
 
-PIPE_DIRS = ["tools/protobuild", "tools/pipe-tool", "tools/DefaultSkinGenerator", "libs"]
+PIPE_DIRS = ["tools/protobuild", "tools/pipe-tool", "tools/DefaultSkinGenerator"]
 EXAM_DIRS = ["tests/unitTest", "examples"]
 TOOL_DIRS = ["tools/debugger", "tools/FontGenerator", "tools/PanicDoc", "tools/Bundle",
 	"tests/unitTestServer", "tools/iphone-builder", "tools/icon-injector", "tools/e32hack",
@@ -58,7 +58,7 @@ TOOL_DIRS = ["tools/debugger", "tools/FontGenerator", "tools/PanicDoc", "tools/B
 MAIN_DIRS = BASE_DIRS + TOOL_DIRS + PIPE_DIRS
 ALL_DIRS = MAIN_DIRS + EXAM_DIRS
 
-NEWLIB_DIRS = ["libs"]
+LIB_DIRS = ['libs']
 
 class CopyDirWork < Work
 	def initialize(name)
@@ -116,6 +116,7 @@ end
 
 target :libs => :base do
 	Work.invoke_subdirs(PIPE_DIRS)
+	Work.invoke_subdirs_ex(true, LIB_DIRS)
 end
 
 target :examples => :libs do
@@ -128,10 +129,6 @@ end
 
 target :more => :base do
 	Work.invoke_subdirs(MORE_DIRS)
-end
-
-target :newlib => :base do
-	Work.invoke_subdirs(NEWLIB_DIRS)
 end
 
 target :version do
@@ -180,6 +177,15 @@ end
 
 target :all_libs do
 	all_configs('libs')
+end
+
+target :all_libs_arm do
+	all_configs('libs USE_ARM=')
+end
+
+target :all_libs_both do
+	all_configs('libs')
+	all_configs('libs USE_ARM=')
 end
 
 target :all_ex do

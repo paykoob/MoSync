@@ -132,6 +132,7 @@ class PipeGccWork < GccWork
 	def pipeTaskClass; PipeTask; end
 
 	def setup3(all_objects, have_cppfiles)
+		raise hell if(@gcc_version_info[:arm])
 		#puts all_objects
 		llo = @LOCAL_LIBS.collect { |ll| FileTask.new(self, @COMMON_BUILDDIR + ll + ".lib") }
 		need(:@NAME)
