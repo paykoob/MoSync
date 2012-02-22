@@ -41,6 +41,7 @@ static void outputRuntimeBuilderFiles(const Interface& maapi);
 static void outputCpp(const Interface& maapi);
 static void outputAsmConfigLst(const Interface& maapi);
 static void outputAsmConfigH(const Interface& maapi);
+static void outputSyscallArmAsm(const Interface& maapi);
 static void outputDllDefine(const Interface& maapi);
 static void outputInvokeSyscallCpp(const Interface& maapi);
 static void outputInvokeSyscallArmRecompiler(const Interface& maapi);
@@ -155,8 +156,10 @@ int main() {
 		_mkdir("../../runtimes/java/Shared/generated");
 
 		copy("Output/maapi.h", "../../libs/MAStd/");
+		copy("Output/syscalls.S", "../../libs/MAStd/");
 		copy("maapi_defs.h", "../../libs/MAStd/");
 		copy("Output/maapi.h", "../../libs/newlib/libc/sys/mosync/");
+		copy("Output/syscalls.S", "../../libs/newlib/libc/sys/mosync/");
 		copy("maapi_defs.h", "../../libs/newlib/libc/sys/mosync/");
 
 		// Create directory for binary files
@@ -709,6 +712,7 @@ static void outputMaapiCSharp(const vector<string>& ixs, const Interface& maapi)
  * Generate files used when building the runtimes.
  */
 static void outputRuntimeBuilderFiles(const Interface& maapi) {
+	outputSyscallArmAsm(maapi);
 	outputCpp(maapi);
 	outputAsmConfigLst(maapi);
 	outputAsmConfigH(maapi);
@@ -757,6 +761,26 @@ static void outputCpp(const Interface& maapi) {
 		"#endif\n\n";
 
 	stream << "#endif\t//CPP_MAAPI_H\n";
+}
+
+static void outputSyscallArmAsm(const Interface& maapi) {
+	ofstream stream("Output/syscalls.S");
+
+	stream <<
+		".text\n"
+		".syntax unified\n"
+		".code 32\n"
+		".align 0\n"
+	;
+
+	for(size_t i=0; i<maapi.functions.size(); i++) {
+		const Function& f(maapi.functions[i]);
+		stream <<
+			".global "<<f.name<<"\n"
+			<<f.name<<":\n"
+			"\tswi "<<f.number<<"\n"
+		;
+	}
 }
 
 static void outputAsmConfigLst(const Interface& maapi) {

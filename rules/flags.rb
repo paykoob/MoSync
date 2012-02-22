@@ -48,7 +48,7 @@ module FlagsChanged
 		if(@OLDFLAGS != cFlags)
 			puts "Because the flags have changed:" if(log)
 			puts "Old: #{@OLDFLAGS}" if(log && PRINT_FLAG_CHANGES)
-			puts "New: #{@FLAGS}" if(log && PRINT_FLAG_CHANGES)
+			puts "New: #{cFlags}" if(log && PRINT_FLAG_CHANGES)
 			return true
 		end
 		return false

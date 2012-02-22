@@ -240,6 +240,28 @@ void streamHeaderFile(ostream& stream, const Interface& inf, const vector<string
 	stream << "#endif	//" + headerName + "_H\n";
 }
 
+static void streamHeaderFunctionArgs(ostream& stream, const Interface& inf, const Function& f) {
+	stream << " " << f.name << "(";
+	if(f.args.size() == 0) {
+		stream << "void";
+	}
+	for(size_t j=0; j<f.args.size(); j++) {
+		const Argument& a(f.args[j]);
+		if(j != 0)
+			stream << ", ";
+		if(a.in && isPointerType(inf, a.type)) {
+			stream << "const ";
+		}
+		stream << cType(inf, a.type);
+		if(!isPointerType(inf, a.type) && !a.in)
+			stream << "*";
+		stream << " " << a.name;
+	}
+
+	if(f.isIOCtl)
+		stream << " MA_IOCTL_ELLIPSIS";
+}
+
 /**
  * Streams C function declarations.
  */
@@ -250,6 +272,11 @@ void streamHeaderFunctions(ostream& stream, const Interface& inf, bool syscall) 
 		if(f.groupId != "")
 			stream << "/** @ingroup " << f.groupId << " */\n";
 
+		if(false)//!syscall && f.returnType != "noreturn")
+			stream <<
+				"#ifdef __arm__\n"
+				"inline\n"
+				"#endif\n";
 		if(syscall)
 			stream << "SYSCALL(";
 		stream << cType(inf, f.returnType);
@@ -257,31 +284,36 @@ void streamHeaderFunctions(ostream& stream, const Interface& inf, bool syscall) 
 			stream << ", ";
 		if(f.returnType == "noreturn")
 			stream << " ATTRIBUTE(noreturn,";
-		stream << " " << f.name << "(";
-		if(f.args.size() == 0) {
-			stream << "void";
-		}
-		for(size_t j=0; j<f.args.size(); j++) {
-			const Argument& a(f.args[j]);
-			if(j != 0)
-				stream << ", ";
-			if(a.in && isPointerType(inf, a.type)) {
-				stream << "const ";
-			}
-			stream << cType(inf, a.type);
-			if(!isPointerType(inf, a.type) && !a.in)
-				stream << "*";
-			stream << " " << a.name;
-		}
 
-		if(f.isIOCtl)
-			stream << " MA_IOCTL_ELLIPSIS";
+		streamHeaderFunctionArgs(stream, inf, f);
 
 		if(f.returnType == "noreturn")
 			stream << ")";
 		if(syscall)
 			stream << ")";
-		stream << ");\n\n";
+		stream << ")\n"
+			"#ifdef __arm__\n"
+			"__attribute((naked))\n"
+			"#endif\n"
+			";\n"
+		;
+		if(false){//f.returnType != "noreturn") {
+			stream <<
+				"#ifdef __arm__\n"
+				"#pragma GCC diagnostic push\n"
+				"#pragma GCC diagnostic ignored \"-Wreturn-type\"\n"
+			;
+			stream << cType(inf, f.returnType);
+			streamHeaderFunctionArgs(stream, inf, f);
+			stream << ") {\n"
+				"\tasm volatile(\"swi "<<f.number<<"\");\n"
+				"}\n"
+			;
+			if(f.returnType != "noreturn")
+				stream <<"#pragma GCC diagnostic pop\n";
+			stream << "#endif\n";
+		}
+		stream << "\n";
 	}
 	stream << "\n";
 }

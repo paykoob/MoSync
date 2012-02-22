@@ -20,6 +20,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "mavsprintf.h"
 #include "mastack.h"
 
+#if defined(MOSYNCDEBUG) && !defined(__arm__)
+#define HAVE_STACK_DUMP 1
+#else
+#define HAVE_STACK_DUMP 0
+#endif
+
 malloc_handler gMallocHandler = default_malloc_handler;
 malloc_hook gMallocHook = NULL;
 free_hook gFreeHook = NULL;
@@ -34,12 +40,13 @@ static int sHeapLength;
 int gUsedMem = 0;
 int gWastedMem = 0;
 int gNumMallocs = 0, gNumFrees = 0;
-
+#endif
+#if HAVE_STACK_DUMP
 static MAHandle sDumpFile = 0;
 static void dumpStack(int req, int block, void* address);
-#endif
+#endif	//HAVE_STACK_DUMP
 
-#ifdef MOSYNCDEBUG
+#if HAVE_STACK_DUMP
 void initStackDump(void) {
 	// Mosync Heap Stack Dump.
 	sDumpFile = maFileOpen("/mhsd.bin", MA_ACCESS_READ_WRITE);
@@ -107,7 +114,9 @@ void default_malloc_handler(int size) {
 	lprintfln("um %i", gUsedMem);
 	lprintfln("wm %i", gWastedMem);
 	lprintfln("nm %i, nf %i", gNumMallocs, gNumFrees);
+#if HAVE_STACK_DUMP
 	dumpStack(size, 0, 0);
+#endif
 #endif
 	maPanic(size, "Malloc failed. You most likely ran out of heap memory. Try to increase the heap size.");
 }
@@ -223,8 +232,10 @@ void * malloc(int size)
 		gNumMallocs++;
 		gUsedMem += gBlockSizeHook(result);
 		gWastedMem += gBlockSizeHook(result) - size;
+#if HAVE_STACK_DUMP
 		dumpStack(size, gBlockSizeHook(result), result);
-	}
+#endif
+		}
 #endif
 
 #ifdef MEMORY_PROTECTION
@@ -279,7 +290,9 @@ void free(void *mem)
 #ifdef MOSYNCDEBUG
 	gNumFrees++;
 	gUsedMem -= gBlockSizeHook(mem);
+#if HAVE_STACK_DUMP
 	dumpStack(-1, gBlockSizeHook(mem), mem);
+#endif
 #endif
 
 	gFreeHook(mem);
@@ -302,7 +315,9 @@ void* realloc(void* old, int size) {
 	if (old != NULL) {
 		gNumFrees++;
 		gUsedMem -= gBlockSizeHook(old);
+#if HAVE_STACK_DUMP
 		dumpStack(-1, gBlockSizeHook(old), old);
+#endif
 	}
 #endif
 
@@ -320,7 +335,9 @@ void* realloc(void* old, int size) {
 		gNumMallocs++;
 		gUsedMem += gBlockSizeHook(result);
 		gWastedMem += gBlockSizeHook(result) - size;
+#if HAVE_STACK_DUMP
 		dumpStack(size, gBlockSizeHook(result), result);
+#endif
 	}
 #endif
 

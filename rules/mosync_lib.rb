@@ -22,6 +22,7 @@
 require "#{File.dirname(__FILE__)}/dll.rb"
 require "#{File.dirname(__FILE__)}/native_lib.rb"
 require "#{File.dirname(__FILE__)}/pipe.rb"
+require "#{File.dirname(__FILE__)}/arm.rb"
 
 module MoSyncMod
 	include MoSyncInclude
@@ -73,26 +74,14 @@ end
 
 class MoSyncArmLibWork < NativeLibWork
 	include MoSyncMod
-	def gcc; ARM_DRIVER_NAME; end
-	def host_flags
-		flags = super
-		flags << ' -DUSE_NEWLIB' if(USE_NEWLIB)
-		return flags
-	end
-	def set_defaults
-		default(:BUILDDIR_PREFIX, "")
-		default(:COMMOM_BUILDDDIR_PREFIX, "")
-		if(USE_NEWLIB)
-			@BUILDDIR_PREFIX << "newlib_"
-			@COMMOM_BUILDDDIR_PREFIX << "newlib_"
-		end
-		super
-	end
+	include MoSyncArmGccMod
 	def setup
 		set_defaults
+		@COMMON_BUILDDIR = mosync_libdir + "/" + @COMMON_BUILDDIR_NAME + "/"
 		setup_pipe
 		modSetup
 		copyHeaders
+		@NAME = "lib#{@NAME}"
 		super
 	end
 end

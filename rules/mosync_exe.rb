@@ -20,6 +20,8 @@ require "#{File.dirname(__FILE__)}/pipe.rb"
 require "#{File.dirname(__FILE__)}/mosync_util.rb"
 require "#{File.dirname(__FILE__)}/mosync_resources.rb"
 require "#{File.dirname(__FILE__)}/targets.rb"
+require "#{File.dirname(__FILE__)}/exe.rb"
+require "#{File.dirname(__FILE__)}/arm.rb"
 
 module PipeElimTask
 	def execute
@@ -122,7 +124,26 @@ class MxConfigTask < MultiFileTask
 	end
 end
 
-class PipeExeWork < PipeGccWork
+module MoSyncMemorySettings
+	# Returns pipe-tool flags for memory settings,
+	# with a datasize of 2^pow2kb KiB.
+	# For example, for 2 MiB, call standardMemorySettings(11).
+	# A power-of-2 argument may seem strange, but because the runtimes
+	# force datasize to the closest upper power-of-2 anyway,
+	# it should minimize accidental memory waste.
+	def standardMemorySettings(pow2kb)
+		raise "Insufficient memory. Need at least 64 KiB." if(pow2kb < 6)
+		d = (1 << (pow2kb + 10))
+		h = d - (d >> 2)
+		#newlibStaticDataSize = 128*1024
+		#h -= newlibStaticDataSize if(USE_NEWLIB)
+		s = (d >> 4)
+		return " -datasize=#{d} -heapsize=#{h} -stacksize=#{s}"
+	end
+end
+
+module MoSyncExeModule
+	include MoSyncMemorySettings
 	def set_defaults
 		default(:TARGETDIR, '.')
 		super
@@ -175,7 +196,7 @@ class PipeExeWork < PipeGccWork
 
 		# libs
 		libs = (@DEFAULT_LIBS + @LIBRARIES).collect do |lib|
-			FileTask.new(self, "#{mosync_libdir}/#{@COMMON_BUILDDIR_NAME}/#{lib}.lib")
+			FileTask.new(self, "#{mosync_libdir}/#{@COMMON_BUILDDIR_NAME}/#{lib}#{libFileEnding}")
 		end
 		all_objects += libs
 
@@ -225,22 +246,6 @@ class PipeExeWork < PipeGccWork
 		end
 	end
 
-	# Returns pipe-tool flags for memory settings,
-	# with a datasize of 2^pow2kb KiB.
-	# For example, for 2 MiB, call standardMemorySettings(11).
-	# A power-of-2 argument may seem strange, but because the runtimes
-	# force datasize to the closest upper power-of-2 anyway,
-	# it should minimize accidental memory waste.
-	def standardMemorySettings(pow2kb)
-		raise "Insufficient memory. Need at least 64 KiB." if(pow2kb < 6)
-		d = (1 << (pow2kb + 10))
-		h = d - (d >> 2)
-		#newlibStaticDataSize = 128*1024
-		#h -= newlibStaticDataSize if(USE_NEWLIB)
-		s = (d >> 4)
-		return " -datasize=#{d} -heapsize=#{h} -stacksize=#{s}"
-	end
-
 	def emuCommandLine
 		if(@resourceTask)
 			resArg = " -resource \"#{@resourceTask}\""
@@ -273,5 +278,40 @@ class PipeExeWork < PipeGccWork
 				return
 			end
 		end
+	end
+end
+
+class OriginalPipeExeWork < PipeGccWork
+	include MoSyncExeModule
+	def libFileEnding; '.lib'; end
+end
+
+class MoSyncArmExeWork < ExeWork
+	include MoSyncExeModule
+	include MoSyncInclude
+	include MoSyncArmGccMod
+	def libFileEnding; NATIVE_LIB_FILE_ENDING; end
+	def linkerName(have_cppfiles); ARM_DRIVER_NAME; end
+	def setup3(a, b)
+		@EXTRA_LINKFLAGS << " -nodefaultlibs -v -B#{ARM_BASEDIR}/arm-elf/sys-include/gcc -lgcc"
+		@EXTRA_LINKFLAGS << " -L#{mosync_libdir}/#{@COMMON_BUILDDIR_NAME}"
+		super(a, b)
+	end
+end
+
+class PipeExeWork
+	include MoSyncMemorySettings
+	def invoke
+		Targets.setup
+		if(USE_ARM)
+			w = MoSyncArmExeWork.new
+		else
+			w = OriginalPipeExeWork.new
+		end
+		self.instance_variables.each do |iv|
+			next if(USE_ARM && iv == "@EXTRA_LINKFLAGS")
+			w.instance_variable_set(iv, self.instance_variable_get(iv))
+		end
+		w.invoke
 	end
 end

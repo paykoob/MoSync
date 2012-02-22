@@ -188,6 +188,10 @@ target :all_libs_both do
 	all_configs('libs USE_ARM=')
 end
 
+target :arm_ex do
+	all_configs('examples USE_ARM=')
+end
+
 target :all_ex do
 	all_configs('examples')
 end

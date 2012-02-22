@@ -31,7 +31,6 @@ mod.class_eval do
 		@SOURCES = ['.', '../libsupc++']
 		if(@GCC_IS_ARM)
 			@IGNORED_FILES << 'matask.c'
-			@IGNORED_FILES << 'macpp.cpp'
 		else
 			@SOURCES << 'libgcc'
 		end

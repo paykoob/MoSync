@@ -476,7 +476,7 @@ char *strtok(char *string, const char *control)
 }
 
 
-#ifdef MAPIP
+#if 0//def MAPIP
 
 void *memset(void *p, int c, size_t n)
 {
@@ -540,6 +540,7 @@ size_t strlen(const char *s)
 	return (int) (eos - s - 1);
 }
 
+#if 0
 int strcmp(const char *s1, const char *s2)
 {
 	int ret = 0;
@@ -552,6 +553,7 @@ int strcmp(const char *s1, const char *s2)
 
 	return ret;
 }
+#endif
 
 char *strcat(char *dst, const char *src)
 {

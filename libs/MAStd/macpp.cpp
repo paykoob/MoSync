@@ -17,6 +17,18 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "maapi.h"
 
+extern "C" void GCCATTRIB(noreturn) __cxa_pure_virtual();
 extern "C" void GCCATTRIB(noreturn) __cxa_pure_virtual() {
 	maExit(-42);
 }
+
+#ifdef __arm__
+extern "C" int MAMain();
+int main() {
+	return MAMain();
+}
+
+void exit(int i) {
+	maExit(i);
+}
+#endif

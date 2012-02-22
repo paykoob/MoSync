@@ -54,6 +54,7 @@ end
 class NativeGccLinkWork < NativeGccWork
 	private
 
+	def linkerName(have_cppfiles); have_cppfiles ? 'g++' : 'gcc'; end
 	def setup3(all_objects, have_cppfiles)
 		if(HOST == :darwin)
 			@EXTRA_LINKFLAGS += " -m32 -L/sw/lib -L/opt/local/lib -framework Cocoa -framework IOBluetooth -framework Foundation"
@@ -64,14 +65,14 @@ class NativeGccLinkWork < NativeGccWork
 		llo = @LOCAL_LIBS.collect { |ll| FileTask.new(self, @COMMON_BUILDDIR + ll + ".a") }
 		lld = @LOCAL_DLLS.collect { |ld| FileTask.new(self, @COMMON_BUILDDIR + ld + DLL_FILE_ENDING) }
 		wlo = @WHOLE_LIBS.collect { |ll| FileTask.new(self, @COMMON_BUILDDIR + ll + ".a") }
+		@LIBRARIES += @DEFAULT_LIBS if(@DEFAULT_LIBS)
 		@LIBRARIES.each { |l| @EXTRA_LINKFLAGS += " -l" + l }
 		need(:@NAME)
 		need(:@BUILDDIR)
 		need(:@TARGETDIR)
 		target = @TARGETDIR + "/" + @BUILDDIR + @NAME + link_file_ending
 		#puts "@EXTRA_LINKFLAGS: "+@EXTRA_LINKFLAGS
-		linker = have_cppfiles ? 'g++' : 'gcc'
-		@TARGET = link_task_class.new(self, target, all_objects, wlo, llo + lld, @EXTRA_LINKFLAGS, linker)
+		@TARGET = link_task_class.new(self, target, all_objects, wlo, llo + lld, @EXTRA_LINKFLAGS, linkerName(have_cppfiles))
 		@prerequisites += [@TARGET]
 	end
 end

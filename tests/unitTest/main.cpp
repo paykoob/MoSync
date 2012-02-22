@@ -142,7 +142,7 @@ public:
 	}
 
 	void keyPressEvent(int keyCode) {
-		if(complete && keyCode == MAK_0 || keyCode == MAK_BACK)
+		if((complete && keyCode == MAK_0) || keyCode == MAK_BACK)
 			close();
 	}
 
