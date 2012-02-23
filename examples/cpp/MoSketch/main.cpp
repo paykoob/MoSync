@@ -52,7 +52,7 @@ void movePtr(MAPoint2d& d);
 
 
 
-bool loadPolyLine(DataHandler& data, PolyLine& pl) {
+static bool loadPolyLine(DataHandler& data, PolyLine& pl) {
 	int length;
 	TEST(data.read(&length, sizeof(length)));
 	if(length <= 0)
@@ -75,7 +75,7 @@ bool loadPolyLine(DataHandler& data, PolyLine& pl) {
 }
 
 //Tries to load a sketch from a data object. Returns false iff the save file is corrupt.
-bool loadFromData(MAHandle object) {
+static bool loadFromData(MAHandle object) {
 	DataHandler data(object);
 	int nPolyLines;
 	TEST(data.read(&nPolyLines, sizeof(nPolyLines)));
@@ -103,14 +103,14 @@ bool loadFromData(MAHandle object) {
 }
 
 //clears the sketch and draws the MoSync logotype.
-void drawLogo() {
+static void drawLogo() {
 #ifdef DRAW_LOGO
 	MYASSERT(loadFromData(RES_LOGO));
 #endif
 }
 
 //Tries to load a sketch from the Store. Returns false iff the save file is corrupt.
-bool tryLoad() {
+static bool tryLoad() {
 	MAHandle store = maOpenStore("MoSketch.sav", 0);
 	if(store <= 0) {
 		drawLogo();
@@ -124,7 +124,7 @@ bool tryLoad() {
 }
 
 //Saves the current sketch. Returns false on failure.
-bool save() {
+static bool save() {
 	//open store
 	MAHandle store = maOpenStore("MoSketch.sav", MAS_CREATE_IF_NECESSARY);
 	if(store <= 0)
@@ -153,7 +153,7 @@ bool save() {
 		data.write(pl.pointer(), length * sizeof(ShortPoint));
 	}
 	data.write(&gPenDown, sizeof(gPenDown));
-	ShortPoint p = { gPointer.x, gPointer.y };
+	ShortPoint p = { (short)gPointer.x, (short)gPointer.y };
 	data.write(&p, sizeof(ShortPoint));
 
 	//write and close store
@@ -164,16 +164,16 @@ bool save() {
 }
 
 //Add the current pointer position as a point in the sketch polyline.
-void addPoint() {
+static void addPoint() {
 	if(gPenDown) {
-		ShortPoint p = { gPointer.x, gPointer.y };
+		ShortPoint p = { (short)gPointer.x, (short)gPointer.y };
 		gCurrentPolyLine.add(p);
 //	lprintfln("vadd %i %ix%i", gVector.size(), gPointer.x, gPointer.y);
 	}
 }
 
 //clears the sketch
-void clear() {
+static void clear() {
 	gCurrentPolyLine.clear();
 	gPolyLines.clear();
 
@@ -222,7 +222,7 @@ int currentKeyState = 0;
 #define DOWN	0x0008
 #define FIRE	0x0010
 
-int getKeyFlag(int key) {
+static int getKeyFlag(int key) {
 	switch(key) {
 		case MAK_LEFT: return LEFT;
 		case MAK_RIGHT: return RIGHT;
@@ -233,9 +233,11 @@ int getKeyFlag(int key) {
 	}
 }
 
-int getKeys() {
+#if 0
+static int getKeys() {
 	return currentKeyState;
 }
+#endif
 
 extern "C" int MAMain() GCCATTRIB(noreturn);
 extern "C" int MAMain() {
@@ -346,10 +348,12 @@ extern "C" int MAMain() {
 	}
 }
 
-void doMenu() {
+#if 0
+static void doMenu() {
 	//exit menu
 	//save
 	//load
 	//clear
 	//exit program
 }
+#endif

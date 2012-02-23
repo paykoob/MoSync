@@ -112,7 +112,7 @@ static const char* getOrientationText(int orientation)
 /*
  * @brief Register to all sensors and get the error codes
  */
-void registerSensors()
+static void registerSensors()
 {
 	for (int type=1; type<=SENSOR_TYPES; type++)
 	{
@@ -123,7 +123,7 @@ void registerSensors()
 /*
  * @brief Unregister all the sensors
  */
-void unregisterSensors()
+static void unregisterSensors()
 {
 	for (int type=1; type<=SENSOR_TYPES; type++)
 	{
@@ -137,7 +137,7 @@ void unregisterSensors()
  * @param x Coordinate x where to draw the values.
  * @param y Coordinate y where to draw the values.
  */
-void drawSensorValue(int index, int x, int y)
+static void drawSensorValue(int index, int x, int y)
 {
 	float* values = gSensorValue[index];
 	char buffer[BUFFER_SIZE];
@@ -168,7 +168,7 @@ void drawSensorValue(int index, int x, int y)
  * @param x Coordinate x where to draw the values.
  * @param y Coordinate y where to draw the values.
  */
-void drawSensorStatus(int index, int x, int y)
+static void drawSensorStatus(int index, int x, int y)
 {
 	char buffer[BUFFER_SIZE];
 	sprintf(buffer, "%s: %s",
@@ -181,7 +181,7 @@ void drawSensorStatus(int index, int x, int y)
  * @brief Displays the sensor values
  * or an error message if the sensor cannot register.
  */
-void drawSensorOutput()
+static void drawSensorOutput()
 {
 	//clean the screen
 	maSetColor(BG_COLOR);
@@ -209,7 +209,7 @@ void drawSensorOutput()
  * @brief Sets the font
  * to display the sensors values.
  */
-void setFont()
+static void setFont()
 {
 	MAHandle defaultFont = maFontLoadDefault(FONT_TYPE_SANS_SERIF, 0, TEXT_SIZE);
 	//Check if it's implemented on the current platform.

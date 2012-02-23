@@ -165,6 +165,14 @@ module MoSyncExeModule
 	def pipeTaskClass
 		return (isPackingForIOS ? PipeCppTask : super)
 	end
+	def libTask(lib)
+		return FileTask.new(self, "#{mosync_libdir}/#{@COMMON_BUILDDIR_NAME}/#{lib}#{libFileEnding}")
+	end
+	def libTasks
+		return (@LIBRARIES + @DEFAULT_LIBS).collect do |lib|
+			libTask(lib)
+		end
+	end
 	def setup3(all_objects, have_cppfiles)
 		# resource compilation
 		if(!@LSTFILES)
@@ -189,16 +197,13 @@ module MoSyncExeModule
 			@prerequisites << @resourceTask
 		end
 		if(USE_NEWLIB)
-			default(:DEFAULT_LIBS, ["newlib","rescompiler"])
+			default(:DEFAULT_LIBS, ['rescompiler', 'newlib'])
 		else
-			default(:DEFAULT_LIBS, ["mastd","rescompiler"])
+			default(:DEFAULT_LIBS, ['rescompiler', 'mastd'])
 		end
 
 		# libs
-		libs = (@DEFAULT_LIBS + @LIBRARIES).collect do |lib|
-			FileTask.new(self, "#{mosync_libdir}/#{@COMMON_BUILDDIR_NAME}/#{lib}#{libFileEnding}")
-		end
-		all_objects += libs
+		all_objects += libTasks
 
 		if(defined?(PACK))
 			default(:PACK_MODEL, PACK)
@@ -214,7 +219,7 @@ module MoSyncExeModule
 		end
 
 		pipeFlags = @FLAGS + @EXTRA_LINKFLAGS
-		if(!pipeFlags.include?(' -datasize') && USE_NEWLIB)
+		if(!pipeFlags.include?(' -datasize') && USE_NEWLIB && !USE_ARM)
 			@EXTRA_LINKFLAGS << standardMemorySettings(10)
 		end
 
@@ -292,9 +297,36 @@ class MoSyncArmExeWork < ExeWork
 	include MoSyncArmGccMod
 	def libFileEnding; NATIVE_LIB_FILE_ENDING; end
 	def linkerName(have_cppfiles); ARM_DRIVER_NAME; end
+	def applyLibraries; end
+	def libTasks
+		# reorder libraries according to dependencies,
+		# to avoid "undefined reference" errors from GNU ld.
+		libDeps = {
+			'mtxml' => 'mautil',
+			'maui' => 'mautil',
+			'matest' => 'mautil',
+			'map' => 'mautil',
+			'testify' => 'mautil',
+			'stlport' => 'newlib',
+			'ads' => 'mautil',
+			'Facebook' => 'mautil',
+			'nativeui' => 'mautil',
+			'Notification' => 'mautil',
+			'Wormhole' => 'nativeui',
+		}
+		libs = @LIBRARIES.sort do |a,b|
+			num = 1
+			num = -1 if(libDeps[a] == b)
+			num = 0 if(a == b)
+			num
+		end
+
+		return (libs + @DEFAULT_LIBS).collect do |lib|
+			libTask(lib)
+		end
+	end
 	def setup3(a, b)
-		@EXTRA_LINKFLAGS << " -nodefaultlibs -v -B#{ARM_BASEDIR}/arm-elf/sys-include/gcc -lgcc"
-		@EXTRA_LINKFLAGS << " -L#{mosync_libdir}/#{@COMMON_BUILDDIR_NAME}"
+		@EXTRA_LINKFLAGS << " -nodefaultlibs -B#{ARM_BASEDIR}/arm-elf/sys-include/gcc -lgcc"
 		super(a, b)
 	end
 end

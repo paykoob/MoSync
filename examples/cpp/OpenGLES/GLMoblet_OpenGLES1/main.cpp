@@ -33,7 +33,7 @@ using namespace MAUtil;
  * Standard OpenGL utility function for setting up the
  * perspective projection matrix.
  */
-void gluPerspective(
+static void gluPerspective(
 	GLfloat fovy,
 	GLfloat aspect,
 	GLfloat zNear,
@@ -52,7 +52,7 @@ void gluPerspective(
 /**
  * Default OpenGL initialization.
  */
-void initGL()
+static void initGL()
 {
     // Enable smooth shading.
 	glShadeModel(GL_SMOOTH);

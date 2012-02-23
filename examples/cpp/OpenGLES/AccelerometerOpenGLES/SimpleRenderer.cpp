@@ -49,7 +49,7 @@ void Renderer::setRotation(float x, float y, float z) {
  * Standard OpenGL utility function for setting up the
  * perspective projection matrix.
  */
-void gluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar) {
+static void gluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar) {
 	GLfloat ymax = zNear * tan(fovy * M_PI / 360.0);
 	GLfloat ymin = -ymax;
 	GLfloat xmin = ymin * aspect;
@@ -59,7 +59,7 @@ void gluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar) {
 }
 
 // setup viewport with a default perspective matrix and viewport.
-void setViewport(int width, int height) {
+static void setViewport(int width, int height) {
 	// Protect against divide by zero.
 	if (0 == height) {
 		height = 1;
@@ -83,7 +83,7 @@ void setViewport(int width, int height) {
 /**
  * Default OpenGL initialization.
  */
-void initGL() {
+static void initGL() {
 	// Enable smooth shading.
 	glShadeModel( GL_SMOOTH);
 

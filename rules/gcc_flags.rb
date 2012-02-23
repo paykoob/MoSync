@@ -77,6 +77,7 @@ end
 if(@GCC_IS_ARM)
 	base_flags << ' -DMAPIP -fshort-wchar'
 	end_flags << ' -Wno-vla'
+	cpp_flags << ' -fno-threadsafe-statics -fno-use-cxa-atexit'
 end
 
 if(@GCC_IS_V4) then

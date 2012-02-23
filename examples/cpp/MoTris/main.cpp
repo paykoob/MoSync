@@ -108,15 +108,17 @@ int playField[PLAY_FIELD_X*PLAY_FIELD_Y];
 int lastGameModePtr = 0;
 int lastGameMode[16];
 
-void pushGameMode(int mode) {
+static void pushGameMode(int mode) {
 	lastGameMode[lastGameModePtr++] = mode;
 }
 
-void pushGameMode() {
+#if 0
+static void pushGameMode() {
 	lastGameMode[lastGameModePtr++] = curGameMode;
 }
+#endif
 
-void popGameMode() {
+static void popGameMode() {
 	lastGameModePtr--;
 	curGameMode = lastGameMode[lastGameModePtr];
 }
@@ -285,22 +287,22 @@ BrickOffset configurations[7][4][4] = {
 void synchronizeHighScore();
 void addPlayerToHighScore();
 
-void initPlayerUpdateTime() {
+static void initPlayerUpdateTime() {
 	playerUpdateTime = PLAYER_UPDATE_TIME;
 }
 
-void setTimeToNextPlayerUpdate() {
+static void setTimeToNextPlayerUpdate() {
 //	timeToNextPlayerUpdate=_time+PLAYER_UPDATE_TIME;
 	_time = maGetMilliSecondCount();
 	timeToNextPlayerUpdate=_time+playerUpdateTime;
 	if(playerUpdateTime>PLAYER_UPDATE_TIME_MIN) playerUpdateTime-=PLAYER_UPDATE_TIME_DECREASE;
 }
 
-void setTimeToNextUpdate() {
+static void setTimeToNextUpdate() {
 	timeToNextUpdate=_time+500-curLevel*30;
 }
 
-void deployBrick(int x, int y, int size, int col, int conf, int rotation) {
+static void deployBrick(int x, int y, int size, int col, int conf, int rotation) {
 	rotation&=0x3;
 
 	for(int i = 0; i < 4; i++) {
@@ -310,7 +312,7 @@ void deployBrick(int x, int y, int size, int col, int conf, int rotation) {
 	}
 }
 
-int testBrick(int x, int y, int size, int col, int conf, int rotation) {
+static int testBrick(int x, int y, int size, int col, int conf, int rotation) {
 	rotation&=0x3;
 
 	int anyOnBrick = false;
@@ -341,7 +343,7 @@ int testBrick(int x, int y, int size, int col, int conf, int rotation) {
 	return NONE;
 }
 
-void drawBrick(int bx, int by, int col, int rotation, int conf) {
+static void drawBrick(int bx, int by, int col, int rotation, int conf) {
 	rotation&=0x3;
 	int x = bx*brickSize + (centerX-(brickSize*(PLAY_FIELD_X>>1)));
 	int y = by*brickSize + (centerY-(brickSize*(PLAY_FIELD_Y>>1)));
@@ -359,7 +361,7 @@ void drawBrick(int bx, int by, int col, int rotation, int conf) {
 	}
 }
 
-void renderField() {
+static void renderField() {
 	int size = brickSize;
 	int x = centerX - ((PLAY_FIELD_X>>1)*size);
 	int y = centerY - ((PLAY_FIELD_Y>>1)*size);
@@ -385,17 +387,17 @@ void renderField() {
 	}
 }
 
-void clearPlayer() {
+static void clearPlayer() {
 	drawBrick(lastX, lastY, 0, lastRot, curConf);
 }
 
-void renderPlayer() {
+static void renderPlayer() {
 	drawBrick(brickX, brickY, curCol+1, curRot, curConf);
 }
 
-int rowScore[4] = {40, 100, 300, 1200};
+static int rowScore[4] = {40, 100, 300, 1200};
 
-void checkBoard() {
+static void checkBoard() {
 	int num;
 	int index = 0;
 	int numRowsFound = 0;
@@ -439,9 +441,9 @@ void checkBoard() {
 	}
 }
 
-
+#if 0
 static int lineNumber = PLAY_FIELD_Y-1;
-int applyGravity(int line) {
+static int applyGravity(int line) {
 	int *field_ptr = playField + PLAY_FIELD_X*line;
 	int updated = 0;
 
@@ -458,8 +460,8 @@ int applyGravity(int line) {
 
 	return updated;
 }
-void updateGravity() {
 
+static void updateGravity() {
 	int _time = maGetMilliSecondCount();
 	if((_time&0x3) != 0) return;
 
@@ -476,8 +478,9 @@ void updateGravity() {
 	lineNumber--;
 	if(lineNumber<1) lineNumber = PLAY_FIELD_Y-1;
 }
+#endif
 
-void initBrick() {
+static void initBrick() {
 	lastX = brickX = (PLAY_FIELD_X>>1);
 	lastY = brickY = -1;
 	curRot = 0;
@@ -486,7 +489,7 @@ void initBrick() {
 	initPlayerUpdateTime();
 }
 
-void initGame(int x, int y, int b) {
+static void initGame(int x, int y, int b) {
 	memset(playField, 0, PLAY_FIELD_X*PLAY_FIELD_Y*sizeof(int));
 
 	centerX = x;
@@ -507,13 +510,13 @@ void initGame(int x, int y, int b) {
 	renderField();
 }
 
-void resumeGame() {
+static void resumeGame() {
 	clearPlayer();
 	renderPlayer();
 	renderField();
 }
 
-void updatePlayer() {
+static void updatePlayer() {
 	int _time=maGetMilliSecondCount();
 	if(_time<timeToNextPlayerUpdate) return;
 
@@ -603,7 +606,7 @@ void updatePlayer() {
 	}
 }
 
-void updateField() {
+static void updateField() {
 	_time=maGetMilliSecondCount();
 
 	if(_time>timeToNextUpdate) {
@@ -622,7 +625,8 @@ void updateField() {
 	}
 }
 
-void resetEventHandler() {
+#if 0
+static void resetEventHandler() {
 	EventHandler::left_pressed = EventHandler::up_pressed = EventHandler::right_pressed = EventHandler::down_pressed = false;
 	EventHandler::left = EventHandler::up = EventHandler::right = EventHandler::down = false;
 
@@ -634,12 +638,14 @@ void resetEventHandler() {
 	EventHandler::point.x = -1;
 	EventHandler::point.y = -1;
 }
+#endif
 
-char score[255];
-char rows[255];
-char level[255];
+static char score[255];
+static char rows[255];
+static char level[255];
 
-void showNavKeys(MAPoint2d point) {
+#if 0
+static void showNavKeys(MAPoint2d point) {
 	MAExtent e = maGetScrSize();
 	int w = EXTENT_X(e);
 
@@ -697,8 +703,9 @@ void showNavKeys(MAPoint2d point) {
 		EventHandler::right_pressed = EventHandler::right = true;
 	}
 }
+#endif
 
-void showScore() {
+static void showScore() {
 	MAExtent e = maGetScrSize();
 	int w = EXTENT_X(e);
 
@@ -895,7 +902,8 @@ class HighScoreListListener : public MenuListener {
 	}
 };
 
-void showHighScore() {
+#if 0
+static void showHighScore() {
 	MAExtent e = maGetScrSize();
 	int w = EXTENT_X(e);
 
@@ -907,14 +915,14 @@ void showHighScore() {
 	drawShadowedText(x-(EXTENT_X(maGetTextSize(score))>>1), y, TEXT_COLOR, score);
 }
 
-void updateHighScore() {
+static void updateHighScore() {
 	if(EventHandler::fire_pressed) {
 		popGameMode();
 	}
 }
+#endif
 
-void showGameOver() {
-
+static void showGameOver() {
 	const char *gameover_str = "Game over";
 	MAExtent ge = maGetTextSize(gameover_str);
 
@@ -927,7 +935,7 @@ void showGameOver() {
 	maDrawText(x+2, y, gameover_str);
 }
 
-void updateGameOver() {
+static void updateGameOver() {
 	if(EventHandler::fire_pressed
 		|| EventHandler::pointer_pressed
 		) {
@@ -936,7 +944,7 @@ void updateGameOver() {
 	}
 }
 
-void loadSettingsFromStore() {
+static void loadSettingsFromStore() {
 	MAHandle settingsStore = maOpenStore("settings", 0);
 	if(settingsStore<=0)
 	{
@@ -958,7 +966,7 @@ void loadSettingsFromStore() {
 	}
 }
 
-void saveSettingsToStore() {
+static void saveSettingsToStore() {
 	MAHandle settingsStore = maOpenStore("settings", MAS_CREATE_IF_NECESSARY);
 	if(settingsStore<=0)
 	{
@@ -969,7 +977,7 @@ void saveSettingsToStore() {
 	maWriteStore(settingsStore, MOTRIS_SETTINGS);
 }
 
-void populateHighScoreList() {
+static void populateHighScoreList() {
 	if(!highScoreListPtr) return;
 	highScoreListPtr->clear();
 	if(curSettings.numHighScoreEntries > 0) {
@@ -1008,7 +1016,7 @@ void addPlayerToHighScore() {
 	populateHighScoreList();
 }
 
-void drawBackground(int w, int h, int x, int y) {
+static void drawBackground(int w, int h, int x, int y) {
 	int col1 = OUTER_BACKGROUND;
 	int col2 = OUTER_BACKGROUND-0x0f0f0f;
 

@@ -81,7 +81,6 @@ class MoSyncArmLibWork < NativeLibWork
 		setup_pipe
 		modSetup
 		copyHeaders
-		@NAME = "lib#{@NAME}"
 		super
 	end
 end

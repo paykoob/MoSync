@@ -40,7 +40,7 @@ MA 02110-1301, USA.
 /*
  * Wait for user to press exit
  */
-void handleExitByUser(void)
+static void handleExitByUser(void)
 {
 		MAEvent e;
 		while ( maGetEvent( &e ) )

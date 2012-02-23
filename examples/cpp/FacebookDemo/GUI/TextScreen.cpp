@@ -57,7 +57,7 @@ void TextScreen::buttonReleased(Widget* button)
 
 void TextScreen::buttonClicked(Widget* button)
 {
-	if( button = mBackButton )
+	if( button == mBackButton )
 	{
 		back();
 		mPreviousScreen->show();

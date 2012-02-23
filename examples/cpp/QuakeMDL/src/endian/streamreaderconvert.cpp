@@ -37,6 +37,10 @@ StreamReaderConvert::StreamReaderConvert ( MAHandle h,
 {
 }
 
+union u_16 {
+	uint16 b;
+	uint8 s[2];
+};
 
 /**
  * Reads two unsigned bytes and increments position
@@ -44,16 +48,17 @@ StreamReaderConvert::StreamReaderConvert ( MAHandle h,
  */
 uint16 StreamReaderConvert::readUInt16 ( void )
 {
-	uint8 t, s[2];
+	u_16 s;
+	uint8 t;
 
 	maReadData( m_stream, &s, m_pos, 2 );
 	m_pos += 2;
 
-	t = s[1];
-	s[1] = s[0];
-	s[0] = t;
+	t = s.s[1];
+	s.s[1] = s.s[0];
+	s.s[0] = t;
 
-	return *((uint16 *)s);
+	return s.b;
 }
 
 /**
@@ -62,17 +67,23 @@ uint16 StreamReaderConvert::readUInt16 ( void )
  */
 sint16 StreamReaderConvert::readSInt16 ( void )
 {
-	uint8 t, s[2];
+	uint8 t;
+	u_16 s;
 
 	maReadData( m_stream, &s, m_pos, 2 );
 	m_pos += 2;
 
-	t = s[1];
-	s[1] = s[0];
-	s[0] = t;
+	t = s.s[1];
+	s.s[1] = s.s[0];
+	s.s[0] = t;
 
-	return *((sint16 *)s);
+	return s.b;
 }
+
+union u_32 {
+	uint32 b;
+	uint8 s[4];
+};
 
 /**
  * Reads four unsigned bytes and increments position
@@ -80,20 +91,20 @@ sint16 StreamReaderConvert::readSInt16 ( void )
  */
 uint32 StreamReaderConvert::readUInt32 ( void )
 {
-	uint8 t, s[4];
+	uint8 t;
+	u_32 s;
 
 	maReadData( m_stream, &s, m_pos, 4 );
 	m_pos += 4;
 
-	t = s[3];
-	s[3] = s[0];
-	s[0] = t;
-	t = s[2];
-	s[2] = s[1];
-	s[1] = t;
+	t = s.s[3];
+	s.s[3] = s.s[0];
+	s.s[0] = t;
+	t = s.s[2];
+	s.s[2] = s.s[1];
+	s.s[1] = t;
 
-	return *((uint32 *)s);
-
+	return s.b;
 }
 
 
@@ -103,17 +114,18 @@ uint32 StreamReaderConvert::readUInt32 ( void )
  */
 sint32 StreamReaderConvert::readSInt32 ( void )
 {
-	uint8 t, s[4];
+	uint8 t;
+	u_32 s;
 
 	maReadData( m_stream, &s, m_pos, 4 );
 	m_pos += 4;
 
-	t = s[3];
-	s[3] = s[0];
-	s[0] = t;
-	t = s[2];
-	s[2] = s[1];
-	s[1] = t;
+	t = s.s[3];
+	s.s[3] = s.s[0];
+	s.s[0] = t;
+	t = s.s[2];
+	s.s[2] = s.s[1];
+	s.s[1] = t;
 
-	return *((sint32 *)s);
+	return s.b;
 }

@@ -33,14 +33,14 @@ namespace MoSync {
 	Map<MAHandle, UIItem*> UIItem::sItems;
 
 
-	int maWidgetSetProperty(MAHandle handle, const char *property, int value) {
+	static int maWidgetSetProperty(MAHandle handle, const char *property, int value) {
 		char buffer[256];
 		snprintf(buffer, 256, "%d", value);
 		::maWidgetSetProperty(handle, property, buffer);
 		return 0;
 	}
 
-	int maWidgetSetProperty(MAHandle handle, const char *property, float value) {
+	static int maWidgetSetProperty(MAHandle handle, const char *property, float value) {
 		char buffer[256];
 		snprintf(buffer, 256, "%f", value);
 		::maWidgetSetProperty(handle, property, buffer);
@@ -142,9 +142,10 @@ namespace MoSync {
 						buttonClicked(item);
 				}
 				break;
-				case MAW_EVENT_EDIT_BOX_RETURN:
+				case MAW_EVENT_EDIT_BOX_RETURN: {
 					UIItem* item = Widget::itemByHandle(data->widgetHandle);
 					editBoxReturned(item);
+				}
 				break;
 				case MAW_EVENT_ITEM_CLICKED: {
 					UIItem* item = Widget::itemByHandle(data->widgetHandle);

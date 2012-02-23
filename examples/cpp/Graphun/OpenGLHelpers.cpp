@@ -18,7 +18,7 @@ MA 02110-1301, USA.
 
 #include "OpenGLHelpers.h"
 
-int createOpenGLScreen(int& openglView)
+static int createOpenGLScreen(int& openglView)
 {
 	int screen = maWidgetCreate( "Screen" );
 	maWidgetSetProperty( screen, "title", "OpenGL" );
@@ -87,7 +87,7 @@ void resizeWindow(int x, int y, int width, int height)
     glLoadIdentity();
 }
 
-void initGL(GLvoid)
+void initGL(void)
 {
     /* Enable Texture Mapping ( NEW ) */
     glEnable(GL_TEXTURE_2D);

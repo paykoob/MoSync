@@ -136,7 +136,14 @@ struct timezone;
 
 #else
 /* Reentrant versions of system calls.  */
+#ifdef REENTRANT_SYSCALLS_PROVIDED
+#warning REENTRANT_SYSCALLS_PROVIDED
+#endif
+#ifdef MISSING_SYSCALL_NAMES
+#warning MISSING_SYSCALL_NAMES
+#endif
 
+#error ry
 extern int _close_r _PARAMS ((struct _reent *, int));
 extern int _execve_r _PARAMS ((struct _reent *, const char *, char *const *, char *const *));
 extern int _fcntl_r _PARAMS ((struct _reent *, int, int, int));

@@ -37,12 +37,13 @@ mod.class_eval do
 
 		if(@GCC_IS_ARM)
 			#@IGNORED_FILES << 'matask.c'
-			@IGNORED_FILES << 'macpp.cpp'
+			#@IGNORED_FILES << 'macpp.cpp'
 		else
 			@SOURCES << 'libc/sys/mosync/libgcc'
 		end
 
 		@IGNORED_FILES << 'engine.c'
+		@IGNORED_FILES << 'rename.c'
 
 		@EXTRA_CFLAGS = " -DUSE_EXOTIC_MATH -Wno-float-equal -Wno-unreachable-code -Wno-sign-compare -Wno-old-style-definition"
 		if(CONFIG=="")

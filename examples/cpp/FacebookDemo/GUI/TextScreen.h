@@ -24,11 +24,6 @@ MA 02110-1301, USA.
 #define TEXTSCREEN_H_
 
 #include <MAUtil/String.h>
-
-class NativeUI::Label;
-class NativeUI::VerticalLayout;
-class NativeUI::Button;
-
 #include "NativeUI/ButtonListener.h"
 #include "FacebookDemoScreen.h"
 

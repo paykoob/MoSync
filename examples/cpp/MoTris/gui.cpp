@@ -270,14 +270,13 @@ void EditBox::show() {
 
 	// begin draw marker
 	char tempString[255];
-	int mx, my;
+	int mx;
 	MAExtent markerExtent;
 
 	memcpy(tempString, curName, curNameIndex);
 	tempString[curNameIndex] = 0;
 	markerExtent = maGetTextSize(tempString);
 	mx = EXTENT_X(markerExtent);
-	my = EXTENT_Y(markerExtent);
 
 	tempString[0] = curName[curNameIndex];
 	tempString[1] = 0;

@@ -36,7 +36,7 @@ using namespace MAUtil;
  * and might be slow on some devices with older gpu:s.
  */
 
-void checkGLError(const char* where) {
+static void checkGLError(const char* where) {
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR) {
 		lprintfln("%s: glGetError returned %x", where, err);
@@ -47,7 +47,7 @@ void checkGLError(const char* where) {
 // Create a shader object, load the shader source, and
 // compile the shader.
 //
-GLuint loadShader(const char *shaderSrc, GLenum type) {
+static GLuint loadShader(const char *shaderSrc, GLenum type) {
 	lprintfln("loading shader: %s", shaderSrc);
 	checkGLError("begin loading shader");
 

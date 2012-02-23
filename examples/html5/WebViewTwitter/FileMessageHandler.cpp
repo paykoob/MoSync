@@ -135,7 +135,7 @@ void FileMessageHandler::handleFileWrite(MessageStreamJSON& message)
 	}
 	else
 	{
-		replyString(message, false);
+		replyBoolean(message, false);
 	}
 }
 
