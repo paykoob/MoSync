@@ -201,4 +201,9 @@ target :all_ex do
 	all_configs('examples')
 end
 
+target :all_ex_both do
+	all_configs('examples')
+	all_configs('examples USE_ARM=')
+end
+
 Targets.invoke
