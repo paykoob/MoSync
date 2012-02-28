@@ -14,14 +14,20 @@
 # Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
+# load local_config.rb, if it exists.
+lc = "#{File.dirname(__FILE__)}/local_config.rb"
+require lc if(File.exists?(lc))
+
 require "#{File.dirname(__FILE__)}/host.rb"
 require "#{File.dirname(__FILE__)}/task.rb"
 require "#{File.dirname(__FILE__)}/gcc_flags.rb"
 require "#{File.dirname(__FILE__)}/loader_md.rb"
 require "#{File.dirname(__FILE__)}/flags.rb"
 
+default_const(:PRINT_GCC_VERSION_INFO, false)
+
 def get_gcc_version_info(gcc)
-	puts "get_gcc_version_string(#{gcc})"
+	puts "get_gcc_version_string(#{gcc})" if(PRINT_GCC_VERSION_INFO)
 	info = {}
 	file = open("|#{gcc} -v 2>&1")
 	file.each do |line|
@@ -115,7 +121,8 @@ module GccVersion
 			if(is_v4)
 				set_class_var(gccVersionClass, :@@GCC_V4_SUB, gcc_version_info[:ver][2, 1].to_i)
 			end
-			warning("GCC version: #{gcc_version_info.inspect}")
+
+			warning("GCC version: #{gcc_version_info.inspect}") if(PRINT_GCC_VERSION_INFO)
 			#warning("GCC_IS_V4: #{is_v4}")
 			if(is_v4)
 				#warning("GCC sub-version: #{gcc_version_info[:ver][2, 1].to_i}")
