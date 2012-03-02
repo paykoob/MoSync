@@ -37,6 +37,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <core/extensions.h>
 #include <base/Syscall.h>
 #include <helpers/helpers.h>
+#include <core/armCore.h>
 
 #include "../sdl_syscall.h"
 #include "../report.h"
@@ -102,6 +103,7 @@ int main2(int argc, char **argv) {
 #endif
 #ifdef EMULATOR
 	bool allowDivZero = false;
+	bool arm = false;
 #endif
 
 	//NOTE: could have a -no-console option used by MoBuild, otherwise use a console for error output.
@@ -144,6 +146,7 @@ int main2(int argc, char **argv) {
 #ifdef EMULATOR
 				"  -allowdivzero                          allow floating-point division by zero. this produces ieee standard results.\n"
 				"  -timeout <seconds:integer>             close the program if it runs longer than the timeout.\n"
+				"  -arm                                   interpret the program file as an ELF file containing ARMv6 code.\n"
 #endif
 				"\n";
 			printf("%s", sInfo);
@@ -161,6 +164,8 @@ int main2(int argc, char **argv) {
 			reportSetFd(writeFd);
 			REPORT("Emulator connected.");
 			//reportClose();
+		} else if(strcmp(argv[i], "-arm")==0) {
+			arm = true;
 		}
 		else if(strcmp(argv[i], "-program")==0) {
 			i++;
@@ -285,7 +290,10 @@ int main2(int argc, char **argv) {
 	else
 		syscall = new Base::Syscall(settings.profile.mScreenWidth, settings.profile.mScreenHeight, settings);
 
-	gCore = Core::CreateCore(*syscall);
+	if(arm)
+		gCore = Core::CreateArmCore(*syscall);
+	else
+		gCore = Core::CreateCore(*syscall);
 #ifdef GDB_DEBUG
 	gCore->mGdbOn = gdb;
 #endif

@@ -111,13 +111,15 @@ __inline void chrashTestDummy(const char* fmt, ...) {
 #include <vector>
 #endif
 
+#include "VMCoreInt.h"
+
 namespace Core {
 
 using namespace Base;
 
 void InvokeSysCall(int id);
 
-class VMCoreInt : public VMCore {
+class MapipCore : public VMCoreInt {
 public:
 
 #ifdef LOG_STATE_CHANGE
@@ -317,10 +319,6 @@ public:
 	uint IP;
 	byte* rIP;
 
-	int VM_Yield;
-	
-	void* customEventPointer;
-
 #ifdef USE_ARM_RECOMPILER
 	MoSync::ArmRecompiler recompiler;
 #endif
@@ -334,9 +332,6 @@ public:
 #endif
 
 #ifdef FAKE_CALL_STACK
-	int* fakeCallStack;
-	int fakeCallStackDepth;	//measured in ints
-	int fakeCallStackCapacity;	//measured in ints
 
 #ifdef FUNCTION_PROFILING
 	class ProfTree {
@@ -651,34 +646,18 @@ public:
 	//****************************************
 #ifndef MOBILEAUTHOR
 
-#ifndef _android
-	bool LoadVMApp(const char* modfile, const char* resfile) {
-		InitVM();
-
-		FileStream mod(modfile);
-		if(!LoadVM(mod))
-			return false;
-			
-		FileStream res(resfile);
-		if(!mSyscall.loadResources(res, resfile))
-			return false;
-#else
+#ifdef _android
 	bool LoadVMApp(int modFd, int resFd) {
 		InitVM();
 
-		FileStream mod(modFd);
-
-		if(!LoadVM(mod))
+		if(!LoadVMAppBase(modFd, resFd))
 			return false;
+#else
+	bool LoadVMApp(const char* modfile, const char* resfile) {
+		InitVM();
 
-		//-2 means that the mosync application does not need any resources.
-		if(-2 != resFd)
-		{
-			FileStream res(resFd);
-
-			if(!mSyscall.loadResources(res, "resources"))
-				return false;
-		}
+		if(!LoadVMAppBase(modfile, resfile))
+			return false;
 #endif
 
 
@@ -755,7 +734,7 @@ public:
 	//****************************************
 	//Loader
 	//****************************************
-	int LoadVM(Stream& file) {
+	bool LoadVM(Stream& file) {
 	
 		LOG("LoadVM\n");
 
@@ -1006,123 +985,6 @@ void WRITE_REG(int reg, int value) {
 
 #define DIVIDE(a_reg, a, b) if((b) == 0) { BIG_PHAT_ERROR(ERR_DIVISION_BY_ZERO); } else { ARITH(a_reg, a, /, b); }
 
-#define RAW_MEMREF(type, addr) (*(type*)(((char*)mem_ds) + (addr)))
-#define MEMREF(type, addr) RAW_MEMREF(type, \
-	(addr) & DATA_SEGMENT_MASK & ~(sizeof(type) - 1))
-
-#ifdef MEMORY_PROTECTION
-#define SET_PROTECTION(x) (protectionSet[(x)>>3]|=(1<<((x)&0x7)))
-#define RESET_PROTECTION(x) (protectionSet[(x)>>3]&=~(1<<((x)&0x7)))
-#define GET_PROTECTION(x) (protectionSet[(x)>>3]&(1<<((x)&0x7)))
-
-	void checkProtection(uint address, uint size) const {
-		if(protectionEnabled) {
-		for(uint i = address; i < address+size; i++) 
-			if(GET_PROTECTION(i)) {
-				BIG_PHAT_ERROR(ERR_MEMORY_PROTECTED);
-			}
-		}
-	}
-#endif	//MEMORY_PROTECTION
-
-#ifdef MEMORY_DEBUG
-#define MEM(type, addr, write) getValidatedMemRef##write<type>(addr)
-	template<class T> const T& getValidatedMemRefREAD(uint address) {
-		return getValidatedMemRefBase<T, 0>(address);
-	}
-	template<class T> T& getValidatedMemRefWRITE(uint address) {
-		return getValidatedMemRefBase<T, 1>(address);
-	}
-
-	template<class T, bool write> T& getValidatedMemRefBase(uint address) {
-		DEBUG_ASSERT(isPowerOf2(sizeof(T)));
-		if(address >= DATA_SEGMENT_SIZE || (address+sizeof(T)) > DATA_SEGMENT_SIZE ||
-			((address & (sizeof(T) - 1)) != 0) || //alignment check
-			(address < 4))	//NULL pointer check
-		{
-			LOG("Memory reference validation failed. Size %"PFZT", address 0x%x\n",
-				sizeof(T), address);
-			if((address & (sizeof(T) - 1)) != 0) {
-				BIG_PHAT_ERROR(ERR_MEMORY_ALIGNMENT);
-			} else if(address >= DATA_SEGMENT_SIZE || (address+sizeof(T)) > DATA_SEGMENT_SIZE) {
-				BIG_PHAT_ERROR(ERR_MEMORY_OOB);
-			} else {
-				BIG_PHAT_ERROR(ERR_MEMORY_NULL);
-			}
-		}
-
-#ifdef MEMORY_PROTECTION	
-		checkProtection(address, sizeof(T));
-#endif
-
-		return MEMREF(T, address);
-	}
-#else
-#define MEM(type, addr, write) MEMREF(type, addr)
-#endif	//_DEBUG
-
-	//****************************************
-	//Memory validation
-	//****************************************
-#define PTR2ADDRESS(ptr) ((unsigned)((char*)ptr - (char*)mem_ds))
-	void ValidateMemStringAddress(unsigned address) const {
-#ifdef MEMORY_PROTECTION	
-		int initialAddr = address;
-#endif
-		do {
-			if(address >= DATA_SEGMENT_SIZE)
-				BIG_PHAT_ERROR(ERR_MEMORY_OOB);
-		} while(RAW_MEMREF(char, address++) != 0);
-#ifdef MEMORY_PROTECTION	
-		checkProtection(initialAddr, address-initialAddr);
-#endif
-	}
-	void ValidateMemWStringAddress(unsigned address) const {
-#ifdef MEMORY_PROTECTION	
-		int initialAddr = address;
-#endif
-		address -= 2;
-		do {
-			address += 2;
-			if(address >= DATA_SEGMENT_SIZE)
-				BIG_PHAT_ERROR(ERR_MEMORY_OOB);
-		} while(RAW_MEMREF(short, address) != 0);
-#ifdef MEMORY_PROTECTION	
-		checkProtection(initialAddr, address-initialAddr);
-#endif
-	}
-	int ValidatedStrLen(const char* ptr) const {
-		unsigned address = PTR2ADDRESS(ptr);
-		do {
-			if(address >= DATA_SEGMENT_SIZE)
-				BIG_PHAT_ERROR(ERR_MEMORY_OOB);
-		} while(RAW_MEMREF(char, address++) != 0);
-
-#ifdef MEMORY_PROTECTION	
-		checkProtection(PTR2ADDRESS(ptr), address-PTR2ADDRESS(ptr));
-#endif
-		return address - PTR2ADDRESS(ptr) - 1;
-	}
-	void ValidateMemRange(const void* ptr, unsigned int size) const {
-		unsigned address = PTR2ADDRESS(ptr);
-		if(address >= DATA_SEGMENT_SIZE || (address+size) >= DATA_SEGMENT_SIZE ||
-			size > DATA_SEGMENT_SIZE)
-			BIG_PHAT_ERROR(ERR_MEMORY_OOB);
-#ifdef MEMORY_PROTECTION	
-		checkProtection(address, size);
-#endif
-	}
-	void* GetValidatedMemRange(int address, int size) {
-		if(address == 0) return NULL;
-		if(uint(address) >= DATA_SEGMENT_SIZE || uint(address+size) >= DATA_SEGMENT_SIZE ||
-			uint(size) > DATA_SEGMENT_SIZE)
-			BIG_PHAT_ERROR(ERR_MEMORY_OOB);
-#ifdef MEMORY_PROTECTION	
-		checkProtection(address, size);
-#endif
-		return ((char*)mem_ds) + address;
-	}
-
 	int GetValidatedStackValue(int offset) {
 		int address = REG(REG_sp) + offset;
 		if(((address&0x03)!=0) || uint(address)<STACK_BOTTOM || uint(address)>STACK_TOP)
@@ -1130,65 +992,6 @@ void WRITE_REG(int reg, int value) {
 		address>>=2;
 		return mem_ds[address];
 	}
-
-	int TranslateNativePointerToMoSyncPointer(void *nativePointer) {
-	    if(nativePointer == NULL)
-	        return 0;
-	    else
-	        return (int)PTR2ADDRESS(nativePointer);
-	}
-
-	const char* GetValidatedStr(int a) const {
-		unsigned address = a;
-		do {
-			if(address >= DATA_SEGMENT_SIZE)
-				BIG_PHAT_ERROR(ERR_MEMORY_OOB);
-		} while(RAW_MEMREF(char, address++) != 0);
-#ifdef MEMORY_PROTECTION	
-		checkProtection(a, address-a);
-#endif
-		return ((char*)mem_ds) + a;
-	}
-
-	const wchar* GetValidatedWStr(int a) const {
-		unsigned address = a - sizeof(wchar);
-		MYASSERT((address & (sizeof(wchar)-1)) == 0, ERR_MEMORY_ALIGNMENT);
-		do {
-			address += sizeof(wchar);
-			if(address >= DATA_SEGMENT_SIZE)
-				BIG_PHAT_ERROR(ERR_MEMORY_OOB);
-		} while(RAW_MEMREF(wchar, address) != 0);
-#ifdef MEMORY_PROTECTION	
-		checkProtection(a, address-a);
-#endif
-		return (wchar*)(((char*)mem_ds) + a);
-	}
-
-#ifdef MEMORY_PROTECTION
-	void protectMemory(uint start, uint length) {
-		char *ptr = ((char*)mem_ds)+start;
-		ValidateMemRange(ptr, length);
-		//memset(&protectionSet[start], 1, length);
-		for(uint i = start; i < start+length; i++)
-			SET_PROTECTION(i);
-	}
-
-	void unprotectMemory(uint start, uint length) {
-		char *ptr = ((char*)mem_ds)+start;
-		ValidateMemRange(ptr, length);
-		//memset(&protectionSet[start], 0, length);
-		for(uint i = start; i < start+length; i++)
-			RESET_PROTECTION(i);
-	}
-
-	void setMemoryProtection(int enable) {
-		this->protectionEnabled = enable;
-	}
-
-	int getMemoryProtection() {
-		return this->protectionEnabled;
-	}
-#endif
 
 	//****************************************
 	//			Invoke SysCalls
@@ -1298,7 +1101,7 @@ void WRITE_REG(int reg, int value) {
 #pragma warning(disable:4355)
 #endif
 
-	VMCoreInt(Syscall& aSyscall)
+	MapipCore(Syscall& aSyscall)
 	: rIP(NULL)
 #ifdef MEMORY_DEBUG
 	, InstCount(0)
@@ -1306,7 +1109,7 @@ void WRITE_REG(int reg, int value) {
 #ifdef INSTRUCTION_PROFILING
 	,instruction_count(NULL)
 #endif
-	, mSyscall(aSyscall) {
+	, VMCoreInt(aSyscall) {
 
 #ifdef FAKE_CALL_STACK
 		allocFakeCallStack();
@@ -1316,7 +1119,7 @@ void WRITE_REG(int reg, int value) {
 #endif
 	}
 	
-	virtual ~VMCoreInt() {
+	virtual ~MapipCore() {
 #ifdef GDB_DEBUG
 		if(mGdbOn)
 			mGdbStub->closeDebugConnection();
@@ -1375,9 +1178,6 @@ void WRITE_REG(int reg, int value) {
 #endif
 
 	}
-	
-private:
-	Syscall& mSyscall;
 };
 
 VMCore::VMCore() : mem_cs(NULL), mem_ds(NULL), mem_cp(NULL)
@@ -1395,7 +1195,7 @@ VMCore::VMCore() : mem_cs(NULL), mem_ds(NULL), mem_cp(NULL)
 
 //Functions for outside access
 VMCore* CreateCore(Syscall& aSyscall) {
-	VMCore *core = new VMCoreInt(aSyscall);
+	VMCore *core = new MapipCore(aSyscall);
 	if(!core) {
 		FAIL
 	} else {

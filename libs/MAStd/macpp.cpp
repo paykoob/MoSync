@@ -23,8 +23,13 @@ extern "C" void GCCATTRIB(noreturn) __cxa_pure_virtual() {
 }
 
 #ifdef __arm__
+extern "C" void ansi_heap_init_crt0(char *start, int length);
+static char sHeap[1024*512];
+
 extern "C" int MAMain();
 int main() {
+	// todo: put before static constructors.
+	ansi_heap_init_crt0(sHeap, sizeof(sHeap));
 	return MAMain();
 }
 

@@ -61,6 +61,8 @@ typedef unsigned ARMul_CPReads (ARMul_State * state, unsigned reg,
 typedef unsigned ARMul_CPWrites (ARMul_State * state, unsigned reg,
 				 ARMword value);
 
+typedef unsigned ARMul_SWIhandler(ARMul_State * state, ARMword number);
+
 struct ARMul_State
 {
   ARMword Emulate;		/* to start and stop emulation */
@@ -150,6 +152,9 @@ struct ARMul_State
   unsigned is_iWMMXt;		/* Are we emulating an iWMMXt co-processor ?  */
   unsigned is_ep9312;		/* Are we emulating a Cirrus Maverick co-processor ?  */
   unsigned verbose;		/* Print various messages like the banner */
+
+  ARMul_SWIhandler* swiHandler;
+  void* user;
 };
 
 #define ResetPin NresetSig
@@ -250,11 +255,11 @@ struct ARMul_State
 *                  Definitons of things in the emulator                     *
 \***************************************************************************/
 
-extern void ARMul_EmulateInit (void);
-extern ARMul_State *ARMul_NewState (void);
-extern void ARMul_Reset (ARMul_State * state);
-extern ARMword ARMul_DoProg (ARMul_State * state);
-extern ARMword ARMul_DoInstr (ARMul_State * state);
+extern __declspec(dllexport) void ARMul_EmulateInit (void);
+extern __declspec(dllexport) ARMul_State *ARMul_NewState (void);
+extern __declspec(dllexport) void ARMul_Reset (ARMul_State * state);
+extern __declspec(dllexport) ARMword ARMul_DoProg (ARMul_State * state);
+extern __declspec(dllexport) ARMword ARMul_DoInstr (ARMul_State * state);
 
 /***************************************************************************\
 *                Definitons of things for event handling                    *
@@ -269,13 +274,13 @@ extern unsigned long ARMul_Time (ARMul_State * state);
 *                          Useful support routines                          *
 \***************************************************************************/
 
-extern ARMword ARMul_GetReg (ARMul_State * state, unsigned mode,
+extern __declspec(dllexport) ARMword ARMul_GetReg (ARMul_State * state, unsigned mode,
 			     unsigned reg);
-extern void ARMul_SetReg (ARMul_State * state, unsigned mode, unsigned reg,
+extern __declspec(dllexport) void ARMul_SetReg (ARMul_State * state, unsigned mode, unsigned reg,
 			  ARMword value);
-extern ARMword ARMul_GetPC (ARMul_State * state);
-extern ARMword ARMul_GetNextPC (ARMul_State * state);
-extern void ARMul_SetPC (ARMul_State * state, ARMword value);
+extern __declspec(dllexport) ARMword ARMul_GetPC (ARMul_State * state);
+extern __declspec(dllexport) ARMword ARMul_GetNextPC (ARMul_State * state);
+extern __declspec(dllexport) void ARMul_SetPC (ARMul_State * state, ARMword value);
 extern ARMword ARMul_GetR15 (ARMul_State * state);
 extern void ARMul_SetR15 (ARMul_State * state, ARMword value);
 
@@ -429,5 +434,9 @@ pascal void SpinCursor (short increment);	/* copied from CursorCtl.h */
 extern void ARMul_UndefInstr      (ARMul_State *, ARMword);
 extern void ARMul_FixCPSR         (ARMul_State *, ARMword, ARMword);
 extern void ARMul_FixSPSR         (ARMul_State *, ARMword, ARMword);
-extern void ARMul_ConsolePrint    (ARMul_State *, const char *, ...) __attribute__((format (printf, 2, 3)));
+extern void ARMul_ConsolePrint    (ARMul_State *, const char *, ...)
+#ifndef _MSC_VER
+	__attribute__((format (printf, 2, 3)))
+#endif
+	;
 extern void ARMul_SelectProcessor (ARMul_State *, unsigned);

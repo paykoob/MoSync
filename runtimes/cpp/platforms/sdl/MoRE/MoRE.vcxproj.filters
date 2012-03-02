@@ -24,6 +24,9 @@
     <ClCompile Include="..\..\..\core\extensions.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\core\armCore.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\core\Core.h">
@@ -63,6 +66,16 @@
     <ClInclude Include="..\..\..\core\extensions.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\core\VMCoreInt.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\core\armCore.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\core\elf.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\arm-core\arm_ext.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\sdl.rc" />

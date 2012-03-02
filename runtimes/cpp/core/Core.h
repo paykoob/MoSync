@@ -143,8 +143,6 @@ namespace Core {
 		
 	};
 
-	class Application;
-
 	const char* CurrentSyscallString(VMCore* core, char* buffer, int bufSize);
 
 	//for main

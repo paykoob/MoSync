@@ -28,6 +28,10 @@ defined to generate aborts. */
 #include "armdefs.h"
 #include "ansidecl.h"
 
+#define VIRTUAL_MEMORY 0
+
+#if VIRTUAL_MEMORY
+
 #ifdef VALIDATE			/* for running the validate suite */
 #define TUBE 48 * 1024 * 1024	/* write a char on the screen */
 #define ABORTS 1
@@ -175,6 +179,25 @@ ARMul_MemoryExit (ARMul_State * state)
   free ((char *) pagetable);
   return;
 }
+#else	//VIRTUAL_MEMORY
+void __declspec(dllexport) ARMul_MemoryInit2 (ARMul_State* state, void* memory, unsigned long initmemsize) {
+	state->MemSize = initmemsize;
+	state->MemDataPtr = (unsigned char*)memory;
+}
+void ARMul_MemoryExit (ARMul_State* state) {
+	// do nothing
+}
+static ARMword GetWord (ARMul_State* state, ARMword address, int check) {
+	if(address >= state->MemSize)
+		abort();
+	return *(ARMword*)(state->MemDataPtr + address);
+}
+static void PutWord (ARMul_State* state, ARMword address, ARMword data, int check) {
+	if(address >= state->MemSize)
+		abort();
+	*(ARMword*)(state->MemDataPtr + address) = data;
+}
+#endif	//VIRTUAL_MEMORY
 
 /***************************************************************************\
 *                   ReLoad Instruction                                     *

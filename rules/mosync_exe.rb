@@ -90,6 +90,7 @@ class MoSyncPackTask < Task
 				" --android-alias \"#{@o[:androidAlias]}\""+
 				" --android-keypass \"#{@o[:androidKeypass]}\""+
 				" --show-passwords"+
+				" --icon \"#{@o[:icon]}\""+
 				@o[:extraParameters].to_s
 		end
 	end
@@ -122,6 +123,11 @@ class MxConfigTask < MultiFileTask
 		end
 		sh "#{@mxConfig} -o build#{params}"
 	end
+end
+
+# Generate an icon file for the target device/platform.
+# If needed, render a bitmap from the default MoSync SVG icon.
+class DefaultIconTask < FileTask
 end
 
 module MoSyncMemorySettings
@@ -196,6 +202,7 @@ module MoSyncExeModule
 			@resourceTask = PipeResourceTask.new(self, "build/resources", lstTasks)
 			@prerequisites << @resourceTask
 		end
+
 		if(USE_NEWLIB)
 			default(:DEFAULT_LIBS, ['rescompiler', 'newlib'])
 		else
@@ -229,6 +236,12 @@ module MoSyncExeModule
 			@TARGET.extend(PipeElimTask)
 		end
 		if(defined?(PACK))
+			if(@ICON)
+				iconTask = FileTask.new(self, @ICON)
+			else
+				iconTask = DefaultIconTask.new(self, @BUILDDIR_BASE, @PACK_MODEL)
+			end
+
 			@prerequisites << @TARGET = MoSyncPackTask.new(self,
 				:tempdir => @BUILDDIR_BASE,
 				:buildpath => @buildpath,
@@ -246,7 +259,8 @@ module MoSyncExeModule
 				:androidStorepass => @PACK_ANDROID_STOREPASS,
 				:androidAlias => @PACK_ANDROID_ALIAS,
 				:androidKeypass => @PACK_ANDROID_KEYPASS,
-				:extraParameters => @PACK_PARAMETERS
+				:extraParameters => @PACK_PARAMETERS,
+				:icon => iconTask,
 				)
 		end
 	end

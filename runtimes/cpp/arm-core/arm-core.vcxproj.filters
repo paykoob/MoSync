@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="armdefs.h" />
+    <ClInclude Include="armemu.h" />
+    <ClInclude Include="armopts.h" />
+    <ClInclude Include="armos.h" />
+    <ClInclude Include="config.h" />
+    <ClInclude Include="dbg_conf.h" />
+    <ClInclude Include="dbg_cp.h" />
+    <ClInclude Include="dbg_hif.h" />
+    <ClInclude Include="dbg_rdi.h" />
+    <ClInclude Include="iwmmxt.h" />
+    <ClInclude Include="msc\ansidecl.h">
+      <Filter>msc</Filter>
+    </ClInclude>
+    <ClInclude Include="msc\bfd.h">
+      <Filter>msc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="armcopro.c" />
+    <ClCompile Include="armemu.c" />
+    <ClCompile Include="armemu32.c" />
+    <ClCompile Include="arminit.c" />
+    <ClCompile Include="armsupp.c" />
+    <ClCompile Include="armvirt.c" />
+    <ClCompile Include="iwmmxt.c" />
+    <ClCompile Include="maverick.c" />
+    <ClCompile Include="thumbemu.c" />
+    <ClCompile Include="wrapper.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="msc">
+      <UniqueIdentifier>{0de8fe12-a3bf-4595-a63c-ca2bdb409a25}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

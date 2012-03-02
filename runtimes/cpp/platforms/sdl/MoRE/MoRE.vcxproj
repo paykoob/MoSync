@@ -67,7 +67,7 @@
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>..\$(Configuration)\sdl.lib;..\..\..\..\..\intlibs\helpers\platforms\windows\$(Configuration)\windows.lib;libirprops.a;..\..\..\..\..\intlibs\filelist\$(Configuration)\filelist.lib;..\..\..\..\..\intlibs\demangle\$(Configuration)\demangle.lib;..\..\..\..\..\intlibs\dll\$(Configuration)\dll.lib;..\..\..\..\..\intlibs\sqlite\$(Configuration)\sqlite.lib;FreeImage.lib;comctl32.lib;ssleay32.lib;libeay32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\$(Configuration)\sdl.lib;..\..\..\..\..\intlibs\helpers\platforms\windows\$(Configuration)\windows.lib;libirprops.a;..\..\..\..\..\intlibs\filelist\$(Configuration)\filelist.lib;..\..\..\..\..\intlibs\demangle\$(Configuration)\demangle.lib;..\..\..\..\..\intlibs\dll\$(Configuration)\dll.lib;..\..\..\..\..\intlibs\sqlite\$(Configuration)\sqlite.lib;FreeImage.lib;comctl32.lib;ssleay32.lib;libeay32.lib;..\..\..\arm-core\$(Configuration)\arm-core.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -106,6 +106,7 @@ copy $(TargetPath)  $(MOSYNCDIR)\bin\ /Y
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\core\armCore.cpp" />
     <ClCompile Include="..\..\..\core\Core.cpp" />
     <ClCompile Include="..\..\..\core\disassembler.cpp" />
     <ClCompile Include="..\..\..\core\extensions.cpp" />
@@ -119,11 +120,14 @@ copy $(TargetPath)  $(MOSYNCDIR)\bin\ /Y
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\arm-core\arm_ext.h" />
+    <ClInclude Include="..\..\..\core\armCore.h" />
     <ClInclude Include="..\..\..\core\Core.h" />
     <ClInclude Include="..\..\..\core\core_run.h" />
     <ClInclude Include="..\..\..\core\CoreCommon.h" />
     <ClInclude Include="..\..\..\core\debugger.h" />
     <ClInclude Include="..\..\..\core\disassembler.h" />
+    <ClInclude Include="..\..\..\core\elf.h" />
     <ClInclude Include="..\..\..\core\extensionCommon.h" />
     <ClInclude Include="..\..\..\core\extensions.h" />
     <ClInclude Include="..\..\..\core\GdbCommon.h" />
@@ -132,6 +136,7 @@ copy $(TargetPath)  $(MOSYNCDIR)\bin\ /Y
     <ClInclude Include="..\..\..\core\sld.h" />
     <ClInclude Include="..\..\..\..\..\intlibs\helpers\intutil.h" />
     <ClInclude Include="..\..\..\core\syscall_arguments.h" />
+    <ClInclude Include="..\..\..\core\VMCoreInt.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\sdl.rc" />
