@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Microsoft.Phone.Info;
+using Microsoft.Phone.Tasks;
 using System.Windows;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
@@ -299,6 +300,26 @@ namespace MoSync
                 }
                 return value.Length + 1;
             };
+
+						ioctls.maPlatformRequest = delegate(int _url)
+						{
+							String url = core.GetDataMemory().ReadStringAtAddress(_url);
+							if (url.StartsWith("tel:"))
+							{
+								String telNr = url.Substring(4);
+								PhoneCallTask p = new PhoneCallTask();
+								p.PhoneNumber = telNr;
+								p.Show();
+								return 0;
+							}
+							else
+							{
+								WebBrowserTask w = new WebBrowserTask();
+								w.Uri = new Uri(url);
+								w.Show();
+								return 0;
+							}
+						};
         }
 
 
@@ -386,7 +407,7 @@ namespace MoSync
             }
 
             // in case of no information
-            return "not available";
+            return null; // "not available";
         }
 
     } // end class MiscModule
