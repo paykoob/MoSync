@@ -70,7 +70,7 @@ public:
 
 	/**
 	* \brief Iterator for a HashDict.
-	* 
+	*
 	* An Iterator is bound to a specific HashDict object.
 	* The Iterator can point to a specific element in that HashDict, or at HashDict::end(),
 	* which is "beyond" the last element of the HashDict.
@@ -104,7 +104,7 @@ public:
 
 	/**
 	* \brief Const Iterator for a HashDict.
-	* 
+	*
 	* A ConstIterator is just like an ordinary Iterator, except
 	* all its methods and return values are const.
 	*/
@@ -196,7 +196,10 @@ protected:
 	* \param keyOffset The offset from the start of Storage to the Key, in bytes.
 	* Calculated by the macro #OFFSETOF.
 	* \param hf The hash function.
-	* \param cf The compare function. See Compare.
+	* This function has default implementations for the types \c int and \c #String.
+	* If you want to use another Key type, you must either implement #THashFunction for that type,
+	* or provide a separate function here.
+	* \param cf The compare function. See #Compare.
 	* \param init_bits The intial size of the hash table is 2 to the power of this number.
 	* While the table grows and shrinks dynamically, it is possible to optimize
 	* if you're doing a known number of insertions directly after constructing the
@@ -207,13 +210,13 @@ protected:
 		int init_bits = 6);
 
 	/**
-	* Inserts a new element into the HashMap.
+	* Inserts a new element into the HashDict.
 	*
 	* Returns a Pair. The Pair's second element is true if the element was inserted,
-	* or false if the element already existed in the map.
-	* The Pair's first element is an Iterator that points to the element in the HashMap.
+	* or false if the element already existed in the dict.
+	* The Pair's first element is an Iterator that points to the element in the HashDict.
 	*
-	* An element which has the same key as the new one may already be present in the HashMap;
+	* An element which has the same key as the new one may already be present in the HashDict;
 	* in that case, this operation does nothing, and the Iterator returned will point to
 	* the old element.
 	*/
