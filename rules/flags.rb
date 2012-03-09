@@ -42,6 +42,11 @@ module FlagsChanged
 		end
 	end
 
+	def needed?(log = true)
+		return true if(super(log))
+		return flagsNeeded?(log)
+	end
+
 	# Call from needed?.
 	def flagsNeeded?(log=true)
 		#puts "Oldflags: #{@OLDFLAGS.inspect} newflags: #{@FLAGS.inspect}"

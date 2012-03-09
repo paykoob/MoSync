@@ -213,10 +213,20 @@ class BundleTask < FileTask
 	def initialize(work, target, srcDir)
 		super(work, target)
 		@srcDir = srcDir
+		([srcDir]+Dir["#{srcDir}/**/*"]).each do |file|
+			#p file
+			@prerequisites << FileTask.new(work, file)
+		end
+		initFlags
+	end
+	def cFlags
+		"-in \"#{@srcDir}\" -out \"#{@NAME}\""
 	end
 	def execute
-		sh "#{mosyncdir}/bin/Bundle -in \"#{@srcDir}\" -out \"#{@NAME}\""
+		execFlags
+		sh "#{mosyncdir}/bin/Bundle #{cFlags}"
 	end
+	include FlagsChanged
 end
 
 class RescompTask < FileTask
@@ -227,10 +237,6 @@ class RescompTask < FileTask
 		@platform = platform
 		@prerequisites << FileTask.new(work, src)
 		initFlags
-	end
-	def needed?(log = true)
-		return true if(super(log))
-		return flagsNeeded?(log)
 	end
 	def cFlags
 		return " -L \"#{@platform}\" \"#{@targetDir}\" \"#{@src}\""

@@ -8546,10 +8546,16 @@ group NFCAPI "NFC API" {
 	}//end of NFC API
 
 	group DBAPI "DB API" {
+		/** \brief A Binary Large OBject for use with the MoSync Database API.
+		* Corresponds to #MA_DB_TYPE_BLOB.
+		*/
 		struct MADBBlob {
 			MAAddress data;
 			int size;
 		}
+		/** \brief A Text object for use with the MoSync Database API.
+		* Corresponds to #MA_DB_TYPE_TEXT.
+		*/
 		struct MADBText {
 			MAString addr;
 			/// Length in bytes of the string pointed to by \a addr.
@@ -8665,7 +8671,7 @@ group NFCAPI "NFC API" {
 		 * A data object will be created with the column data, and the handle
 		 * will refer to that data.
 		 * @return #MA_DB_OK on success, #MA_DB_NULL if the column value
-		 * is NULL, #MA_#MA_DB_ERROR on error.
+		 * is NULL, #MA_DB_ERROR on error.
 		 */
 		int maDBCursorGetColumnData(
 			in MAHandle cursorHandle,
@@ -8701,7 +8707,7 @@ group NFCAPI "NFC API" {
 		 * First column has index zero.
 		 * @param value Pointer to int to receive the value.
 		 * @return #MA_DB_OK on success, #MA_DB_NULL if the column value
-		 * is NULL, #MA_#MA_DB_ERROR on error.
+		 * is NULL, #MA_DB_ERROR on error.
 		 */
 		int maDBCursorGetColumnInt(
 			in MAHandle cursorHandle,
@@ -8718,7 +8724,7 @@ group NFCAPI "NFC API" {
 		 * First column has index zero.
 		 * @param value Pointer to double to receive the value.
 		 * @return #MA_DB_OK on success, #MA_DB_NULL if the column value
-		 * is NULL, #MA_#MA_DB_ERROR on error.
+		 * is NULL, #MA_DB_ERROR on error.
 		 */
 		int maDBCursorGetColumnDouble(
 			in MAHandle cursorHandle,
