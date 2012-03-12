@@ -125,7 +125,7 @@ namespace Core {
 #ifdef TRACK_SYSCALL_ID
 		int currentSyscallId;
 #endif
-		int regs[128];
+		int* regs;
 
 #ifdef GDB_DEBUG
 		GdbStub *mGdbStub;

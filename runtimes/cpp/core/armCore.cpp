@@ -1,6 +1,8 @@
 
 #define SYSCALL_DEBUGGING_MODE
 
+#include "config_platform.h"
+#include "helpers/log.h"
 #include "armCore.h"
 #include "VMCoreInt.h"
 #include "elf.h"
@@ -15,6 +17,10 @@ public:
 	ArmCore(Syscall& aSyscall) : VMCoreInt(aSyscall) {}
 
 	virtual ~ArmCore() {}
+
+#ifdef GDB_DEBUG
+	virtual GdbStub::CpuType getCpuType() const { return GdbStub::Arm; }
+#endif
 
 #ifdef _android
 	bool LoadVMApp(int modFd, int resFd) {
@@ -122,6 +128,7 @@ bool ArmCore::LoadVM(Stream& file) {
 	mArmState = ARMul_NewState();
 	ARMul_SetSWIhandler(mArmState, (ARMul_SWIhandler*)::swiHandler, this);
 	mArmRegs = ARMul_GetRegs(mArmState);
+	regs = (int*)mArmRegs;
 
 	ARMul_MemoryInit2(mArmState, mem_ds, DATA_SEGMENT_SIZE);
 
@@ -178,6 +185,7 @@ bool ArmCore::LoadVM(Stream& file) {
 	// entry point
 	mPC = ELF_SWAPW(ehdr.e_entry);
 	ARMul_SetPC(mArmState, mPC);
+	LOG("Entry point: 0x%x\n", mPC);
 
 	{ //Read Section Table
 		ELF_SWAP16(ehdr.e_shstrndx);
@@ -221,7 +229,7 @@ bool ArmCore::LoadVM(Stream& file) {
 		}
 	}
 
-	DWORD ArenaLo = 0;
+	//DWORD ArenaLo = 0;
 
 	{ //Read Program Table
 		ELF_SWAP16(ehdr.e_phnum);

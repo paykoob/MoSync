@@ -180,6 +180,7 @@ ARMul_MemoryExit (ARMul_State * state)
   return;
 }
 #else	//VIRTUAL_MEMORY
+void __declspec(dllexport) ARMul_MemoryInit2 (ARMul_State* state, void* memory, unsigned long initmemsize);
 void __declspec(dllexport) ARMul_MemoryInit2 (ARMul_State* state, void* memory, unsigned long initmemsize) {
 	state->MemSize = initmemsize;
 	state->MemDataPtr = (unsigned char*)memory;

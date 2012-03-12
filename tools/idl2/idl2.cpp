@@ -779,6 +779,7 @@ static void outputSyscallArmAsm(const Interface& maapi) {
 			".global "<<f.name<<"\n"
 			<<f.name<<":\n"
 			"\tswi "<<f.number<<"\n"
+			"\tbx r14\n"
 		;
 	}
 }

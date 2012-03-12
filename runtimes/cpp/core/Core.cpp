@@ -39,15 +39,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 //#undef LOGC
 //#define LOGC(...) do { if(InstCount > 8200000) LOG(__VA_ARGS__); } while(0)
 
-#ifdef GDB_DEBUG
-#define UPDATE_IP
-/*
-#include "debugger.h"
-*/
-#include "GdbStub.h"
-#include "GdbCommon.h"
-#endif
-
 #include <base/base_errors.h>
 using namespace MoSyncError;
 
@@ -121,6 +112,7 @@ void InvokeSysCall(int id);
 
 class MapipCore : public VMCoreInt {
 public:
+	int mRegs[128];
 
 #ifdef LOG_STATE_CHANGE
 	int csRegs[128];
@@ -664,17 +656,6 @@ public:
 #ifdef FUNCTION_PROFILING
 		profTree.init(Head.EntryPoint);
 #endif
-
-#ifdef GDB_DEBUG
-		if(mGdbOn) {
-			if(!mGdbStub) {
-				mGdbStub = new GdbStub(this);
-				mGdbStub->setupDebugConnection();
-			}
-			mGdbStub->waitForRemote();
-		}
-		mGdbSignal = eNone;
-#endif
 		return true;
 	}
 #endif
@@ -1101,16 +1082,21 @@ void WRITE_REG(int reg, int value) {
 #pragma warning(disable:4355)
 #endif
 
+#ifdef GDB_DEBUG
+virtual GdbStub::CpuType getCpuType() const { return GdbStub::Mapip; }
+#endif
+
 	MapipCore(Syscall& aSyscall)
-	: rIP(NULL)
+	: VMCoreInt(aSyscall),
+	rIP(NULL)
 #ifdef MEMORY_DEBUG
 	, InstCount(0)
 #endif
 #ifdef INSTRUCTION_PROFILING
 	,instruction_count(NULL)
 #endif
-	, VMCoreInt(aSyscall) {
-
+	{
+		regs = mRegs;
 #ifdef FAKE_CALL_STACK
 		allocFakeCallStack();
 #endif

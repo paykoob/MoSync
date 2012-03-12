@@ -1,8 +1,9 @@
 
 module MoSyncArmGccMod
 	def gcc; ARM_DRIVER_NAME; end
+	def host_cppflags; '' end
 	def host_flags
-		flags = super
+		flags = ''
 		flags << ' -fno-exceptions -mfloat-abi=hard'
 		flags << ' -DUSE_NEWLIB' if(USE_NEWLIB)
 		return flags

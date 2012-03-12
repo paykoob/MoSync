@@ -312,6 +312,7 @@ class MoSyncArmExeWork < ExeWork
 	def libFileEnding; NATIVE_LIB_FILE_ENDING; end
 	def linkerName(have_cppfiles); ARM_DRIVER_NAME; end
 	def applyLibraries; end
+	def link_file_ending; ''; end
 	def libTasks
 		# reorder libraries according to dependencies,
 		# to avoid "undefined reference" errors from GNU ld.

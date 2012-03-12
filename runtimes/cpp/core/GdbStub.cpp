@@ -21,6 +21,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 /* This is used to compile the GDB debug version of the mosync runtime.       */
 /******************************************************************************/
 
+#define DEBUGGING_MODE
+
 #include <stdexcept>
 #include "config_platform.h"
 #include <helpers/helpers.h>
@@ -33,36 +35,262 @@ using namespace MoSyncError;
 
 #include "config_platform.h"
 #include "GdbStub.h"
+#include <net/net.h>
+#include "ThreadPoolImpl.h"
+#include <mostl/vector.h>
+
 #include "fastevents.h"
 #include "sdl_syscall.h"
-
 
 #define CORE mCore
 
 // Map from integer to a hexadecimal ASCII character.
-char GdbStub::hexChars[] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+static const char hexChars[] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+
+class GdbStubInt : public GdbStub {
+public:
+	GdbStubInt(Core::VMCore* core, CpuType);
+
+	void setupDebugConnection();
+	void closeDebugConnection();
+
+	// we arrive here when a trap occurs in the mosync program
+	void exceptionHandler(int exception);
+	void exitHandler(int exception);
+	bool waitForRemote();	//returns true if stub has quit.
+
+private:
+	// Connections from and to the GDB host.
+	TcpServer server;
+	TcpConnection *connection;
+
+	void runControl();
+	static int sRunControl(void*);
+	bool mQuit, mExitPacketSent;
+	MoSyncThread mControlThread;
+
+	// CpuType stuff
+	const int mNregs;
+
+	//waitForRemote()
+	MoSyncSemaphore mExecSem;
+
+	// Unprotected queue
+	enum MessageType {
+		eInput, eException, eExit, eTerminate
+	};
+	struct MESSAGE {
+		MessageType type;
+		int code;
+	};
+	class MessageQueue {
+	private:
+		static const int QUEUE_SIZE = 4;
+		MESSAGE mArray[QUEUE_SIZE];
+		int mWP, mRP;
+	public:
+		MessageQueue();
+		MESSAGE pop();
+		void push(MESSAGE);
+	} mMessageQueue;
+
+	// Internal messages
+	MoSyncSemaphore mMessageSem;
+	MoSyncSemaphore mMessageMutex;
+
+	MESSAGE getMessage();
+	void putMessage(MESSAGE);
+	void handleMessage();
+
+	// handlers
+	void sendExceptionPacket(int code);
+	void sendExitPacket(int code);
+	void sendTerminationPacket(int code);
+
+	void runRead();
+	static int sRunRead(void*);
+	MoSyncThread mReadThread;
+	MoSyncSemaphore mReadSem;
+	MoSyncSemaphore mReadThreadSem;
+
+	void handleInput();
+	void handleAck();
+	void handleNack();
+	int handlePacket(int pos);	//returns new pos, or <0 if packet was incomplete
+
+	// Used to store the input data and output data.
+	//char mInputBuffer[1024*10];	//todo:make variable length
+	mostd::vector<char> mInputBuffer;
+	int mInputPos;
+	char* mInputPtr;	//legacy
+
+	mostd::vector<char> outputBuffer;
+	char *curOutputBuffer;
+
+	bool mForceNextPacket;
+
+	// Acks
+	char getAck();
+
+	bool mWaitingForAck;
+
+	// Reference to the core, used to retrieve and write memory/registers and such.
+	Core::VMCore *mCore;
+
+	char tempBuffer[1024];
+
+	template<typename type>
+	const char* convertDataTypeToString(type b) {
+		char* ret = tempBuffer;
+		for(int i = (sizeof(type)<<3)-4; i >= 0; i-=4) {
+			*ret++ = (hexChars[((b>>i)&0xf)]);
+		}
+		*ret++ = 0;
+		return tempBuffer;
+	}
+
+	int hexToNum(char c);
+
+	template<typename type>
+	type getDataTypeFromString(char*& b) {
+		type ret = 0;
+		for(int i = (sizeof(type)*2)-1; i >= 0; i-=1) {
+			ret |= ((type)(hexToNum(*b)))<<(i*4);
+			b++;
+		}
+		return ret;
+	}
+
+	template<typename type>
+	type getBoundedDataTypeFromInput(char bound) {
+		const char *start = mInputPtr;
+		while(*mInputPtr!=bound) mInputPtr++;
+		const char *end = mInputPtr;
+		mInputPtr++;
+		type ret = 0;
+		type n = 0;
+		while(start!=end && (n=hexToNum(*start))!=-1) {
+			ret<<=4;
+			ret|=n;
+			start++;
+		}
+		return ret;
+	}
 
 
-GdbStub::GdbStub(Core::VMCore *core)
+	void appendOut(const char *what);
+	void appendOut(char what);
+	void checkAndResize(int len);
+
+	template<typename type>
+	void appendDataTypeToOutput(type d) {
+		appendOut(convertDataTypeToString<type>(d));
+	}
+
+	template<typename type>
+	type getDataTypeFromInput() {
+		return getDataTypeFromString<type>(mInputPtr);
+		//mInputPtr += ((sizeof(type))-1)<<1;
+	}
+
+	void clearOutputBuffer();
+
+	void putDebugChar(char c);
+	void putDebugChars(char *c, int len);
+
+	void transmissionNAK();
+	void transmissionACK();
+
+	// Required commands follows:
+	bool readRegisters();
+	bool writeRegisters();
+	bool readMemory();
+	bool writeMemory();
+	bool continueExec();
+	bool stepExec();
+
+	/**
+	 * Terminates the program (relatively) gracefully.
+	 *
+	 * Note:
+	 * This function must try to get the main thread out of the
+	 * kernel, e.g. if it is waiting idefinitley for a semaphore,
+	 * otherwise MoRE will not receive any signals and will hang
+	 * on Unix like systems if mdb dies.
+	 *
+	 * This function does not call exit directly, but implicitly
+	 * makes the other threads stop. It relies on the VM loop to
+	 * exit when waitForRemote returns false.
+	 */
+	bool quit();
+
+	// Optional commands follows:
+	bool lastSignal();
+	bool readRegister();
+	bool writeRegister();
+	bool killRequest();
+	bool toggleDebug();
+	bool reset();
+	bool search();
+	bool generalSet();
+	bool generalQuery();
+	bool sectionOffsetsQuery();
+	bool consoleOutput();
+	bool defaultResponse();
+
+	bool appendOK();
+
+	// Select and execute command:
+	bool executeCommand();
+	void putPacket(bool force = false);
+
+	// Read and execute command and send reply.
+	bool doPacket();
+};
+
+
+GdbStub* GdbStub::create(Core::VMCore* core, CpuType type) {
+	return new GdbStubInt(core, type);
+}
+
+static int nregs(GdbStub::CpuType t) {
+	switch(t) {
+	case GdbStub::Mapip: return 128;
+	case GdbStub::Arm: return 16;
+	default: DEBIG_PHAT_ERROR;
+	}
+}
+
+GdbStubInt::GdbStubInt(Core::VMCore *core, CpuType type)
+	: mNregs(nregs(type))
 {
 	outputBuffer.resize(1024);
 	curOutputBuffer = outputBuffer.begin();
 	mInputBuffer.resize(1024);
-    mCore = core;
-    mWaitingForAck = false;
-    mQuit = false;
-    mExitPacketSent = false;
-    mMessageMutex.post();	//leave it open so exactly one thread can get in
+	mCore = core;
+	mWaitingForAck = false;
+	mQuit = false;
+	mExitPacketSent = false;
+	mForceNextPacket = false;
+	mMessageMutex.post();	//leave it open so exactly one thread can get in
 }
 
-int GdbStub::hexToNum(char c) {
+void GdbStub::setupDebugConnection() { ((GdbStubInt*)this)->setupDebugConnection(); }
+void GdbStub::closeDebugConnection() { ((GdbStubInt*)this)->closeDebugConnection(); }
+
+void GdbStub::exceptionHandler(int exception) { ((GdbStubInt*)this)->exceptionHandler(exception); }
+void GdbStub::exitHandler(int code) { ((GdbStubInt*)this)->exitHandler(code); }
+bool GdbStub::waitForRemote() { return ((GdbStubInt*)this)->waitForRemote(); }
+
+
+int GdbStubInt::hexToNum(char c) {
 	if(c>='0'&&c<='9') return c-'0';
 	else if(c>='a'&&c<='f') return c+10-'a';
 	else if(c>='A'&&c<='F') return c+10-'A';
 	else return -1;
 }
 
-void GdbStub::checkAndResize(int len) {
+void GdbStubInt::checkAndResize(int len) {
 	size_t curIndex = (size_t)(curOutputBuffer-outputBuffer.begin());
 	size_t newSize = (len+curIndex)+1; // +1 for the null terminator...
 	if(newSize>(outputBuffer.size())) {
@@ -71,28 +299,28 @@ void GdbStub::checkAndResize(int len) {
 		if(betterSize>newSize) newSize=betterSize;
 		outputBuffer.resize(newSize);
 		curOutputBuffer = outputBuffer.begin()+curIndex;
-	}	
+	}
 }
 
-void GdbStub::appendOut(const char *what) {
+void GdbStubInt::appendOut(const char *what) {
 	checkAndResize(strlen(what));
-	curOutputBuffer += sprintf(curOutputBuffer, "%s", what);	
+	curOutputBuffer += sprintf(curOutputBuffer, "%s", what);
 }
 
-void GdbStub::appendOut(char what) {
+void GdbStubInt::appendOut(char what) {
 	checkAndResize(1);
 	*curOutputBuffer++ = what;
 	*curOutputBuffer = 0;
 }
 
-void GdbStub::clearOutputBuffer() {
+void GdbStubInt::clearOutputBuffer() {
 	curOutputBuffer = outputBuffer.begin();
 	checkAndResize(1024);
 	appendOut('$');
-	
+
 }
 
-void GdbStub::setupDebugConnection() {
+void GdbStubInt::setupDebugConnection() {
 	connection = NULL;
 	int res = server.open(50000);
 	MYASSERT(res > 0, ERR_GDB_SERVER_OPEN);
@@ -104,12 +332,12 @@ void GdbStub::setupDebugConnection() {
 	mReadThread.start(sRunRead, this);
 }
 
-int GdbStub::sRunControl(void* arg) {
-	GdbStub* s = (GdbStub*)arg;
+int GdbStubInt::sRunControl(void* arg) {
+	GdbStubInt* s = (GdbStubInt*)arg;
 	s->runControl();
 	return 0;
 }
-void GdbStub::runControl() {
+void GdbStubInt::runControl() {
 	LOGD("runControl()\n");
 	while(!mQuit) {
 		try {
@@ -122,7 +350,7 @@ void GdbStub::runControl() {
 	mExecSem.post();
 }
 
-void GdbStub::handleMessage() {
+void GdbStubInt::handleMessage() {
 	MESSAGE m = getMessage();	//blocking
 	switch(m.type) {
 	case eInput:
@@ -149,7 +377,7 @@ void GdbStub::handleMessage() {
 	}
 }
 
-GdbStub::MESSAGE GdbStub::getMessage() {
+GdbStubInt::MESSAGE GdbStubInt::getMessage() {
 	MESSAGE m;
 	mMessageSem.wait();	//wait for a message to arrive in the queue
 	mMessageMutex.wait();	//get the lock on the queue
@@ -160,7 +388,7 @@ GdbStub::MESSAGE GdbStub::getMessage() {
 	return m;
 }
 
-void GdbStub::putMessage(MESSAGE m) {
+void GdbStubInt::putMessage(MESSAGE m) {
 	//LOG("putMessage %i\n", m.type);
 	mMessageMutex.wait();	//get the lock on the queue
 	{
@@ -171,10 +399,10 @@ void GdbStub::putMessage(MESSAGE m) {
 }
 
 
-GdbStub::MessageQueue::MessageQueue() {
+GdbStubInt::MessageQueue::MessageQueue() {
 	mWP = mRP = 0;
 }
-GdbStub::MESSAGE GdbStub::MessageQueue::pop() {
+GdbStubInt::MESSAGE GdbStubInt::MessageQueue::pop() {
 	DEBUG_ASSERT(mWP != mRP);
 	MESSAGE m = mArray[mRP];
 	mRP++;
@@ -182,7 +410,7 @@ GdbStub::MESSAGE GdbStub::MessageQueue::pop() {
 		mRP = 0;
 	return m;
 }
-void GdbStub::MessageQueue::push(MESSAGE m) {
+void GdbStubInt::MessageQueue::push(MESSAGE m) {
 	int oldWP = mWP;
 	mWP++;
 	if(mWP == QUEUE_SIZE)
@@ -193,7 +421,7 @@ void GdbStub::MessageQueue::push(MESSAGE m) {
 
 
 //wait until the remote has requested that execution be started/resumed.
-bool GdbStub::waitForRemote() {
+bool GdbStubInt::waitForRemote() {
 	if(!mQuit) {
 		if(!mControlThread.isCurrent()) {
 			mExecSem.wait();
@@ -203,13 +431,13 @@ bool GdbStub::waitForRemote() {
 }
 
 // we arrive here when a trap occurs in the mosync program
-void GdbStub::exceptionHandler(int code) {
+void GdbStubInt::exceptionHandler(int code) {
 	MESSAGE m;
 	m.type = eException;
 	m.code = code;
 	putMessage(m);
 }
-void GdbStub::sendExceptionPacket(int code) {
+void GdbStubInt::sendExceptionPacket(int code) {
 	clearOutputBuffer();
 	appendOut('S');
 	appendOut(hexChars[(code>>4)&0xf]);
@@ -217,13 +445,13 @@ void GdbStub::sendExceptionPacket(int code) {
 	putPacket();
 }
 
-void GdbStub::exitHandler(int code) {
+void GdbStubInt::exitHandler(int code) {
 	MESSAGE m;
 	m.type = eExit;
 	m.code = code;
 	putMessage(m);
 }
-void GdbStub::sendExitPacket(int code) {
+void GdbStubInt::sendExitPacket(int code) {
 	clearOutputBuffer();
 	appendOut('W');
 	appendOut(hexChars[(code>>4)&0xf]);
@@ -232,7 +460,7 @@ void GdbStub::sendExitPacket(int code) {
 	mExitPacketSent = true;
 }
 
-void GdbStub::sendTerminationPacket(int code) {
+void GdbStubInt::sendTerminationPacket(int code) {
 	clearOutputBuffer();
 	appendOut('X');
 	appendOut(hexChars[(code>>4)&0xf]);
@@ -240,7 +468,7 @@ void GdbStub::sendTerminationPacket(int code) {
 	putPacket();
 }
 
-void GdbStub::closeDebugConnection() {
+void GdbStubInt::closeDebugConnection() {
 	{
 		MESSAGE m;
 		m.type = eTerminate;
@@ -257,12 +485,12 @@ void GdbStub::closeDebugConnection() {
 	}
 }
 
-int GdbStub::sRunRead(void* arg) {
-	GdbStub* s = (GdbStub*)arg;
+int GdbStubInt::sRunRead(void* arg) {
+	GdbStubInt* s = (GdbStubInt*)arg;
 	s->runRead();
 	return 0;
 }
-void GdbStub::runRead() {
+void GdbStubInt::runRead() {
 	mInputPos = 0;
 	while(!mQuit) {
 		if(mInputPos>=(int)mInputBuffer.size()) {
@@ -273,7 +501,7 @@ void GdbStub::runRead() {
 		//LOG("GDB read %i\n", res);
 		if(res <= 0) {
 			LOG("connection->read error %i\n", res);
-			
+
 			/* If there is a connection error, then either mdb has crashed, been
 			 * killed by a signal or gotten -gdb-exit. In either case we should
 			 * quit since we cannot restore the debug session. */
@@ -291,7 +519,7 @@ void GdbStub::runRead() {
 	mExecSem.post();
 }
 
-void GdbStub::handleInput() {
+void GdbStubInt::handleInput() {
 	int pos = 0;
 	while(pos < mInputPos) {
 		switch(mInputBuffer[pos]) {
@@ -326,16 +554,17 @@ void GdbStub::handleInput() {
 	mInputPos = 0;
 }
 
-void GdbStub::handleAck() {
+void GdbStubInt::handleAck() {
 	LOGD("GDB ACK was sent from the client.\n");
 	if(mWaitingForAck) {
 		mWaitingForAck = false;
 	} else {
-		DEBIG_PHAT_ERROR;
+		// seems GNU gdb does this.
+		//DEBIG_PHAT_ERROR;
 	}
 }
 
-char GdbStub::getAck() {
+char GdbStubInt::getAck() {
 	DEBUG_ASSERT(!mWaitingForAck);
 	mWaitingForAck = true;
 	while(!mQuit && mWaitingForAck) {
@@ -344,12 +573,12 @@ char GdbStub::getAck() {
 	return '+';
 }
 
-void GCCATTRIB(noreturn) GdbStub::handleNack() {
+void GCCATTRIB(noreturn) GdbStubInt::handleNack() {
 	LOG("GDB NACK was sent from the client.\n");
 	DEBIG_PHAT_ERROR;
 }
 
-int GdbStub::handlePacket(int pos) {
+int GdbStubInt::handlePacket(int pos) {
 	int begin = pos;
 	uint myChecksum = 0;
 	while(pos < mInputPos && mInputBuffer[pos] != '#') {
@@ -382,7 +611,7 @@ int GdbStub::handlePacket(int pos) {
 }
 
 
-void GdbStub::putDebugChar(char c) {
+void GdbStubInt::putDebugChar(char c) {
 	//LOG("putDebugChar(%c)\n", c);
 	int res = connection->write(&c, 1);
 	if(res <= 0) {
@@ -391,7 +620,7 @@ void GdbStub::putDebugChar(char c) {
 	}
 }
 
-void GdbStub::putDebugChars(char *c, int len) {
+void GdbStubInt::putDebugChars(char *c, int len) {
 	int res = connection->write(c, len);
 	if(res <= 0) {
 		LOG("connection->write error %i\n", res);
@@ -399,38 +628,37 @@ void GdbStub::putDebugChars(char *c, int len) {
 	}
 }
 
-void GdbStub::transmissionNAK() {
+void GdbStubInt::transmissionNAK() {
 	LOG("GDB transmission: NAK\n");
 	putDebugChar('-');
 }
 
-void GdbStub::transmissionACK() {
+void GdbStubInt::transmissionACK() {
 	LOGD("GDB transmission: ACK\n");
 	putDebugChar('+');
 }
 
-#define NUM_REGS 128
 // Required commands follows:
-bool GdbStub::readRegisters() {
-	for(int i = 0; i < NUM_REGS/*mCore.mRegs.length*/; i++) {
+bool GdbStubInt::readRegisters() {
+	for(int i = 0; i < mNregs; i++) {
 		appendDataTypeToOutput<int>(mCore->regs[i]);
 	}
 	appendDataTypeToOutput<int>(Core::GetIp(mCore));
 	return true;
 }
 
-bool GdbStub::writeRegisters() {
+bool GdbStubInt::writeRegisters() {
 	int i;
-	for(i = 0; i < NUM_REGS /*mCore.mRegs.length*/; i++) {
+	for(i = 0; i < mNregs; i++) {
 		mCore->regs[i] = getDataTypeFromInput<int>();
 	}
 	Core::SetIp(mCore, getDataTypeFromInput<int>());
 	return true;
 }
 
-bool GdbStub::readMemory() {
+bool GdbStubInt::readMemory() {
 	int address = getBoundedDataTypeFromInput<int>(',');
-	int length = getBoundedDataTypeFromInput<int>(0);	
+	int length = getBoundedDataTypeFromInput<int>(0);
 
 	byte *src;
 	int size;
@@ -454,7 +682,7 @@ bool GdbStub::readMemory() {
 	return true;
 }
 
-bool GdbStub::writeMemory() {
+bool GdbStubInt::writeMemory() {
 	int address = getBoundedDataTypeFromInput<int>(',');
 	int length = getBoundedDataTypeFromInput<int>(':');
 
@@ -482,7 +710,7 @@ bool GdbStub::writeMemory() {
 	return true;
 }
 
-bool GdbStub::continueExec() {
+bool GdbStubInt::continueExec() {
 	int address = getBoundedDataTypeFromInput<int>(0);
 	if(address) {
 		Core::SetIp(mCore, address);
@@ -492,7 +720,7 @@ bool GdbStub::continueExec() {
 	return true;
 }
 
-bool GdbStub::stepExec() {
+bool GdbStubInt::stepExec() {
 	int address = getBoundedDataTypeFromInput<int>(0);
 	if(address) {
 		Core::SetIp(mCore, address);
@@ -502,62 +730,76 @@ bool GdbStub::stepExec() {
 	return true;
 }
 
-bool GdbStub::quit() {
+bool GdbStubInt::quit() {
 	mQuit = true;
 	return true;
 }
 
 // Optional commands follows:
-bool GdbStub::lastSignal() {
+bool GdbStubInt::lastSignal() {
+	appendOut("S00");
+	return true;
+}
+
+bool GdbStubInt::readRegister() {
 	return false;
 }
 
-bool GdbStub::readRegister() {
+bool GdbStubInt::writeRegister() {
 	return false;
 }
 
-bool GdbStub::writeRegister() {
+bool GdbStubInt::killRequest() {
 	return false;
 }
 
-bool GdbStub::killRequest() {
+bool GdbStubInt::toggleDebug() {
 	return false;
 }
 
-bool GdbStub::toggleDebug() {
+bool GdbStubInt::reset() {
 	return false;
 }
 
-bool GdbStub::reset() {
+bool GdbStubInt::search() {
 	return false;
 }
 
-bool GdbStub::search() {
+bool GdbStubInt::generalSet() {
 	return false;
 }
 
-bool GdbStub::generalSet() {
+bool GdbStubInt::generalQuery() {
+	if(strncmp(mInputPtr, "Offsets", sizeof("Offsets")-1) == 0) {
+		return sectionOffsetsQuery();
+	}
+	mForceNextPacket = true;
+	return true;
+}
+
+bool GdbStubInt::sectionOffsetsQuery() {
+	appendOut("TextSeg=0");
+	return true;
+}
+
+bool GdbStubInt::consoleOutput() {
 	return false;
 }
 
-bool GdbStub::generalQuery() {
-	return false;
+bool GdbStubInt::defaultResponse() {
+	appendOut("NO");
+	mForceNextPacket = true;
+	return true;
 }
 
-bool GdbStub::sectionOffsetsQuery() {
-	return false;
+bool GdbStubInt::appendOK() {
+	appendOut("OK");
+	return true;
 }
 
-bool GdbStub::consoleOutput() {
-	return false;
-}
-
-bool GdbStub::defaultResponse() {
-	return false;
-}
 
 // Select and execute command:
-bool GdbStub::executeCommand() {
+bool GdbStubInt::executeCommand() {
 	char instruction = *mInputPtr;
 	mInputPtr++;
 
@@ -576,25 +818,19 @@ bool GdbStub::executeCommand() {
 
 			// optional;
 
+		case 'H': return appendOK();
+		case 'q': return generalQuery();
+		case '?': return lastSignal();
 
 #if 0
-		case 'p': return readRegister();		
-		case 'P': return writeRegister();			
-		case '?': return lastSignal();
+		case 'p': return readRegister();
+		case 'P': return writeRegister();
 		case 'k': return killRequest();
 		case 'd': return toggleDebug();
 		case 'r': return reset();
 		case 't': return search();
-		case 'q': 
-			{
-				if((inputBuffer.toString()).startsWith("Offsets") == true) {
-					return sectionOffsetsQuery();
-				} else {
-					return generalQuery();
-				}
-			}
-			case 'Q' return generalSet();
-				case 'O' return consoleOutput();
+			case 'Q' return generalSetQuery();
+			case 'O' return consoleOutput();
 #endif	//0
 
 		default:
@@ -602,7 +838,7 @@ bool GdbStub::executeCommand() {
 	}
 }
 
-void GdbStub::putPacket() {
+void GdbStubInt::putPacket(bool force) {
 	DEBUG_ASSERT(!mWaitingForAck);
 	int calculatedChecksum = 0;
 	const char *cur = outputBuffer.begin() + 1;
@@ -612,7 +848,7 @@ void GdbStub::putPacket() {
 		len++;
 		calculatedChecksum += (byte)(*cur++);
 	}
-	if(len == 0)
+	if(len == 0 && !force)
 		return;
 
 	appendOut('#');
@@ -626,7 +862,7 @@ void GdbStub::putPacket() {
 }
 
 // Read and execute command and send reply.
-bool GdbStub::doPacket() {
+bool GdbStubInt::doPacket() {
 	clearOutputBuffer();
 
 	if(executeCommand() == false) {
@@ -636,7 +872,8 @@ bool GdbStub::doPacket() {
 	}
 
 	transmissionACK();
-	putPacket();
+	putPacket(mForceNextPacket);
+	mForceNextPacket = false;
 
 	return true;
 }

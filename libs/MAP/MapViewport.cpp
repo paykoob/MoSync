@@ -534,6 +534,7 @@ namespace MAP
 		setCenterPosition( mPanTargetPositionLonLat, true, false );
 	}
 
+#ifdef USE_ALPHAFADES
 	//-------------------------------------------------------------------------
 	static int getAlphaForTile(MapTile* tile)
 	//-------------------------------------------------------------------------
@@ -543,6 +544,7 @@ namespace MAP
 		if(alpha>255) alpha = 255;
 		return alpha;
 	}
+#endif
 
 	class AlphaRestore : public IdleListener {
 		public:

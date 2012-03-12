@@ -29,8 +29,10 @@
 //#include <stdint.h>
 //#include "general.h"
 
+#ifndef _WINDEF_
 typedef unsigned short WORD;
 typedef unsigned int DWORD;
+#endif
 typedef unsigned long int QWORD;
 
 /* Type for a 16-bit quantity.  */

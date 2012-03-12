@@ -61,7 +61,7 @@ typedef unsigned ARMul_CPReads (ARMul_State * state, unsigned reg,
 typedef unsigned ARMul_CPWrites (ARMul_State * state, unsigned reg,
 				 ARMword value);
 
-typedef unsigned ARMul_SWIhandler(ARMul_State * state, ARMword number);
+typedef unsigned ARMul_SWIhandler(ARMul_State * state, ARMword number, void* user);
 
 struct ARMul_State
 {

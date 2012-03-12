@@ -57,14 +57,16 @@ ARMul_Debug (ARMul_State * state ATTRIBUTE_UNUSED, ARMword pc ATTRIBUTE_UNUSED, 
 
 // invoke syscall
 unsigned ARMul_OSHandleSWI (ARMul_State * state, ARMword number) {
-	return state->swiHandler(state, number);
+	return state->swiHandler(state, number, state->user);
 }
 
+void __declspec(dllexport) ARMul_SetSWIhandler (ARMul_State* state, ARMul_SWIhandler* h, void* user);
 void __declspec(dllexport) ARMul_SetSWIhandler (ARMul_State* state, ARMul_SWIhandler* h, void* user) {
 	state->swiHandler = h;
 	state->user = user;
 }
 
+__declspec(dllexport) ARMword* ARMul_GetRegs (ARMul_State * state);
 __declspec(dllexport) ARMword* ARMul_GetRegs (ARMul_State * state) {
 	return state->Reg;
 }

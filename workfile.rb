@@ -37,6 +37,7 @@ MORE_DIRS = ["intlibs/helpers/platforms/#{INTLIB_PLATFORM}",
 	"intlibs/stabs",
 	"intlibs/dgles-0.5",
 	"intlibs/profiledb",
+	"runtimes/cpp/arm-core",
 	"runtimes/cpp/platforms/sdl",
 	"runtimes/cpp/platforms/sdl/mosynclib",
 	"runtimes/cpp/platforms/sdl/MoRE"

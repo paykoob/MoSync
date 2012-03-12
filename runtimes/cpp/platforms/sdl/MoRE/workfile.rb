@@ -9,7 +9,7 @@ class << work
 end
 work.instance_eval do
 	setup_common
-	
+
 	BD = '../../../../..'
 	@SOURCES = ["."]
 	@IGNORED_FILES = ["debugger.cpp"]
@@ -17,6 +17,7 @@ work.instance_eval do
 		"#{BD}/runtimes/cpp/core/sld.cpp",
 		"#{BD}/runtimes/cpp/core/GdbStub.cpp",
 		"#{BD}/runtimes/cpp/core/extensions.cpp",
+		"#{BD}/runtimes/cpp/core/armCore.cpp",
 		"#{BD}/intlibs/helpers/intutil.cpp",
 		]
 	@EXTRA_INCLUDES += ["../../.."]
@@ -28,13 +29,13 @@ work.instance_eval do
 	if(HOST == :win32)
 		@EXTRA_LINKFLAGS = ' -mwindows'
 	end
-	
-	@LOCAL_LIBS = ["mosync_sdl", "demangle"] + @LOCAL_LIBS
-	
+
+	@LOCAL_LIBS = ['mosync_sdl', 'demangle', 'libarmcore'] + @LOCAL_LIBS
+
 	@NAME = "MoRE"
-	
+
 	@INSTALLDIR = mosyncdir + '/bin'
-	
+
 	setup
 end
 

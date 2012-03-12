@@ -3,6 +3,15 @@
 
 #include "Core.h"
 
+#ifdef GDB_DEBUG
+#define UPDATE_IP
+/*
+#include "debugger.h"
+*/
+#include "GdbStub.h"
+#include "GdbCommon.h"
+#endif
+
 #include <base/Syscall.h>
 
 #include <base/base_errors.h>
@@ -53,9 +62,7 @@ public:
 			if(!mSyscall.loadResources(res, "resources"))
 				return false;
 		}
-		return true;
-	}
-#else
+#else	//_android
 	virtual bool LoadVMApp(const char* modfile, const char* resfile) = 0;
 	bool LoadVMAppBase(const char* modfile, const char* resfile) {
 		FileStream mod(modfile);
@@ -65,8 +72,23 @@ public:
 		FileStream res(resfile);
 		if(!mSyscall.loadResources(res, resfile))
 			return false;
+#endif	//_android
+
+#ifdef GDB_DEBUG
+		if(mGdbOn) {
+			if(!mGdbStub) {
+				mGdbStub = GdbStub::create(this, this->getCpuType());
+				mGdbStub->setupDebugConnection();
+			}
+			mGdbStub->waitForRemote();
+		}
+		mGdbSignal = eNone;
+#endif
 		return true;
 	}
+
+#ifdef GDB_DEBUG
+	virtual GdbStub::CpuType getCpuType() const = 0;
 #endif
 
 	// memory support
@@ -249,4 +271,4 @@ public:
 
 }	//namespace Core
 
-#endif VMCOREINT_H
+#endif	//VMCOREINT_H
