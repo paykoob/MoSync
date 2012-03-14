@@ -22,10 +22,12 @@ namespace Core {
 class VMCoreInt : public VMCore {
 protected:
 	Syscall& mSyscall;
-	int* mem_ds;
 
 public:
-	VMCoreInt(Syscall& aSyscall) : mSyscall(aSyscall), mem_ds(NULL) {}
+	VMCoreInt(Syscall& aSyscall) : mSyscall(aSyscall)
+	{
+		mem_ds = NULL;
+	}
 	virtual ~VMCoreInt() {}
 
 	virtual bool LoadVM(Stream& stream) = 0;

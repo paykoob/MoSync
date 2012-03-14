@@ -136,6 +136,9 @@ namespace Core {
 		VMCore();
 		virtual ~VMCore();
 
+		// returns true if regNum refers to a valid register.
+		virtual bool getCustomReg(int regNum, int& val) = 0;
+
 #ifdef LOG_STATE_CHANGE
 		void logStateChange(int ip);
 #endif

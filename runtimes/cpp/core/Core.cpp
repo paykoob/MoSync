@@ -1086,6 +1086,10 @@ void WRITE_REG(int reg, int value) {
 virtual GdbStub::CpuType getCpuType() const { return GdbStub::Mapip; }
 #endif
 
+	bool getCustomReg(int regNum, int& val) {
+		return false;
+	}
+
 	MapipCore(Syscall& aSyscall)
 	: VMCoreInt(aSyscall),
 	rIP(NULL)

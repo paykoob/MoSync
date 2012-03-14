@@ -444,7 +444,7 @@ void reportIp(int r, const char* message) {
 #ifdef GDB_DEBUG
 	if(gCore->mGdbOn) {
 		gCore->mGdbStub->exitHandler(r);
-		gCore->mGdbStub->waitForRemote();
+		while(!gCore->mGdbStub->waitForRemote());
 	}
 #endif
 }

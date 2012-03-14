@@ -60,6 +60,17 @@ public:
 	void Run2() {
 		mPC = ARMul_DoProg(mArmState);
 	}
+
+	bool getCustomReg(int regNum, int& val) {
+		switch(regNum) {
+		case 0x19:	//cpsr
+			val = ARMul_GetCPSR(mArmState);
+			break;
+		default:
+			return false;
+		}
+		return true;
+	}
 private:
 	ARMul_State* mArmState;
 	ARMword mPC;
@@ -105,6 +116,12 @@ unsigned swiHandler(ARMul_State * state, ARMword number, void* user) {
 	return 1;
 }
 
+unsigned memErrHandler(ARMul_State * state, ARMword number, void* user) {
+	LOG("Invalid memory access: 0x%x\n", number);
+	BIG_PHAT_ERROR(ERR_MEMORY_OOB);
+	return 0;
+}
+
 //******************************************************************************
 // ELF loader
 //******************************************************************************
@@ -127,10 +144,19 @@ bool ArmCore::LoadVM(Stream& file) {
 
 	mArmState = ARMul_NewState();
 	ARMul_SetSWIhandler(mArmState, (ARMul_SWIhandler*)::swiHandler, this);
+	ARMul_SetMemErrHandler(mArmState, (ARMul_SWIhandler*)::memErrHandler);
 	mArmRegs = ARMul_GetRegs(mArmState);
 	regs = (int*)mArmRegs;
 
 	ARMul_MemoryInit2(mArmState, mem_ds, DATA_SEGMENT_SIZE);
+
+	// set the stack pointer
+	mArmRegs[13] = DATA_SEGMENT_SIZE - 1024;
+
+	// fill registers with debug markers
+	for(int i=0; i<13; i++) {
+		regs[i] = i;
+	}
 
 #ifdef MEMORY_PROTECTION
 	protectionSet = new byte[(DATA_SEGMENT_SIZE+7)>>3];
@@ -185,6 +211,7 @@ bool ArmCore::LoadVM(Stream& file) {
 	// entry point
 	mPC = ELF_SWAPW(ehdr.e_entry);
 	ARMul_SetPC(mArmState, mPC);
+	mArmRegs[14] = mPC;	//Link Register
 	LOG("Entry point: 0x%x\n", mPC);
 
 	{ //Read Section Table

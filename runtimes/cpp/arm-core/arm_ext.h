@@ -28,6 +28,7 @@ extern void __declspec(dllimport) ARMul_MemoryInit2 (ARMul_State* state, void* m
 extern void __declspec(dllimport) ARMul_MemoryExit (ARMul_State* state);
 
 extern void __declspec(dllimport) ARMul_SetSWIhandler (ARMul_State* state, ARMul_SWIhandler*, void* user);
+extern void __declspec(dllimport) ARMul_SetMemErrHandler (ARMul_State* state, ARMul_SWIhandler*);
 
 extern __declspec(dllimport) ARMword ARMul_GetReg (ARMul_State * state, unsigned mode,
 	unsigned reg);
@@ -36,6 +37,8 @@ extern __declspec(dllimport) void ARMul_SetReg (ARMul_State * state, unsigned mo
 extern __declspec(dllimport) ARMword ARMul_GetPC (ARMul_State * state);
 extern __declspec(dllimport) ARMword ARMul_GetNextPC (ARMul_State * state);
 extern __declspec(dllimport) void ARMul_SetPC (ARMul_State * state, ARMword value);
+
+extern __declspec(dllimport) ARMword ARMul_GetCPSR (ARMul_State * state);
 
 extern __declspec(dllimport) ARMword* ARMul_GetRegs (ARMul_State * state);
 

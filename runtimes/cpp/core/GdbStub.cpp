@@ -70,6 +70,7 @@ private:
 	MoSyncThread mControlThread;
 
 	// CpuType stuff
+	const CpuType mType;
 	const int mNregs;
 
 	//waitForRemote()
@@ -137,13 +138,19 @@ private:
 	// Reference to the core, used to retrieve and write memory/registers and such.
 	Core::VMCore *mCore;
 
+	bool getMemSegment(int& address, int length, byte** psrc, int* psize);
+
 	char tempBuffer[1024];
 
 	template<typename type>
 	const char* convertDataTypeToString(type b) {
+		DEBUG_ASSERT(sizeof(type) < 500);
 		char* ret = tempBuffer;
-		for(int i = (sizeof(type)<<3)-4; i >= 0; i-=4) {
-			*ret++ = (hexChars[((b>>i)&0xf)]);
+		const char* src = (char*)&b;
+		for(int i = 0; i < sizeof(type); i++) {
+			*ret++ = hexChars[(*src >> 4) & 0xf];
+			*ret++ = hexChars[*src & 0xf];
+			src++;
 		}
 		*ret++ = 0;
 		return tempBuffer;
@@ -154,9 +161,11 @@ private:
 	template<typename type>
 	type getDataTypeFromString(char*& b) {
 		type ret = 0;
-		for(int i = (sizeof(type)*2)-1; i >= 0; i-=1) {
-			ret |= ((type)(hexToNum(*b)))<<(i*4);
-			b++;
+		char* dst = (char*)&ret;
+		for(int i = 0; i < sizeof(type); i++) {
+			*dst = hexToNum(*b++) << 4;
+			*dst |= hexToNum(*b++);
+			dst++;
 		}
 		return ret;
 	}
@@ -262,7 +271,7 @@ static int nregs(GdbStub::CpuType t) {
 }
 
 GdbStubInt::GdbStubInt(Core::VMCore *core, CpuType type)
-	: mNregs(nregs(type))
+	: mType(type), mNregs(nregs(type))
 {
 	outputBuffer.resize(1024);
 	curOutputBuffer = outputBuffer.begin();
@@ -364,7 +373,11 @@ void GdbStubInt::handleMessage() {
 		break;
 	case eExit:
 		LOG("MESSAGE exit\n");
-		sendExitPacket(m.code);
+		if(mType == Mapip) {
+			sendExitPacket(m.code);
+		} else {
+			sendExceptionPacket(m.code);
+		}
 		break;
 	case eTerminate:
 		LOG("MESSAGE terminate\n");
@@ -595,6 +608,8 @@ int GdbStubInt::handlePacket(int pos) {
 	if(pos + 2 > mInputPos)
 		return -1;
 
+	LOGD("GDB packet received: %s\n", mInputBuffer.begin() + begin);
+
 	//check the checksum
 	uint theirChecksum;
 	int res = sscanf(mInputBuffer.begin() + pos, "%x", &theirChecksum);
@@ -643,7 +658,8 @@ bool GdbStubInt::readRegisters() {
 	for(int i = 0; i < mNregs; i++) {
 		appendDataTypeToOutput<int>(mCore->regs[i]);
 	}
-	appendDataTypeToOutput<int>(Core::GetIp(mCore));
+	if(mType == Mapip)
+		appendDataTypeToOutput<int>(Core::GetIp(mCore));
 	return true;
 }
 
@@ -652,7 +668,32 @@ bool GdbStubInt::writeRegisters() {
 	for(i = 0; i < mNregs; i++) {
 		mCore->regs[i] = getDataTypeFromInput<int>();
 	}
-	Core::SetIp(mCore, getDataTypeFromInput<int>());
+	if(mType == Mapip)
+		Core::SetIp(mCore, getDataTypeFromInput<int>());
+	return true;
+}
+
+bool GdbStubInt::getMemSegment(int& address, int length, byte** psrc, int* psize) {
+	if(mType == Mapip) {
+		if(address >= DATA_MEMORY_START && address < INSTRUCTION_MEMORY_START) {
+			*psize = mCore->DATA_SEGMENT_SIZE;
+			*psrc = (byte*)mCore->mem_ds;
+		} else {
+			*psize = mCore->CODE_SEGMENT_SIZE;
+			*psrc = (byte*)mCore->mem_cs;
+		}
+		address &= ADDRESS_MASK;
+	} else {	// Arm
+		*psize = mCore->DATA_SEGMENT_SIZE;
+		*psrc = (byte*)mCore->mem_ds;
+	}
+
+	if(address >= *psize || address + length > *psize || address < 0) {
+		LOG("bad address: 0x%x + 0x%x\n", address, length);
+		appendOut("E00");
+		return false;
+	}
+	*psrc += address;
 	return true;
 }
 
@@ -662,19 +703,8 @@ bool GdbStubInt::readMemory() {
 
 	byte *src;
 	int size;
-	if(address >= DATA_MEMORY_START && address < INSTRUCTION_MEMORY_START) {
-		size = mCore->DATA_SEGMENT_SIZE;
-		src = (byte*)mCore->mem_ds;
-	} else {
-		size = mCore->CODE_SEGMENT_SIZE;
-		src = (byte*)mCore->mem_cs;
-	}
-	address &= ADDRESS_MASK;
-	if(address >= size || address + length > size) {
-		LOG("bad address: 0x%x + 0x%x\n", address, length);
-		return false;
-	}
-	src += address;
+	if(!getMemSegment(address, length, &src, &size))
+		return true;
 
 	for(int i = 0; i < length; i++) {
 		appendDataTypeToOutput<byte>(src[i]);
@@ -688,19 +718,8 @@ bool GdbStubInt::writeMemory() {
 
 	byte *dst;
 	int size;
-	if(address>=DATA_MEMORY_START&&address<INSTRUCTION_MEMORY_START) {
-		size = mCore->DATA_SEGMENT_SIZE;
-		dst = (byte*)mCore->mem_ds;
-	} else {
-		size = mCore->CODE_SEGMENT_SIZE;
-		dst = (byte*)mCore->mem_cs;
-	}
-	address&=ADDRESS_MASK;
-
-	if(address >= size || address + length > size) {
-		LOG("bad address: 0x%x + 0x%x\n", address, length);
-		return false;
-	}
+	if(!getMemSegment(address, length, &dst, &size))
+		return true;
 
 	for(int i = 0; i < length; i++) {
 		dst[address+i] = getDataTypeFromInput<byte>();
@@ -742,7 +761,16 @@ bool GdbStubInt::lastSignal() {
 }
 
 bool GdbStubInt::readRegister() {
-	return false;
+	byte reg = getDataTypeFromInput<byte>();
+	int r;
+	if(reg < mNregs) {
+		appendDataTypeToOutput<int>(mCore->regs[reg]);
+	} else if(mCore->getCustomReg(reg, r)) {
+		appendDataTypeToOutput<int>(r);
+	} else {
+		appendOut("E00");
+	}
+	return true;
 }
 
 bool GdbStubInt::writeRegister() {
@@ -778,7 +806,7 @@ bool GdbStubInt::generalQuery() {
 }
 
 bool GdbStubInt::sectionOffsetsQuery() {
-	appendOut("TextSeg=0");
+	appendOut("TextSeg=8000");
 	return true;
 }
 
@@ -787,7 +815,7 @@ bool GdbStubInt::consoleOutput() {
 }
 
 bool GdbStubInt::defaultResponse() {
-	appendOut("NO");
+	//appendOut("NO");
 	mForceNextPacket = true;
 	return true;
 }
@@ -818,12 +846,12 @@ bool GdbStubInt::executeCommand() {
 
 			// optional;
 
-		case 'H': return appendOK();
+		//case 'H': return appendOK();
 		case 'q': return generalQuery();
 		case '?': return lastSignal();
+		case 'p': return readRegister();
 
 #if 0
-		case 'p': return readRegister();
 		case 'P': return writeRegister();
 		case 'k': return killRequest();
 		case 'd': return toggleDebug();

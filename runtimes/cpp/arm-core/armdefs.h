@@ -154,6 +154,7 @@ struct ARMul_State
   unsigned verbose;		/* Print various messages like the banner */
 
   ARMul_SWIhandler* swiHandler;
+	ARMul_SWIhandler* memErrHandler;
   void* user;
 };
 
@@ -284,7 +285,7 @@ extern __declspec(dllexport) void ARMul_SetPC (ARMul_State * state, ARMword valu
 extern ARMword ARMul_GetR15 (ARMul_State * state);
 extern void ARMul_SetR15 (ARMul_State * state, ARMword value);
 
-extern ARMword ARMul_GetCPSR (ARMul_State * state);
+extern __declspec(dllexport) ARMword ARMul_GetCPSR (ARMul_State * state);
 extern void ARMul_SetCPSR (ARMul_State * state, ARMword value);
 extern ARMword ARMul_GetSPSR (ARMul_State * state, ARMword mode);
 extern void ARMul_SetSPSR (ARMul_State * state, ARMword mode, ARMword value);

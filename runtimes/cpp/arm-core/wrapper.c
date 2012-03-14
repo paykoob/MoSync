@@ -66,6 +66,11 @@ void __declspec(dllexport) ARMul_SetSWIhandler (ARMul_State* state, ARMul_SWIhan
 	state->user = user;
 }
 
+void __declspec(dllexport) ARMul_SetMemErrHandler (ARMul_State* state, ARMul_SWIhandler* h);
+void __declspec(dllexport) ARMul_SetMemErrHandler (ARMul_State* state, ARMul_SWIhandler* h) {
+	state->memErrHandler = h;
+}
+
 __declspec(dllexport) ARMword* ARMul_GetRegs (ARMul_State * state);
 __declspec(dllexport) ARMword* ARMul_GetRegs (ARMul_State * state) {
 	return state->Reg;

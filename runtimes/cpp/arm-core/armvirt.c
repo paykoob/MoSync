@@ -190,12 +190,12 @@ void ARMul_MemoryExit (ARMul_State* state) {
 }
 static ARMword GetWord (ARMul_State* state, ARMword address, int check) {
 	if(address >= state->MemSize)
-		abort();
+		state->memErrHandler(state, address, state->user);
 	return *(ARMword*)(state->MemDataPtr + address);
 }
 static void PutWord (ARMul_State* state, ARMword address, ARMword data, int check) {
 	if(address >= state->MemSize)
-		abort();
+		state->memErrHandler(state, address, state->user);
 	*(ARMword*)(state->MemDataPtr + address) = data;
 }
 #endif	//VIRTUAL_MEMORY

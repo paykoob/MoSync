@@ -2834,6 +2834,6 @@ void MoSyncErrorExit(int errorCode) {
 		MoSyncMessageBox(buffer, "MoSync Panic");
 	}
 
-	DEBUG_BREAK;
+	//DEBUG_BREAK;
 	MoSyncExit(errorCode);
 }
