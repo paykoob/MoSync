@@ -722,7 +722,7 @@ bool GdbStubInt::writeMemory() {
 		return true;
 
 	for(int i = 0; i < length; i++) {
-		dst[address+i] = getDataTypeFromInput<byte>();
+		dst[i] = getDataTypeFromInput<byte>();
 	}
 	appendOut("OK");
 

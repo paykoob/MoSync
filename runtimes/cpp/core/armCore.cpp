@@ -58,8 +58,31 @@ public:
 		DEBIG_PHAT_ERROR;
 	}
 	void Run2() {
-		mPC = ARMul_DoProg(mArmState);
+		ARMul_SetPC(mArmState, mPC);
+		ARMword oldPC = mPC;
+		if(mGdbSignal == eStep) {
+			LOG("step\n");
+			mPC = ARMul_DoInstr(mArmState);
+			ARMul_SetPC(mArmState, mPC);
+			waitForRemote(mGdbSignal);
+		} else {
+			LOG("instruction\n");
+#if 0	// run
+			mPC = ARMul_DoProg(mArmState);
+#else	// step
+			if(mem_ds[mPC >> 2] == 0xe7ffdefe) {	// breakpoint
+				LOG("Breakpoint hit at 0x%08x\n", mPC);
+				mGdbSignal = eBreakpoint;
+				waitForRemote(mGdbSignal);
+			} else {
+				mPC = ARMul_DoInstr(mArmState);
+				ARMul_SetPC(mArmState, mPC);
+			}
+#endif
+		}
+		LOG("PC: 0x%08x -> 0x%08x\n", oldPC, mPC);
 	}
+
 
 	bool getCustomReg(int regNum, int& val) {
 		switch(regNum) {

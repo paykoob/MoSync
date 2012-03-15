@@ -1061,14 +1061,6 @@ void WRITE_REG(int reg, int value) {
 #undef RUN_LOOP
 #endif	//GDB_DEBUG
 
-#if defined(UPDATE_IP) && defined(GDB_DEBUG)
-	void waitForRemote(int code) {
-		mGdbStub->exceptionHandler(code);
-		if(mGdbStub->waitForRemote()) {
-			MoSyncExit(code);
-		}
-	}
-#endif
 
 	int GetIp() const {
 		return IP;

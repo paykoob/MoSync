@@ -84,10 +84,19 @@ public:
 			}
 			mGdbStub->waitForRemote();
 		}
-		mGdbSignal = eNone;
+		//mGdbSignal = eNone;
 #endif
 		return true;
 	}
+
+#if defined(UPDATE_IP) && defined(GDB_DEBUG)
+	void waitForRemote(int code) {
+		mGdbStub->exceptionHandler(code);
+		if(mGdbStub->waitForRemote()) {
+			MoSyncExit(code);
+		}
+	}
+#endif
 
 #ifdef GDB_DEBUG
 	virtual GdbStub::CpuType getCpuType() const = 0;
