@@ -147,7 +147,7 @@ private:
 		DEBUG_ASSERT(sizeof(type) < 500);
 		char* ret = tempBuffer;
 		const char* src = (char*)&b;
-		for(int i = 0; i < sizeof(type); i++) {
+		for(size_t i = 0; i < sizeof(type); i++) {
 			*ret++ = hexChars[(*src >> 4) & 0xf];
 			*ret++ = hexChars[*src & 0xf];
 			src++;
@@ -162,7 +162,7 @@ private:
 	type getDataTypeFromString(char*& b) {
 		type ret = 0;
 		char* dst = (char*)&ret;
-		for(int i = 0; i < sizeof(type); i++) {
+		for(size_t i = 0; i < sizeof(type); i++) {
 			*dst = hexToNum(*b++) << 4;
 			*dst |= hexToNum(*b++);
 			dst++;

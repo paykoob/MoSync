@@ -266,13 +266,19 @@ module MoSyncExeModule
 	end
 
 	def emuCommandLine
+		args = ''
 		if(@resourceTask)
-			resArg = " -resource \"#{@resourceTask}\""
+			args << " -resource \"#{@resourceTask}\""
 		end
 		if(@EXTENSIONS)
-			extArg = " -x build/mxConfig.txt"
+			args << " -x build/mxConfig.txt"
 		end
-		return "#{mosyncdir}/bin/MoRE -program \"#{@TARGET}\" -sld \"#{@SLD}\"#{resArg}#{extArg}#{@EXTRA_EMUFLAGS}"
+		if(USE_ARM)
+			args << ' -arm'
+		else
+			args << " -sld \"#{@SLD}\""
+		end
+		return "#{mosyncdir}/bin/MoRE -program \"#{@TARGET}\"#{args}#{@EXTRA_EMUFLAGS}"
 	end
 	def run
 		# run the emulator

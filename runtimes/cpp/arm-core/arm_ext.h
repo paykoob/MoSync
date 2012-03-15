@@ -20,7 +20,9 @@ typedef unsigned ARMul_SWIhandler(ARMul_State * state, ARMword number);
 
 extern __declspec(dllimport) void ARMul_EmulateInit (void);
 extern __declspec(dllimport) ARMul_State *ARMul_NewState (void);
+extern __declspec(dllimport) unsigned ARMul_CoProInit (ARMul_State * state);
 extern __declspec(dllimport) void ARMul_Reset (ARMul_State * state);
+
 extern __declspec(dllimport) ARMword ARMul_DoProg (ARMul_State * state);
 extern __declspec(dllimport) ARMword ARMul_DoInstr (ARMul_State * state);
 

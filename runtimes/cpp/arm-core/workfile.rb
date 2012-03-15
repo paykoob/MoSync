@@ -13,6 +13,7 @@ work.instance_eval do
 		'iwmmxt.c' => ' -Wno-sign-compare',
 	}
 	@NAME = 'armcore'
+	@INSTALLDIR = mosyncdir + '/bin'
 end
 
 work.invoke

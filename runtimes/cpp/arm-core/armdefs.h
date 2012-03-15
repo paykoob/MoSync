@@ -394,7 +394,7 @@ extern ARMword ARMul_MemAccess (ARMul_State * state, ARMword, ARMword,
 #define ARMul_CP15_DBCON_E1	0x000c
 #define ARMul_CP15_DBCON_E0	0x0003
 
-extern unsigned ARMul_CoProInit (ARMul_State * state);
+extern __declspec(dllexport) unsigned ARMul_CoProInit (ARMul_State * state);
 extern void ARMul_CoProExit (ARMul_State * state);
 extern void ARMul_CoProAttach (ARMul_State * state, unsigned number,
 			       ARMul_CPInits * init, ARMul_CPExits * exit,

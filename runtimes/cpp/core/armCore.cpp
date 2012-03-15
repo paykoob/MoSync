@@ -58,6 +58,7 @@ public:
 		DEBIG_PHAT_ERROR;
 	}
 	void Run2() {
+		DEBUG_ASSERT(mPC >= 0x8000);
 		ARMul_SetPC(mArmState, mPC);
 		ARMword oldPC = mPC;
 		if(mGdbSignal == eStep) {
@@ -66,8 +67,7 @@ public:
 			ARMul_SetPC(mArmState, mPC);
 			waitForRemote(mGdbSignal);
 		} else {
-			LOG("instruction\n");
-#if 0	// run
+#if 1	// run
 			mPC = ARMul_DoProg(mArmState);
 #else	// step
 			if(mem_ds[mPC >> 2] == 0xe7ffdefe) {	// breakpoint
@@ -139,7 +139,7 @@ unsigned swiHandler(ARMul_State * state, ARMword number, void* user) {
 	return 1;
 }
 
-unsigned memErrHandler(ARMul_State * state, ARMword number, void* user) {
+static unsigned memErrHandler(ARMul_State * state, ARMword number, void* user) {
 	LOG("Invalid memory access: 0x%x\n", number);
 	BIG_PHAT_ERROR(ERR_MEMORY_OOB);
 	return 0;
@@ -165,7 +165,9 @@ bool ArmCore::LoadVM(Stream& file) {
 	DATA_SEGMENT_SIZE = 2*1024*1024;
 	mem_ds = new int[DATA_SEGMENT_SIZE / sizeof(int)];
 
+	ARMul_EmulateInit();
 	mArmState = ARMul_NewState();
+	ARMul_CoProInit(mArmState);
 	ARMul_SetSWIhandler(mArmState, (ARMul_SWIhandler*)::swiHandler, this);
 	ARMul_SetMemErrHandler(mArmState, (ARMul_SWIhandler*)::memErrHandler);
 	mArmRegs = ARMul_GetRegs(mArmState);
