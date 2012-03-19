@@ -4,7 +4,7 @@ module MoSyncArmGccMod
 	def host_cppflags; '' end
 	def host_flags
 		flags = ''
-		flags << ' -fno-exceptions -mfloat-abi=hard'
+		flags << ' -fno-exceptions -mfloat-abi=soft'
 		flags << ' -DUSE_NEWLIB' if(USE_NEWLIB)
 		return flags
 	end

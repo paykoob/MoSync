@@ -347,7 +347,7 @@ class MoSyncArmExeWork < ExeWork
 		end
 	end
 	def setup3(a, b)
-		@EXTRA_LINKFLAGS << " -nodefaultlibs -B#{ARM_BASEDIR}/arm-elf/sys-include/gcc -lgcc"
+		@EXTRA_LINKFLAGS << " -nodefaultlibs -mfloat-abi=soft #{ARM_BASEDIR}/lib/gcc/arm-elf/4.6.3/libgcc.a"
 		super(a, b)
 	end
 end

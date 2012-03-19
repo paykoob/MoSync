@@ -26,7 +26,8 @@ static const int instructionsPerLoop = 14;
 static const int nLoops = 100000;
 static const int minTime = 1000;
 
-int MAMain() {
+int MAMain(void) GCCATTRIB(noreturn);
+int MAMain(void) {
 	int v, i, time, startTime;
 	int nitr;
 	MAEvent event;
@@ -37,7 +38,7 @@ int MAMain() {
 	printf("Fire->Quit, other->restart\n");
 	printf("of %i instructions\n", nLoops * instructionsPerLoop);
 #endif
-#if 0
+#if 1
 	puts("Testing ");
 	itoa(nLoops, buf, 10);
 	puts(buf);
@@ -75,5 +76,4 @@ waitLoop:
 		goto waitLoop;
 	else
 		goto beginning;
-	return 0;
 }
