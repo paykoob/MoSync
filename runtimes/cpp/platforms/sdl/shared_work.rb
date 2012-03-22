@@ -31,12 +31,12 @@ def setup_common
 			@EXTRA_CPPFLAGS += " -D__USE_FULLSCREEN__"
 		end
 		@LIBRARIES = common_libraries + sound_lib + ["gtk-x11-2.0", "bluetooth", "expat", "freeimage",
-			"ssl", "crypto", "GLEW", "GL"]
+			"ssl", "crypto"]
 		@EXTRA_INCLUDES = ["../../../base", ".."]
 
 	elsif(HOST == :darwin)
 		@LOCAL_LIBS << "gsm_amr"
-		@LIBRARIES = common_libraries + ["SDL_sound", "SDLmain", "expat", "freeimage", "ssl", "crypto", "GLEW", "GL"]
+		@LIBRARIES = common_libraries + ["SDL_sound", "SDLmain", "expat", "freeimage", "ssl", "crypto"]
 		@EXTRA_INCLUDES = common_includes + ["/sw/include", "/opt/local/include"]
 	else
 		error "Unsupported platform"
