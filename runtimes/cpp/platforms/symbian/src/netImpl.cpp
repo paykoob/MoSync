@@ -15,6 +15,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.
 */
 
+#define SOCKET_DEBUGGING_MODE
+
 #include <es_enum.h>
 #include <CommDbConnPref.h>
 
@@ -218,7 +220,11 @@ bool CSocket::Write(const TDesC8& aDesc, CPublicActive& op) {
 }
 void CSocket::RecvOneOrMoreL(TDes8& aDes, CPublicActive& op) {
 	LOGS("RooM...");
-	mSocket.RecvOneOrMore(aDes, 0, op.iStatus, mDummyLength);
+	if(mIsDatagram) {
+		mSocket.Recv(aDes, 0, op.iStatus);
+	} else {
+		mSocket.RecvOneOrMore(aDes, 0, op.iStatus, mDummyLength);
+	}
 	op.SetActive();
 	LOGS("A\n");
 }
@@ -309,7 +315,7 @@ void Syscall::ConnOp::SendResult(int result) {
 	//LOGS("cops %i 0x%08X\n", mSyscall.gConnOps.IsEmpty(), mSyscall.gConnOps.First());
 	mSyscall.gConnCleanupQue->move(this);
 	//LOGS("cops %i\n", mSyscall.gConnOps.IsEmpty());
-	
+
 	if(mConn.errorOverride)
 		result = mConn.errorOverride;
 
@@ -432,7 +438,7 @@ void Syscall::ConnOp::RunL() {
 
 		subOps.Pop();
 	}
-	
+
 	if(!subOps.IsEmpty()) {
 		StartConnSubOpL();
 	} else {
@@ -714,7 +720,7 @@ void Syscall::ConnOp::addHttpSendHeaders() {
 	//send headers
 	http->mBufPtr.Set(CBufFlatPtr(http->mBuffer()));
 	CSO_ADD(Write, http->mBufPtr);
-	
+
 	http->mState = CHttpConnection::WRITING;
 }
 
@@ -768,7 +774,7 @@ void CHttpConnection::FormatRequestL() {
 	default:
 		BIG_PHAT_ERROR(ERR_HTTP_METHOD_INVALID);
 	}
-	
+
 	APPEND(*mPath);
 	APPEND(_L8(" HTTP/1.0\r\n"));
 
@@ -860,7 +866,7 @@ void CHttpConnection::RunL(TInt aResult) {
 		LOG("HTTP header buffer full!\n");
 		CompleteReadHeaders(CONNERR_INTERNAL, 0);
 	}
-	
+
 	// copy partial header lines to beginning of buffer
 	if(startPos != 0) {
 		LOGS("Deleting %i bytes.\n", startPos);
@@ -1088,7 +1094,7 @@ void CBtServerSocket::init(RSocketServ& aServer, const TUUID& uuid, bool hasName
 
 	// set protocol list to the record
 	mSdpDB.UpdateAttributeL(mHandle, KSdpAttrIdProtocolDescriptorList, *pdl);
-	
+
 	// set browse group
 	// service will not appear in scans unless this is set properly!
 	TCleaner<CSdpAttrValueDES> bga(CSdpAttrValueDES::NewDESL(NULL));
@@ -1121,11 +1127,12 @@ CBtServerSocket::~CBtServerSocket() {
 //Helpers
 //******************************************************************************
 
-CSocket* Syscall::createSocket(bool ssl) {
-	if(ssl) {
-		return new (ELeave) CMySecureSocket(gSocketServ);
-	} else {
-		return new (ELeave) CSocket(gSocketServ, CSocket::ETcp);
+CSocket* Syscall::createSocket(SocketType type) {
+	switch(type) {
+	case SSL: return new (ELeave) CMySecureSocket(gSocketServ);
+	case TCP: return new (ELeave) CSocket(gSocketServ, CSocket::ETcp);
+	case UDP: return new (ELeave) CSocket(gSocketServ, CSocket::EUdp);
+	default: DEBIG_PHAT_ERROR;
 	}
 }
 
@@ -1148,7 +1155,7 @@ bool splitPurl(const TDesC8& parturl, TPtrC8& hostnamePtrC8, int& port, int port
 
 //returns >0 or CONNERR.
 int Syscall::httpCreateConnectionLC(const TDesC8& parturl, CHttpConnection*& conn,
-	int method, bool ssl)
+	int method, SocketType socketType)
 {
 	int port_m1_index = parturl.Locate(':');
 	int path_index = parturl.Locate('/');
@@ -1162,7 +1169,7 @@ int Syscall::httpCreateConnectionLC(const TDesC8& parturl, CHttpConnection*& con
 	int hostname_length;
 	TUint16 port;
 	if(port_m1_index == KErrNotFound) {
-		port = ssl ? 443 : 80;
+		port = (socketType == SSL) ? 443 : 80;
 		hostname_length = path_index;
 	} else {
 		TLex8 portLex(parturl.Mid(port_m1_index + 1, path_index - (port_m1_index + 1)));
@@ -1172,7 +1179,7 @@ int Syscall::httpCreateConnectionLC(const TDesC8& parturl, CHttpConnection*& con
 		}
 	}
 	TPtrC8 hostname(parturl.Left(hostname_length));
-	conn = new (ELeave) CHttpConnection(createSocket(ssl), method, port, gHttpStringPool);
+	conn = new (ELeave) CHttpConnection(createSocket(socketType), method, port, gHttpStringPool);
 	CleanupStack::PushL(conn);
 	conn->ConstructL(hostname, path);
 	return 1;
@@ -1218,6 +1225,7 @@ static void storeSockAddr(const TSockAddr& sockaddr, MAConnAddr* addr) {
 _LIT8(KHttp, "http://");
 _LIT8(KHttps, "https://");
 _LIT8(KSocket, "socket://");
+_LIT8(KDatagram, "datagram://");
 _LIT8(KSsl, "ssl://");
 _LIT8(KBtspp, "btspp://");
 
@@ -1238,26 +1246,30 @@ SYSCALL(MAHandle, maConnect(const char* url)) {
 	_LIT8(KLocalhost, "localhost");
 	CConnection* conn = NULL;
 	TPtrC8 match;
-	bool ssl = false;
+	SocketType socketType = TCP;	// initialized to placate stupid compiler
 	ConnectionType type;
 
 	// determine type of connection
 	if(SSTREQ(urlP, KSocket)) {
 		match.Set(KSocket);
 		type = eSocket;
-		ssl = false;
+		socketType = TCP;
+	} else if(SSTREQ(urlP, KDatagram)) {
+		match.Set(KDatagram);
+		type = eSocket;
+		socketType = UDP;
 	} else if(SSTREQ(urlP, KSsl)) {
 		match.Set(KSsl);
 		type = eSocket;
-		ssl = true;
+		socketType = SSL;
 	} else if(SSTREQ(urlP, KHttp)) {
 		match.Set(KHttp);
 		type = eHttp;
-		ssl = false;
+		socketType = TCP;
 	} else if(SSTREQ(urlP, KHttps)) {
 		match.Set(KHttps);
 		type = eHttp;
-		ssl = true;
+		socketType = SSL;
 	} else if(SSTREQ(urlP, KBtspp)) {
 		match.Set(KBtspp);
 		type = eBtspp;
@@ -1272,8 +1284,8 @@ SYSCALL(MAHandle, maConnect(const char* url)) {
 		if(!splitPurl(parturl, hostnamePtrC8, port, (1<<16))) {
 			return CONNERR_URL;
 		}
-		Smartie<CSocket> sockp(createSocket(ssl));
-		
+		Smartie<CSocket> sockp(createSocket(socketType));
+
 		_LIT8(K127, "127.");
 		TInetAddr addr;
 		bool localhost = false;
@@ -1300,7 +1312,7 @@ SYSCALL(MAHandle, maConnect(const char* url)) {
 		conn = sockp.extract();
 	} else if(type == eHttp) {
 		CHttpConnection* http;
-		TLTZ_PASS(httpCreateConnectionLC(parturl, http, HTTP_GET, ssl));
+		TLTZ_PASS(httpCreateConnectionLC(parturl, http, HTTP_GET, socketType));
 		http->state |= CONNOP_CONNECT;
 		StartConnOpL(CO_HttpFinish::NewL(gNetworkingState != EStarted,
 			*this, gConnNextHandle, *http, *http, true));
@@ -1412,7 +1424,7 @@ SYSCALL(int, maConnGetAddr(MAHandle conn, MAConnAddr* addr)) {
 		if(addr->family == CONN_FAMILY_BT) {
 			TBTDevAddr btaddr;
 			//TPckgBuf<TBTDevAddr> pckg(btaddr);
-			
+
 			//old style, might work on Symbian 7.0 and earlier
 			//update: doesn't work on 6630.
 #if 0//!defined(__SERIES60_3X__)
@@ -1455,7 +1467,7 @@ SYSCALL(int, maConnGetAddr(MAHandle conn, MAConnAddr* addr)) {
 			return CONNERR_INTERNAL;
 		}
 	}
-	
+
 	CConnection* cc = gConnections.find(conn);
 	MYASSERT(cc, ERR_CONN_HANDLE_INVALID);
 	//we have 4 options: tcp client, bt client, tcp server, bt server
@@ -1539,10 +1551,10 @@ SYSCALL(MAHandle, maHttpCreate(const char* url, int method)) {
 	CHttpConnection* conn;
 	if(SSTREQ(urlP, KHttp)) {
 		TPtrC8 parturl = urlP.Mid(KHttp().Length());
-		TLTZ_PASS(httpCreateConnectionLC(parturl, conn, method, false));
+		TLTZ_PASS(httpCreateConnectionLC(parturl, conn, method, TCP));
 	} else if(SSTREQ(urlP, KHttps)) {
 		TPtrC8 parturl = urlP.Mid(KHttps().Length());
-		TLTZ_PASS(httpCreateConnectionLC(parturl, conn, method, true));
+		TLTZ_PASS(httpCreateConnectionLC(parturl, conn, method, SSL));
 	} else {
 		return CONNERR_URL;
 	}
