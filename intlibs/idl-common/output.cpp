@@ -272,9 +272,9 @@ void streamHeaderFunctions(ostream& stream, const Interface& inf, bool syscall) 
 		if(f.groupId != "")
 			stream << "/** @ingroup " << f.groupId << " */\n";
 
-		if(false)//!syscall && f.returnType != "noreturn")
+		if(!syscall && f.returnType != "noreturn")
 			stream <<
-				"#ifdef __arm__\n"
+				"#if defined(__arm__) && !defined(MAPIP)\n"
 				"inline\n"
 				"#endif\n";
 		if(syscall)
@@ -292,27 +292,11 @@ void streamHeaderFunctions(ostream& stream, const Interface& inf, bool syscall) 
 		if(syscall)
 			stream << ")";
 		stream << ")\n"
-			"#ifdef __arm__\n"
+			"#if defined(__arm__) && defined(MAPIP)\n"
 			"__attribute((naked))\n"
 			"#endif\n"
 			";\n"
 		;
-		if(false){//f.returnType != "noreturn") {
-			stream <<
-				"#ifdef __arm__\n"
-				"#pragma GCC diagnostic push\n"
-				"#pragma GCC diagnostic ignored \"-Wreturn-type\"\n"
-			;
-			stream << cType(inf, f.returnType);
-			streamHeaderFunctionArgs(stream, inf, f);
-			stream << ") {\n"
-				"\tasm volatile(\"swi "<<f.number<<"\");\n"
-				"}\n"
-			;
-			if(f.returnType != "noreturn")
-				stream <<"#pragma GCC diagnostic pop\n";
-			stream << "#endif\n";
-		}
 		stream << "\n";
 	}
 	stream << "\n";
