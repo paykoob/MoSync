@@ -24,6 +24,7 @@ work.instance_eval do
 
 		@IGNORED_FILES << "strptime.c"
 		@IGNORED_FILES << "OpenGLES.cpp"
+		@IGNORED_FILES << "OpenGLES2.cpp"
 		if (!SDL_SOUND)
 			@EXTRA_CPPFLAGS += " -D__NO_SDL_SOUND__"
 			@IGNORED_FILES += ["SDLSoundAudioSource.cpp"]
@@ -41,6 +42,7 @@ work.instance_eval do
 	elsif(HOST == :darwin)
 		@IGNORED_FILES << "strptime.c"
 		@IGNORED_FILES << "OpenGLES.cpp"
+		@IGNORED_FILES << "OpenGLES2.cpp"
 		@EXTRA_INCLUDES = common_includes + ["/sw/include", "/opt/local/include"]
 		@LIBRARIES = common_libraries +["objc"]
 		@SPECIFIC_CFLAGS = {"SDL_prim.c" => " -Wno-float-equal -Wno-unreachable-code -D_ANSI_SOURCE",

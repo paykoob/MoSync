@@ -118,8 +118,13 @@ static const GLvoid* getArrayBufferBindingOffset(const GLvoid *pointer)
 	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &ret);
 	if(ret != 0)
 	{
-		if(pointer != NULL)
-			pointer = (const void*)(size_t)SYSCALL_THIS->TranslateNativePointerToMoSyncPointer((void*)pointer);
+		glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &ret);
+		if(ret != 0 && glGetError()==GL_NO_ERROR)
+		{
+			if(pointer != NULL)
+				pointer = (const void*)(size_t)SYSCALL_THIS->TranslateNativePointerToMoSyncPointer((void*)pointer);
+		}
+		return pointer;
 	}
 	return pointer;
 }

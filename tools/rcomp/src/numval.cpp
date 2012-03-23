@@ -339,7 +339,12 @@ void NumericValue::StoreValue( unsigned long LongValue)
 template<bool> class __CompileTimeAssert {public: __CompileTimeAssert(...) {}};
 template<> class __CompileTimeAssert<false> {};
 struct COMPILE_TIME_ERROR {};
-#define COMPILE_TIME_ASSERT(aCondition) { /*__CompileTimeAssert<(aCondition)> __temp =*/ __CompileTimeAssert<(aCondition)>(COMPILE_TIME_ERROR()); }
+#ifdef _MSC_VER
+#define _CTA_VAR(aCondition) __CompileTimeAssert<(aCondition)> __temp =
+#else
+#define _CTA_VAR(aCondition)
+#endif
+#define COMPILE_TIME_ASSERT(aCondition) { _CTA_VAR(aCondition) __CompileTimeAssert<(aCondition)>(COMPILE_TIME_ERROR()); }
 
 RCBinaryStream & operator<< ( RCBinaryStream & os, NumericValue o)
 	{

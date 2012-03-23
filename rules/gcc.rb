@@ -122,10 +122,12 @@ module GccVersion
 				set_class_var(gccVersionClass, :@@GCC_V4_SUB, gcc_version_info[:ver][2, 1].to_i)
 			end
 
-			warning("GCC version: #{gcc_version_info.inspect}") if(PRINT_GCC_VERSION_INFO)
-			#warning("GCC_IS_V4: #{is_v4}")
-			if(is_v4)
-				#warning("GCC sub-version: #{gcc_version_info[:ver][2, 1].to_i}")
+			if(PRINT_GCC_VERSION_INFO)
+				warning("GCC version: #{gcc_version.inspect}")
+				warning("GCC_IS_V4: #{is_v4}")
+				if(is_v4)
+					warning("GCC sub-version: #{gcc_version[2, 1].to_i}")
+				end
 			end
 
 			# Assuming for the moment that clang is command-line-compatible with gcc 4.2.

@@ -926,6 +926,29 @@ namespace Base
 		return result;
 	}
 
+	int _maWidgetScreenAddOptionsMenuItem(int widget, const char* title, int iconHandle, int iconPredefined, JNIEnv* jNIEnv, jobject jThis)
+	{
+		// Convert to Java parameters
+		jstring jstrTitle = jNIEnv->NewStringUTF(title);
+
+		// Get the Java method
+		jclass cls = jNIEnv->GetObjectClass(jThis);
+		jmethodID methodID = jNIEnv->GetMethodID(cls, "maWidgetScreenAddOptionsMenuItem", "(ILjava/lang/String;II)I");
+		if (methodID == 0)
+		{
+			return 0;
+		}
+
+		// Call the java method
+		int result = jNIEnv->CallIntMethod(jThis, methodID, widget, jstrTitle, iconHandle, iconPredefined);
+
+		// Delete allocated memory
+		jNIEnv->DeleteLocalRef(cls);
+		jNIEnv->DeleteLocalRef(jstrTitle);
+
+		return result;
+	}
+
 	int _maWidgetScreenShow(int screenWidget, JNIEnv* jNIEnv, jobject jThis)
 	{
 		// Get the Java method
@@ -2512,7 +2535,7 @@ namespace Base
 	int _maNFCGetNDEFId(MAHandle ndefRecordHandle, int dst, int len, int memStart, JNIEnv* jNIEnv, jobject jThis) {
 		jclass cls = jNIEnv->GetObjectClass(jThis);
 
-		int fixedDst = dst == NULL ? 0 : dst - memStart;
+		int fixedDst = dst == 0 ? 0 : dst - memStart;
 
 		jmethodID methodID = jNIEnv->GetMethodID(
 												 cls,
@@ -2531,7 +2554,7 @@ namespace Base
 	int _maNFCGetNDEFPayload(MAHandle ndefRecordHandle, int dst, int len, int memStart, JNIEnv* jNIEnv, jobject jThis) {
 		jclass cls = jNIEnv->GetObjectClass(jThis);
 
-		int fixedDst = dst == NULL ? 0 : dst - memStart;
+		int fixedDst = dst == 0 ? 0 : dst - memStart;
 
 		jmethodID methodID = jNIEnv->GetMethodID(
 												 cls,
@@ -2565,7 +2588,7 @@ namespace Base
 	int _maNFCGetNDEFType(MAHandle ndefRecordHandle, int dst, int len, int memStart, JNIEnv* jNIEnv, jobject jThis) {
 		jclass cls = jNIEnv->GetObjectClass(jThis);
 
-		int fixedDst = dst == NULL ? 0 : dst - memStart;
+		int fixedDst = dst == 0 ? 0 : dst - memStart;
 
 		jmethodID methodID = jNIEnv->GetMethodID(
 												 cls,
