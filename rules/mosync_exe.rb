@@ -16,6 +16,8 @@
 
 # This file defines the class used for compiling MoSync programs.
 
+require "#{File.dirname(__FILE__)}/config.rb"
+
 require "#{File.dirname(__FILE__)}/pipe.rb"
 require "#{File.dirname(__FILE__)}/mosync_util.rb"
 require "#{File.dirname(__FILE__)}/mosync_resources.rb"
@@ -206,7 +208,7 @@ module MoSyncExeModule
 		if(USE_NEWLIB)
 			default(:DEFAULT_LIBS, ['rescompiler', 'newlib'])
 		else
-			default(:DEFAULT_LIBS, ['rescompiler', 'mastd'])
+			default(:DEFAULT_LIBS, ['mastd', 'rescompiler', 'mastd'])
 		end
 
 		# libs
@@ -288,6 +290,17 @@ module MoSyncExeModule
 		# debug the emulator
 		sh "gdb --args #{emuCommandLine}"
 	end
+	def runGdb
+		# debug the program
+		if(USE_ARM)
+			spawn(emuCommandLine + ' -gdb')
+			gc = "#{ARM_GDB_NAME} \"#{@TARGET}\" -ex \"target remote localhost:50000\""
+			gc << " -x gdb.txt" if(File.exist?('gdb.txt'))
+			sh gc
+		else
+			raise 'Not implemented'
+		end
+	end
 	def invoke
 		super
 		# If you invoke a work without setting up any targets,
@@ -300,6 +313,10 @@ module MoSyncExeModule
 			end
 			if(Targets.goals.include?(:gdb))
 				self.gdb
+				return
+			end
+			if(Targets.goals.include?(:rg))
+				self.runGdb
 				return
 			end
 		end

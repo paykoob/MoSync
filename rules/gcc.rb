@@ -14,9 +14,7 @@
 # Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
-# load local_config.rb, if it exists.
-lc = "#{File.dirname(__FILE__)}/local_config.rb"
-require lc if(File.exists?(lc))
+require "#{File.dirname(__FILE__)}/config.rb"
 
 require "#{File.dirname(__FILE__)}/host.rb"
 require "#{File.dirname(__FILE__)}/task.rb"

@@ -14,13 +14,11 @@
 # Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
+require "#{File.dirname(__FILE__)}/config.rb"
+
 require "#{File.dirname(__FILE__)}/gcc.rb"
 require "#{File.dirname(__FILE__)}/mosync_util.rb"
 require "#{File.dirname(__FILE__)}/targets.rb"
-
-# load local_config.rb, if it exists.
-lc = "#{File.dirname(__FILE__)}/local_config.rb"
-require lc if(File.exists?(lc))
 
 module MoSyncInclude
 	def mosync_include; "#{mosyncdir}/include" + sub_include; end

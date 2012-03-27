@@ -88,6 +88,9 @@ printf_nothing (const char * foo, ...)
 {
 }
 
+static void __declspec(noreturn)
+cirrus_not_implemented (const char * insn);
+
 static void
 cirrus_not_implemented (const char * insn)
 {
@@ -357,7 +360,7 @@ DSPMRC6 (ARMul_State * state ATTRIBUTE_UNUSED,
       break;
     }
 
-  return ARMul_DONE;
+  //return ARMul_DONE;
 }
 
 unsigned
@@ -492,7 +495,7 @@ DSPMCR6 (ARMul_State * state,
       break;
     }
 
-  return ARMul_DONE;
+  //return ARMul_DONE;
 }
 
 unsigned
@@ -1197,9 +1200,10 @@ DSPCDP6 (ARMul_State * state,
 
      default:
        fprintf (stderr, "unknown opcode in DSPCDP6 0x%x\n", instr);
+		 cirrus_not_implemented ("impossible");
      }
 
-   return ARMul_DONE;
+   //return ARMul_DONE;
 }
 
 /* Conversion functions.

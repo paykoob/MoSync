@@ -12,6 +12,11 @@ work.instance_eval do
 	@SPECIFIC_CFLAGS = {
 		'iwmmxt.c' => ' -Wno-sign-compare',
 	}
+	# buggy compiler
+	if(@GCC_IS_V4 && @GCC_V4_SUB == 6 && CONFIG == 'release')
+		#@SPECIFIC_CFLAGS['armemu32.c'] = ' -Wno-uninitialized'
+	end
+
 	@NAME = 'armcore'
 	@INSTALLDIR = mosyncdir + '/bin'
 end

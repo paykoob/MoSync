@@ -26,10 +26,13 @@ extern "C" void GCCATTRIB(noreturn) __cxa_pure_virtual() {
 extern "C" void ansi_heap_init_crt0(char *start, int length);
 static char sHeap[1024*512];
 
+extern "C" int resource_selector();
+
 extern "C" int MAMain();
 int main() {
 	// todo: put before static constructors.
 	ansi_heap_init_crt0(sHeap, sizeof(sHeap));
+	resource_selector();
 	return MAMain();
 }
 

@@ -124,7 +124,7 @@ int main2(int argc, char **argv) {
 	for(int i = 1; i < argc; i++) {
 		LOG("%i:%s\n", i, argv[i]);
 		if((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0)) {
-			static const char sInfo[] = 
+			static const char sInfo[] =
 				"MoSync Runtime Environment (MoRE) (c) MoSync AB 2010\n"
 				"\n"
 				"  Options (Optional):\n"
@@ -170,7 +170,7 @@ int main2(int argc, char **argv) {
 		else if(strcmp(argv[i], "-program")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -program");			
+				LOG("not enough parameters for -program");
 				return 1;
 			}
 			programFile = argv[i];
@@ -179,20 +179,20 @@ int main2(int argc, char **argv) {
 		else if(strcmp(argv[i], "-resource")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -resource");			
+				LOG("not enough parameters for -resource");
 				return 1;
 			}
 			resourceFile = argv[i];
 		} else if(strcmp(argv[i], "-resolution")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -resolution");			
+				LOG("not enough parameters for -resolution");
 				return 1;
 			}
 			settings.profile.mScreenWidth = atoi(argv[i]);
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -resolution");			
+				LOG("not enough parameters for -resolution");
 				return 1;
 			}
 			settings.profile.mScreenHeight = atoi(argv[i]);
@@ -200,7 +200,7 @@ int main2(int argc, char **argv) {
 		} else if(strcmp(argv[i], "-icon")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -icon");			
+				LOG("not enough parameters for -icon");
 				return 1;
 			}
 
@@ -216,41 +216,42 @@ int main2(int argc, char **argv) {
 		} else if(strcmp(argv[i], "-model")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -model");			
+				LOG("not enough parameters for -model");
 				return 1;
 			}
 			settings.profile.mModel = argv[i];
 		} else if(strcmp(argv[i], "-vendor")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -vendor");			
+				LOG("not enough parameters for -vendor");
 				return 1;
 			}
 			settings.profile.mVendor = argv[i];
 		} else if(strcmp(argv[i], "-sld")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -sld");			
+				LOG("not enough parameters for -sld");
 				return 1;
 			}
 			sldFile = argv[i];
 		} else if(strcmp(argv[i], "-resmem")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -resmem");			
+				LOG("not enough parameters for -resmem");
 				return 1;
 			}
 			settings.resmem = atoi(argv[i]);
 		} else if(strcmp(argv[i], "-x")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -x");			
+				LOG("not enough parameters for -x");
 				return 1;
 			}
 			xFile = argv[i];
 #ifdef GDB_DEBUG
 		} else if(strcmp(argv[i], "-gdb")==0) {
 			gdb = true;
+			LOG("GDB activated.\n");
 #endif
 #ifdef EMULATOR
 		} else if(strcmp(argv[i], "-allowdivzero")==0) {
@@ -258,7 +259,7 @@ int main2(int argc, char **argv) {
 		} else if(strcmp(argv[i], "-timeout")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -timeout");			
+				LOG("not enough parameters for -timeout");
 				return 1;
 			}
 			settings.timeout = atoi(argv[i]);

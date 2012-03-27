@@ -14,6 +14,8 @@
 # Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
+require "#{File.dirname(__FILE__)}/config.rb"
+
 require "#{File.dirname(__FILE__)}/util.rb"
 require "#{File.dirname(__FILE__)}/error.rb"
 require "#{File.dirname(__FILE__)}/host.rb"
@@ -108,7 +110,7 @@ class Targets
 			name = a[0, i]
 			value = a[i+1 .. a.length]
 			puts "Set constant #{name.inspect}=#{value.inspect}"
-			set_const(name, value)
+			default_const(name, value)
 		else
 			@@goals += [a.to_sym]
 		end

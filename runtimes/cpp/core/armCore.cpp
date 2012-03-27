@@ -66,11 +66,13 @@ public:
 			mPC = ARMul_DoInstr(mArmState);
 			ARMul_SetPC(mArmState, mPC);
 			waitForRemote(mGdbSignal);
+			LOG("PC: 0x%08x -> 0x%08x\n", oldPC, mPC);
 		} else {
 #if 1	// run
 			mPC = ARMul_DoProg(mArmState);
+			LOG("PC: 0x%08x -> 0x%08x\n", oldPC, mPC);
 #else	// step
-			if(mem_ds[mPC >> 2] == 0xe7ffdefe) {	// breakpoint
+			if(mem_ds[mPC >> 2] == (int)0xe7ffdefe) {	// breakpoint
 				LOG("Breakpoint hit at 0x%08x\n", mPC);
 				mGdbSignal = eBreakpoint;
 				waitForRemote(mGdbSignal);
@@ -80,7 +82,6 @@ public:
 			}
 #endif
 		}
-		LOG("PC: 0x%08x -> 0x%08x\n", oldPC, mPC);
 	}
 
 
@@ -122,6 +123,7 @@ private:
 		switch(number) {
 #include "invoke_syscall_cpp.h"
 		default:
+			LOG("SWI %i\n", number);
 			DEBIG_PHAT_ERROR;
 		}
 		return;
