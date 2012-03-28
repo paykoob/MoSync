@@ -110,8 +110,12 @@ target :base => [SKINS, RULES] do
 	EXTENSION_INCLUDES.invoke
 end
 
-target :default => :base do
+target :main => :base do
 	Work.invoke_subdirs(MAIN_DIRS)
+end
+
+target :default => :main do
+	Work.invoke_subdirs_ex(true, LIB_DIRS)
 end
 
 target :libs => :base do
