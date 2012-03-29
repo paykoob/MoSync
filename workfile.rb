@@ -127,8 +127,7 @@ target :examples => :libs do
 	Work.invoke_subdirs_ex(true, EXAM_DIRS)
 end
 
-target :all => :default do
-	Work.invoke_subdirs_ex(true, EXAM_DIRS)
+target :all => :examples do
 end
 
 target :more => :base do
@@ -176,7 +175,7 @@ def all_configs(target)
 end
 
 target :all_configs do
-	all_configs('all')
+	all_configs('')
 end
 
 target :all_libs do
