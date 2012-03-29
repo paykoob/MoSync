@@ -21,6 +21,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #ifdef USE_NEWLIB
 #include <wchar.h>
+#else
+#include <conprint.h>
 #endif
 
 #define STRLOG(str) maWriteLog(str, sizeof(str)-1)
@@ -35,7 +37,9 @@ int MAMain(void) {
 	int res = wsprintf(buf, L"%S\n", str);
 #endif
 	wprintf(L"%i\n", res);
+#ifdef USE_NEWLIB
 	fputws(buf, stdout);
+#endif
 	wlprintfln(L"%S", buf);
 	STRLOG("__test\n");
 	wprintf(L"%S", buf);	//this one fails.
