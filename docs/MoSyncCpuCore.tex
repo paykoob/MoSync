@@ -1,0 +1,563 @@
+\documentclass {article}
+
+\usepackage[latin1]{inputenc}
+%\usepackage[english]{babel}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+
+\usepackage{verbatim}
+\usepackage{moreverb}
+%\let\verbatim=\verbatimtab
+
+\def\verbatimtabsize{2\relax}
+
+\title{MoSync CPU Core reference}
+
+\author{Fredrik Eldh}
+
+\begin{document}
+\maketitle
+%\thispagestyle{empty}
+%\newpage
+
+%\tableofcontents
+%\thispagestyle{empty}
+%\newpage
+
+\setcounter{page}{1}
+\pagestyle{fancy}
+
+
+\section{Abstract}
+
+MoSync uses a custom virtual architecture as its C/C++ compiler target.
+This document will describe that architecture:
+memory layout, register set, ABI, assembly language and bytecode format.
+
+
+\section{Memory layout}
+
+There are two memory sections: code and data.
+Each has an independent, linear address space that starts at 0.
+The size of both sections should be a multiple of 2, so that, in optimized mode,
+addresses may be ANDed.
+
+\subsection{Code section}
+
+Read-only. Executable code is stored here.
+Function pointers point here.
+Its size is determined at link time.
+The first few bytes should be unused by the main program, and filled with invalid opcodes,
+to allow NULL function pointers to be properly trapped.
+
+\subsection{Data section}
+
+Read-write. It contains static data, BSS, stack and heap.
+Data pointers point here.
+Its size is, again, determined at link time, but the user may specify stack and heap size.
+The first few bytes, maybe up to 32, should be left unused and filled with zeroes,
+to prevent NULL pointers from destroying too much.
+
+The static data starts at address 0.
+The linker may place the stack, BSS and heap anywhere it likes, beyond the static data section.
+
+
+\section{Register set}
+
+The register set consists of 32 32-bit integer registers,
+and a normally inaccessible instruction pointer.
+They are numbered 0 to 31.
+
+\begin{verbatim}
+zero	// Always zero. Read-only.
+sp	// Stack pointer.
+rt	// ReTurn pointer.
+fr	// FRame register.
+
+// Preserved registers (if a function would use these,
+// it must preserve the original values on the stack).
+d0
+d1
+d2
+d3
+d4
+d5
+d6
+d7
+
+// Used to pass function parameters.
+i0
+i1
+i2
+i3
+
+// Non-preserved register. May be used freely.
+r0
+r1
+r2
+r3
+r4
+r5
+r6
+r7
+r8
+r9
+r10
+r11
+r12
+r13
+
+// Return value registers. r14 is used for 32-bit values.
+// r14 and r15 together is used for 64-bit values.
+// r14 gets the high word, r15 gets the low word.
+r14
+r15
+\end{verbatim}
+
+
+\section{Application Binary Interface}
+
+The ABI must be followed, because the MoSync Syscalls use it.
+It's fairly simple; 4 parameter registers (i0-i3), then push parameters on the stack.
+See above for return values.
+The return address goes in RT.
+FR shall point to the byte after the caller frame. The stack frame has this format:
+
+\begin{verbatimtab}
+typedef struct MA_STACK_FRAME {
+	void* _nextFrame;
+	void* retAddr;
+} MA_STACK_FRAME;
+
+MA_STACK_FRAME* nextFrame(MA_STACK_FRAME* frame) {
+	char* bp = (char*)(frame->_nextFrame);
+	if(bp == NULL)
+		return NULL;
+	else
+		return (MA_STACK_FRAME*)(bp - sizeof(MA_STACK_FRAME));
+}
+\end{verbatimtab}
+
+
+
+\section{Assembly language}
+
+The MoSync assembly language, also known as Intermediate Language (IL), consists of units called directives, labels and instructions,
+separated by end-of-line (EOL).
+
+Non-EOL whitespace acts as a separator between tokens, but is otherwise ignored, unless it appears inside a string.
+
+
+\subsection{Directives}
+
+Directives start with a dot(.), followed by the name of the directive, followed by parameters.
+
+Unknown directives shall cause an error in the assembler.
+
+Known directives include:
+
+\begin{verbatimtab}
+.model	// ignored.
+.sourcedir	// ignored.
+.stabs	// debugging information. may be ignored.
+.stabn // numeric debugging information. may be ignored.
+\end{verbatimtab}
+
+\begin{verbatimtab}
+.sourcefile <filename>	// required.
+\end{verbatimtab}
+The name of the file that was used as source when generating this assembly file.
+Normally a C or C++ file. If you write an assembly file directly, this should be the name of the file itself.
+
+\begin{verbatimtab}
+.line	// line number. refers to the sourcefile.
+.code	// start code section.
+.data	// start data section.
+.align <uint a>	// align next symbol to a bytes. ignored by code sections.
+.globl <symbol>	// mark symbol / label as global. does not define position of the symbol.
+\end{verbatimtab}
+
+
+\subsubsection{Code directives}
+
+These are valid only in code sections.
+
+\begin{verbatimtab}
+.func <symbol>, <uint nArg>, <return type>	// define start of function
+.dlab <label>	// ignored.
+\end{verbatimtab}
+
+A function is ended by any one of these things:
+\begin{itemize}
+	\item End of file.
+	\item .code
+	\item .func
+\end{itemize}
+
+
+\subsubsection{Data directives}
+\begin{verbatimtab}
+.word <decimal>	// 32-bit integer
+.half <decimal>	// 16-bit integer
+.byte <decimal>	// 8-bit integer
+.ascii "<string>"	// ascii string. octal escape sequences are allowed to create 8-bit values.
+\end{verbatimtab}
+
+The .ascii directive is also used for wide-char and UTF-8 strings.
+
+
+\subsection{Labels}
+
+A label is a symbol followed by a colon, like this:
+
+\begin{verbatimtab}
+label:
+\end{verbatimtab}
+
+They are used to mark the start of data symbols.
+They are also used to mark jump targets inside functions.
+
+\subsection{Instructions}
+
+Instructions are allowed only inside functions. They have this format:
+
+\begin{verbatimtab}
+<name>	[parameters]
+\end{verbatimtab}
+
+Parameters are comma-serparated.
+
+Individual instructions are documented in the Instruction Set section.
+
+
+
+\section{Bytecode}
+
+\subsection{Executable file format}
+
+A MoSync bytecode executable file starts with the four bytes 'MADX'.
+
+Then follows this header:
+\begin{verbatimtab}
+{
+	int CodeLen;
+	int DataLen;
+	int DataSize;
+	int StackSize;
+	int HeapSize;
+	int AppCode;
+	int AppID;
+	int EntryPoint;
+	int IntLen;
+}
+\end{verbatimtab}
+
+Each int is 4 bytes, little-endian.
+
+Then follows the code section, CodeLen bytes.
+
+Then follows the static data section, DataLen bytes.
+It should be read into the data section, starting at address 0.
+
+Then follows the constant pool, IntLen 4-byte ints.
+The constant pool is a special read-only memory section that may be accessed by
+certain instruction fragments. See below.
+
+The other members of the header:
+\begin{itemize}
+	\item DataSize: size of the data section, in bytes. If it is not an exact power of 2, it may be rounded up to produce the effective size.
+	\item StackSize: size of the stack, in bytes.
+	\item HeapSize: size of the heap, in bytes.
+	\item AppCode: ignored.
+	\item	AppID: ignored.
+	\item EntryPoint: pointer to the code section.
+\end{itemize}
+
+
+\subsection{Initial machine state}
+
+\begin{verbatim}
+sp = STACK_TOP - 16;
+i0 = DataSize;
+i1 = StackSize;
+i2 = HeapSize;
+\end{verbatim}
+
+
+\subsection{Instruction set}
+
+Instructions are encoded as a sequence of bytes.
+
+Each instruction consists of one byte opcode, followed by its parameters.
+
+Common parameters include:
+\begin{itemize}
+	\item RD: Register, Destination. One byte.
+	\item RS: Register, Source. One byte.
+	\item CONST: 32-bit integer from the constant pool. The encoding is either one or two bytes. See FETCH CONST below.
+	\item IMM8: 8-bit integer, sign-extended to 32 bits.
+	\item IMM16: 16-bit integer, big-endian, sign-extended to 32 bits.
+	\item IMM24: 24-bit integer, big-endian, sign-extended to 32 bits.
+\end{itemize}
+
+
+Below is an excerpt from our C interpreter core, which serves as the de-facto reference document.
+
+\begin{verbatimtab}
+
+OPC(ADD)	FETCH_RD_RS	ARITH(rd, RD, +, RS);	EOP;
+OPC(ADDI)	FETCH_RD_CONST	ARITH(rd, RD, +, IMM);	EOP;
+OPC(SUB)	FETCH_RD_RS	ARITH(rd, RD, -, RS);	EOP;
+OPC(SUBI)	FETCH_RD_CONST	ARITH(rd, RD, -, IMM);	EOP;
+OPC(MUL)	FETCH_RD_RS	ARITH(rd, RD, *, RS);	EOP;
+OPC(MULI)	FETCH_RD_CONST	ARITH(rd, RD, *, IMM);	EOP;
+OPC(AND)	FETCH_RD_RS	ARITH(rd, RD, &, RS);	EOP;
+OPC(ANDI)	FETCH_RD_CONST	ARITH(rd, RD, &, IMM);	EOP;
+OPC(OR)	FETCH_RD_RS	ARITH(rd, RD, |, RS);	EOP;
+OPC(ORI)	FETCH_RD_CONST	ARITH(rd, RD, |, IMM);	EOP;
+OPC(XOR)	FETCH_RD_RS	ARITH(rd, RD, ^, RS);	EOP;
+OPC(XORI)	FETCH_RD_CONST	ARITH(rd, RD, ^, IMM);	EOP;
+OPC(DIVU)	FETCH_RD_RS	DIVIDE(rd, RDU, RSU);	EOP;
+OPC(DIVUI)	FETCH_RD_CONST	DIVIDE(rd, RDU, IMMU);	EOP;
+OPC(DIV)	FETCH_RD_RS	DIVIDE(rd, RD, RS);		EOP;
+OPC(DIVI)	FETCH_RD_CONST	DIVIDE(rd, RD, IMM);	EOP;
+OPC(SLL)	FETCH_RD_RS	ARITH(rd, RDU, <<, RSU);	EOP;
+OPC(SLLI)	FETCH_RD_IMM8	ARITH(rd, RDU, <<, IMMU);	EOP;
+OPC(SRA)	FETCH_RD_RS	ARITH(rd, RD, >>, RS);	EOP;
+OPC(SRAI)	FETCH_RD_IMM8	ARITH(rd, RD, >>, IMM);	EOP;
+OPC(SRL)	FETCH_RD_RS	ARITH(rd, RDU, >>, RSU);	EOP;
+OPC(SRLI)	FETCH_RD_IMM8	ARITH(rd, RDU, >>, IMMU);	EOP;
+
+OPC(NOT)	FETCH_RD_RS	WRITE_REG(rd, ~RS);	EOP;
+OPC(NEG)	FETCH_RD_RS	WRITE_REG(rd, -RS);	EOP;
+
+OPC(PUSH)	FETCH_RD_IMM8
+{
+	byte r = rd;
+	unsigned n = imm32;
+	if(rd < 2 || int(rd) + n > 32) {
+		BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION_FORM); //raise hell
+	}
+
+	do {
+		ARITH(REG_sp, regs[REG_sp], -, 4);
+		MEM(int32_t, REG(REG_sp), WRITE) = REG(r);
+		LOGC("\t0x%x", REG(r));
+		r++;
+	} while(--n);
+}
+EOP;
+
+OPC(POP) FETCH_RD_IMM8
+{
+	byte r = rd;
+	unsigned n = imm32;
+	if(rd > 31 || int(rd) - n < 1)
+		BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION_FORM); //raise hell
+
+	do {
+		REG(r) = MEM(int32_t, REG(REG_sp), READ);
+		//REG(REG_sp) += 4;
+		ARITH(REG_sp, regs[REG_sp], +, 4);
+		LOGC("\t0x%x", REG(r));
+		r--;
+	} while(--n);
+}
+EOP;
+
+OPC(LDB)
+{
+	FETCH_RD_RS_CONST
+	WRITE_REG(rd, MEM(char, RS + IMM, READ));
+	LOGC("\t%i", RD);
+}
+EOP;
+
+OPC(LDH)
+{
+	FETCH_RD_RS_CONST
+	WRITE_REG(rd, MEM(short, RS + IMM, READ));
+	LOGC("\t%i", RD);
+}
+EOP;
+
+OPC(LDW)
+{
+	FETCH_RD_RS_CONST
+	WRITE_REG(rd, MEM(int32_t, RS + IMM, READ));
+	LOGC("\t%i", RD);
+}
+EOP;
+
+OPC(STB)
+{
+	FETCH_RD_RS_CONST
+	MEM(byte, RD + IMM, WRITE) = RS;
+}
+EOP;
+
+OPC(STH)
+{
+	FETCH_RD_RS_CONST
+	MEM(unsigned short, RD + IMM, WRITE) = RS;
+}
+EOP;
+
+OPC(STW)
+{
+	FETCH_RD_RS_CONST
+	MEM(unsigned int, RD + IMM, WRITE) = RS;
+}
+EOP;
+
+OPC(LDI)	FETCH_RD_CONST	WRITE_REG(rd, IMM);	EOP;
+OPC(LDR)	FETCH_RD_RS	WRITE_REG(rd, RS);	EOP;
+
+OPC(RET)
+	fakePop();
+JMP_GENERIC(REG(REG_rt));
+EOP;
+
+OPC(CALL)
+	FETCH_RD
+	CALL_RD
+	fakePush(REG(REG_rt), RD);
+EOP;
+OPC(CALLI)
+	FETCH_IMM16
+	CALL_IMM
+	fakePush(REG(REG_rt), IMM);
+EOP;
+
+OPC(JC_EQ) 	FETCH_RD_RS_ADDR16	if (RD == RS)	{ JMP_IMM; } 	EOP;
+OPC(JC_NE)	FETCH_RD_RS_ADDR16	if (RD != RS)	{ JMP_IMM; }	EOP;
+OPC(JC_GE)	FETCH_RD_RS_ADDR16	if (RD >= RS)	{ JMP_IMM; }	EOP;
+OPC(JC_GT)	FETCH_RD_RS_ADDR16	if (RD >  RS)	{ JMP_IMM; }	EOP;
+OPC(JC_LE)	FETCH_RD_RS_ADDR16	if (RD <= RS)	{ JMP_IMM; }	EOP;
+OPC(JC_LT)	FETCH_RD_RS_ADDR16	if (RD <  RS)	{ JMP_IMM; }	EOP;
+
+OPC(JC_LTU)	FETCH_RD_RS_ADDR16	if (RDU <  RSU)	{ JMP_IMM; }	EOP;
+OPC(JC_GEU)	FETCH_RD_RS_ADDR16	if (RDU >= RSU)	{ JMP_IMM; }	EOP;
+OPC(JC_GTU)	FETCH_RD_RS_ADDR16	if (RDU >  RSU)	{ JMP_IMM; }	EOP;
+OPC(JC_LEU)	FETCH_RD_RS_ADDR16	if (RDU <= RSU)	{ JMP_IMM; }	EOP;
+
+OPC(JPI)		FETCH_IMM16		JMP_IMM		EOP;
+OPC(JPR)		FETCH_RD		JMP_RD		EOP;
+
+OPC(FAR) op = *ip++; switch(op) {
+	OPC(CALLI)
+		FETCH_IMM24
+		CALL_IMM
+		fakePush(REG(REG_rt), IMM);
+	EOP;
+
+	OPC(JC_EQ) 	FETCH_RD_RS_ADDR24	if (RD == RS)	{ JMP_IMM; } 	EOP;
+	OPC(JC_NE)	FETCH_RD_RS_ADDR24	if (RD != RS)	{ JMP_IMM; }	EOP;
+	OPC(JC_GE)	FETCH_RD_RS_ADDR24	if (RD >= RS)	{ JMP_IMM; }	EOP;
+	OPC(JC_GT)	FETCH_RD_RS_ADDR24	if (RD >  RS)	{ JMP_IMM; }	EOP;
+	OPC(JC_LE)	FETCH_RD_RS_ADDR24	if (RD <= RS)	{ JMP_IMM; }	EOP;
+	OPC(JC_LT)	FETCH_RD_RS_ADDR24	if (RD <  RS)	{ JMP_IMM; }	EOP;
+
+	OPC(JC_LTU)	FETCH_RD_RS_ADDR24	if (RDU <  RSU)	{ JMP_IMM; }	EOP;
+	OPC(JC_GEU)	FETCH_RD_RS_ADDR24	if (RDU >= RSU)	{ JMP_IMM; }	EOP;
+	OPC(JC_GTU)	FETCH_RD_RS_ADDR24	if (RDU >  RSU)	{ JMP_IMM; }	EOP;
+	OPC(JC_LEU)	FETCH_RD_RS_ADDR24	if (RDU <= RSU)	{ JMP_IMM; }	EOP;
+
+	OPC(JPI)		FETCH_IMM24		JMP_IMM		EOP;
+default:
+	LOG("Illegal far instruction 0x%02X @ 0x%04X\n", op, (int)(size_t)(ip - mem_cs) - 1);
+	BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION);
+	//return ip;
+} EOP;
+
+//OPC(XB)		FETCH_RD_RS		RD = (int)((char) RS); EOP;
+OPC(XB)	FETCH_RD_RS	RD = ((RS & 0x80) == 0) ? (RS & 0xFF) : (RS | ~0xFF); EOP;
+//OPC(XH)		FETCH_RD_RS		RD = (int)((short) RS);	EOP;
+OPC(XH)	FETCH_RD_RS	RD = ((RS & 0x8000) == 0) ? (RS & 0xFFFF) : (RS | ~0xFFFF); EOP;
+
+OPC(SYSCALL)
+{
+	int syscallNumber = IB;
+	fakePush((int32_t) (ip - mem_cs), -syscallNumber);
+	InvokeSysCall(syscallNumber);
+	fakePop();
+	if (VM_Yield)
+		return ip;
+}
+EOP;
+
+OPC(CASE) FETCH_RD; FETCH_IMM24; {
+	imm32 <<= 2;
+	uint CaseStart = MEM(int, imm32, READ);
+	uint CaseLength = MEM(int, imm32 + 1*sizeof(int), READ);
+	uint index = RD - CaseStart;
+	if(index <= CaseLength) {
+		int tableAddress = imm32 + 3*sizeof(int);
+		JMP_GENERIC(MEM(int, tableAddress + index*sizeof(int), READ));
+	} else {
+		int DefaultCaseAddress = MEM(int, imm32 + 2*sizeof(int), READ);
+		JMP_GENERIC(DefaultCaseAddress);
+	}
+} EOP;
+
+\end{verbatimtab}
+
+
+\subsection{Instruction fragments}
+
+\begin{verbatimtab}
+
+#define IMMU ((uint32_t) imm32)
+#define IMM ((int32_t) imm32)
+
+#define JMP_GENERIC(address) \
+	ip = (byte*)(mem_cs + ((address) & CODE_SEGMENT_MASK));
+
+#define	JMP_IMM	JMP_GENERIC(IMM)
+#define	JMP_RD	JMP_GENERIC(RD)
+
+#define	CALL_IMM	REG(REG_rt) = (int32_t) (ip - mem_cs); JMP_IMM;
+#define	CALL_RD	REG(REG_rt) = (int32_t) (ip - mem_cs); JMP_RD;
+
+#define IB ((int)(*ip++))
+
+#define FETCH_RD	rd = IB;
+#define FETCH_RS	rs = IB;
+#define FETCH_CONST	imm32 = IB; if(imm32>127) {imm32=((imm32&127)<<8)+IB;}\
+	imm32=mem_cp[imm32];
+#define FETCH_INT	imm32 = IB; if(imm32>127) {imm32=((imm32&127)<<8)+IB;}
+
+#define FETCH_IMM8	imm32 = IB;
+#define FETCH_IMM16	imm32 = IB << 8; imm32 += IB;
+#define FETCH_IMM24	imm32 = IB << 16; imm32 += IB << 8; imm32 += IB;
+
+#define FETCH_RD_RS		FETCH_RD FETCH_RS
+#define FETCH_RD_CONST		FETCH_RD FETCH_CONST
+#define FETCH_RD_RS_CONST	FETCH_RD FETCH_RS FETCH_CONST
+#define FETCH_RD_RS_ADDR16	FETCH_RD FETCH_RS FETCH_IMM16
+#define FETCH_RD_RS_ADDR24	FETCH_RD FETCH_RS FETCH_IMM24
+#define FETCH_RD_IMM8		FETCH_RD FETCH_IMM8
+
+#define ARITH(a_reg, a, oper, b) WRITE_REG(a_reg, (a) oper (b));
+
+\end{verbatimtab}
+
+
+\subsection{Future modifications}
+
+This architecture could be improved in a few ways.
+
+\subsubsection{Relative jumps}
+
+Current jump and call instructions all use absolute addresses. A switch to relative addressing,
+which should decrease code size, especially in larger programs. With absolute addressing,
+they are forced to use a lot of FAR jumps.
+
+\subsubsection{Floating-point support}
+
+32 64-bit registers. Opcodes matching the integer arithmetics,
+plus conversion to and from integer and 32-bit float.
+Floating-point constant pool?
+
+
+\end{document}
