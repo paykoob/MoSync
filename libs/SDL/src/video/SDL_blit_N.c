@@ -137,10 +137,10 @@ static vector unsigned char calc_swizzle32(const SDL_PixelFormat *srcfmt,
     /* Use zero for alpha if either surface doesn't have alpha */
     if (dstfmt->Amask) {
         amask = ((srcfmt->Amask) ? RESHIFT(srcfmt->Ashift) : 0x10) << (dstfmt->Ashift);
-    } else {    
+    } else {
         amask = 0x10101010 & ((dstfmt->Rmask | dstfmt->Gmask | dstfmt->Bmask) ^ 0xFFFFFFFF);
-    }           
-#undef RESHIFT  
+    }
+#undef RESHIFT
     ((unsigned int *)(char*)&srcvec)[0] = (rmask | gmask | bmask | amask);
     vswiz = vec_add(plus, (vector unsigned char)vec_splat(srcvec, 0));
     return(vswiz);
@@ -264,7 +264,7 @@ static void Blit_RGB565_32Altivec(SDL_BlitInfo *info) {
     vector unsigned int v16 = vec_add(v8, v8);
     vector unsigned short v2 = vec_splat_u16(2);
     vector unsigned short v3 = vec_splat_u16(3);
-    /* 
+    /*
         0x10 - 0x1f is the alpha
         0x00 - 0x0e evens are the red
         0x01 - 0x0f odds are zero
@@ -304,7 +304,7 @@ static void Blit_RGB565_32Altivec(SDL_BlitInfo *info) {
     vector unsigned char vgreen2 = (vector unsigned char)(
         vec_add((vector unsigned int)vgreen1, vec_sl(v8, v8))
     );
-    
+
 
     assert(srcfmt->BytesPerPixel == 2);
     assert(dstfmt->BytesPerPixel == 4);
@@ -372,7 +372,7 @@ static void Blit_RGB565_32Altivec(SDL_BlitInfo *info) {
             vdst2 = vec_perm(vdst2, (vector unsigned char)vG, vgreen2);
             vdst2 = vec_perm(vdst2, valpha, vpermute);
             vec_st(vdst2, 16, dst);
-            
+
             width -= 8;
             dst += 32;
             src += 16;
@@ -409,7 +409,7 @@ static void Blit_RGB555_32Altivec(SDL_BlitInfo *info) {
     vector unsigned int v16 = vec_add(v8, v8);
     vector unsigned short v1 = vec_splat_u16(1);
     vector unsigned short v3 = vec_splat_u16(3);
-    /* 
+    /*
         0x10 - 0x1f is the alpha
         0x00 - 0x0e evens are the red
         0x01 - 0x0f odds are zero
@@ -449,7 +449,7 @@ static void Blit_RGB555_32Altivec(SDL_BlitInfo *info) {
     vector unsigned char vgreen2 = (vector unsigned char)(
         vec_add((vector unsigned int)vgreen1, vec_sl(v8, v8))
     );
-    
+
 
     assert(srcfmt->BytesPerPixel == 2);
     assert(dstfmt->BytesPerPixel == 4);
@@ -517,7 +517,7 @@ static void Blit_RGB555_32Altivec(SDL_BlitInfo *info) {
             vdst2 = vec_perm(vdst2, (vector unsigned char)vG, vgreen2);
             vdst2 = vec_perm(vdst2, valpha, vpermute);
             vec_st(vdst2, 16, dst);
-            
+
             width -= 8;
             dst += 32;
             src += 16;
@@ -636,7 +636,7 @@ static void Blit32to32KeyAltivec(SDL_BlitInfo *info)
                 vd = vec_ld(0, dstp);
                 /* select the source and dest into vs */
                 vd = (vector unsigned int)vec_sel((vector unsigned char)vs, (vector unsigned char)vd, vsel);
-                
+
                 vec_st(vd, 0, dstp);
                 srcp += 4;
                 width -= 4;
@@ -791,7 +791,7 @@ static void ConvertAltivec32to32_prefetch(SDL_BlitInfo *info)
             dst += 4;
             vbits = voverflow;
         }
-        
+
         assert(width == 0);
 
         /* cover pixels at the end of the row that didn't fit in 16 bytes. */
@@ -1053,7 +1053,7 @@ static void Blit_RGB888_RGB555(SDL_BlitInfo *info)
 			src += srcskip;
 			dst += dstskip;
 		}
-	} else { 
+	} else {
 		while ( height-- ) {
 			/* Copy in 4 pixel chunks */
 			for ( c=width/4; c; --c ) {
@@ -1173,7 +1173,7 @@ static void Blit_RGB888_RGB565(SDL_BlitInfo *info)
 			src += srcskip;
 			dst += dstskip;
 		}
-	} else { 
+	} else {
 		while ( height-- ) {
 			/* Copy in 4 pixel chunks */
 			for ( c=width/4; c; --c ) {
@@ -2281,7 +2281,7 @@ struct blit_table {
 };
 static const struct blit_table normal_blit_1[] = {
 	/* Default for 8-bit RGB source, an invalid combination */
-	{ 0,0,0, 0, 0,0,0, 0, NULL, NULL },
+	{ 0,0,0, 0, 0,0,0, 0, NULL, NULL, NO_ALPHA },
 };
 static const struct blit_table normal_blit_2[] = {
 #if SDL_HERMES_BLITTERS
@@ -2394,7 +2394,7 @@ SDL_loblit SDL_CalculateBlitN(SDL_Surface *surface, int blit_index)
 	if ( dstfmt->BitsPerPixel < 8 ) {
 		return(NULL);
 	}
-	
+
 	if(blit_index == 1) {
 	    /* colorkey blit: Here we don't have too many options, mostly
 	       because RLE is the preferred fast way to deal with this.

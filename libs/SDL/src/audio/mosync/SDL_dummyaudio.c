@@ -141,12 +141,10 @@ static SDL_AudioDevice *sDevice;
 
 static int DUMMYAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 {
-
+	//float bytes_per_sec = 0.0f;
+	int bps = 2;
 	sDevice = this;
 
-	float bytes_per_sec = 0.0f;
-
-	/*
 	/* Allocate mixing buffer */
 	//this->hidden->mixlen = spec->size;
 	//this->hidden->mixbuf = (Uint8 *) SDL_AllocAudioMem(this->hidden->mixlen);
@@ -168,7 +166,6 @@ static int DUMMYAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 	//this->hidden->write_delay = (Uint32) ((((float) spec->size) / bytes_per_sec) * 1000.0f);
 
 
-	int bps = 2;
 	switch(spec->format) {
 		case AUDIO_U8: this->hidden->info.fmt = AUDIO_FMT_U8; bps=1; break;
 		case AUDIO_S8: this->hidden->info.fmt = AUDIO_FMT_S8; bps=1; break;
@@ -191,8 +188,8 @@ static int DUMMYAUD_OpenAudio(_THIS, SDL_AudioSpec *spec)
 	return (1);
 }
 
-void SDL_MoSync_AudioBufferFill() {
-	int startTime;
+void SDL_MoSync_AudioBufferFill(void);
+void SDL_MoSync_AudioBufferFill(void) {
 	if ( sDevice->convert.needed ) {
 		(*sDevice->spec.callback)(sDevice->spec.userdata, (Uint8 *)sDevice->convert.buf,sDevice->convert.len);
 		SDL_ConvertAudio(&sDevice->convert);

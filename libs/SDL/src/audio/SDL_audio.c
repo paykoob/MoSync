@@ -544,6 +544,7 @@ int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 		}
 	}
 
+#ifndef MAPIP
 	/* Start the audio thread if necessary */
 	switch (audio->opened) {
 		case  1:
@@ -565,6 +566,7 @@ int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 			/* The audio is now playing */
 			break;
 	}
+#endif
 
 	return(0);
 }

@@ -36,6 +36,7 @@
  *  SDL video driver.  Renamed to "DUMMY" by Sam Lantinga.
  */
 
+#include "SDL_config.h"
 #include "SDL_video.h"
 #include "SDL_mouse.h"
 #include "../SDL_sysvideo.h"
@@ -62,7 +63,7 @@ static void DUMMY_UnlockHWSurface(_THIS, SDL_Surface *surface);
 static void DUMMY_FreeHWSurface(_THIS, SDL_Surface *surface);
 static int DUMMY_FlipHWSurface(_THIS, SDL_Surface *surface);
 
-static MAFrameBufferInfo sFrameBufferInfo;
+//static MAFrameBufferInfo sFrameBufferInfo;
 
 /* etc. */
 static void DUMMY_UpdateRects(_THIS, int numrects, SDL_Rect *rects);

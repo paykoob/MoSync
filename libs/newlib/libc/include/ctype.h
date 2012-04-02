@@ -55,7 +55,7 @@ char	*__ctype_ptr__;
    Meanwhile, the real index to __ctype_ptr__+1 must be cast to int,
    since isalpha(0x100000001LL) must equal isalpha(1), rather than being
    an out-of-bounds reference on a 64-bit machine.  */
-#define __ctype_lookup(__c) ((__ctype_ptr__+sizeof(""[__c]))[(int)(__c)])
+#define __ctype_lookup(__c) ((__ctype_ptr__+sizeof(""[(int)(unsigned char)(__c)]))[(int)(unsigned char)(__c)])
 
 #define	isalpha(__c)	(__ctype_lookup(__c)&(_U|_L))
 #define	isupper(__c)	((__ctype_lookup(__c)&(_U|_L))==_U)
@@ -93,10 +93,10 @@ char	*__ctype_ptr__;
    function.  */
 #   define toupper(__c) \
   __extension__ ({ __typeof__ (__c) __x = (__c);	\
-      (void) __ctype_ptr__[__x]; (toupper) (__x);})
+      (void) __ctype_ptr__[(int)(unsigned char)__x]; (toupper) (__x);})
 #   define tolower(__c) \
   __extension__ ({ __typeof__ (__c) __x = (__c);	\
-      (void) __ctype_ptr__[__x]; (tolower) (__x);})
+      (void) __ctype_ptr__[(int)(unsigned char)__x]; (tolower) (__x);})
 #  endif /* _MB_EXTENDED_CHARSETS* */
 # endif /* __GNUC__ */
 #endif /* !__cplusplus */

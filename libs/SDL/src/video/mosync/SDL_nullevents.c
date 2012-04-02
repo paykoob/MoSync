@@ -36,7 +36,7 @@
 
 enum MOUSE_ACTION { MOUSE_DOWN = 0, MOUSE_UP=1, MOUSE_MOVE=2 };
 
-void SDL_MoSync_AudioBufferFill();
+void SDL_MoSync_AudioBufferFill(void);
 
 void DUMMY_PumpEvents(_THIS)
 {
