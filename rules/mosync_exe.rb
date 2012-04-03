@@ -379,6 +379,7 @@ class PipeExeWork
 			w = OriginalPipeExeWork.new
 		end
 		self.instance_variables.each do |iv|
+			# ignore @EXTRA_LINKFLAGS on ARM
 			next if(USE_ARM && iv == "@EXTRA_LINKFLAGS")
 			w.instance_variable_set(iv, self.instance_variable_get(iv))
 		end

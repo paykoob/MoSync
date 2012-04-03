@@ -189,12 +189,12 @@ void ARMul_MemoryExit (ARMul_State* state) {
 	// do nothing
 }
 static ARMword GetWord (ARMul_State* state, ARMword address, int check) {
-	if(address >= state->MemSize)
+	if(address >= state->MemSize || address < 0x8000)
 		state->memErrHandler(state, address, state->user);
 	return *(ARMword*)(state->MemDataPtr + (address & ~3));
 }
 static void PutWord (ARMul_State* state, ARMword address, ARMword data, int check) {
-	if(address >= state->MemSize)
+	if(address >= state->MemSize || address < 0x8000)
 		state->memErrHandler(state, address, state->user);
 	*(ARMword*)(state->MemDataPtr + (address & ~3)) = data;
 }

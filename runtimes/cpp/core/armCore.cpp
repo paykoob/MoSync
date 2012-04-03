@@ -68,10 +68,13 @@ public:
 			waitForRemote(mGdbSignal);
 			LOG("PC: 0x%08x -> 0x%08x\n", oldPC, mPC);
 		} else {
-#if 1	// run
+#if 1
+		if(!mGdbOn) {
 			mPC = ARMul_DoProg(mArmState);
 			LOG("PC: 0x%08x -> 0x%08x\n", oldPC, mPC);
-#else	// step
+		} else
+#endif
+		{
 			if(mem_ds[mPC >> 2] == (int)0xe7ffdefe) {	// breakpoint
 				LOG("Breakpoint hit at 0x%08x\n", mPC);
 				mGdbSignal = eBreakpoint;
@@ -80,7 +83,7 @@ public:
 				mPC = ARMul_DoInstr(mArmState);
 				ARMul_SetPC(mArmState, mPC);
 			}
-#endif
+		}
 		}
 	}
 
@@ -164,7 +167,7 @@ bool ArmCore::LoadVM(Stream& file) {
 
 	// hard-coded size for now
 	// ARM has only one memory segment; data and code are one.
-	DATA_SEGMENT_SIZE = 2*1024*1024;
+	DATA_SEGMENT_SIZE = 64*1024*1024;
 	mem_ds = new int[DATA_SEGMENT_SIZE / sizeof(int)];
 
 	ARMul_EmulateInit();

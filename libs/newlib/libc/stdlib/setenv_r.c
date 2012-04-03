@@ -128,9 +128,11 @@ _DEFUN (_setenv_r, (reent_ptr, name, value, rewrite),
 
   ENV_UNLOCK;
 
+#if 0	//broken?
   /* if we are setting the TZ environment variable, update timezone info */
   if (strncmp ((*p_environ)[offset], "TZ=", 3) == 0)
     tzset ();
+#endif
 
   return 0;
 }
@@ -146,8 +148,8 @@ _DEFUN (_unsetenv_r, (reent_ptr, name),
 {
   register char **P;
   int offset;
- 
-  /* Name cannot be NULL, empty, or contain an equal sign.  */ 
+
+  /* Name cannot be NULL, empty, or contain an equal sign.  */
   if (name == NULL || name[0] == '\0' || strchr(name, '='))
     {
       errno = EINVAL;
@@ -157,7 +159,7 @@ _DEFUN (_unsetenv_r, (reent_ptr, name),
   ENV_LOCK;
 
   while (_findenv_r (reent_ptr, name, &offset))	/* if set multiple times */
-    { 
+    {
       for (P = &(*p_environ)[offset];; ++P)
         if (!(*P = *(P + 1)))
 	  break;

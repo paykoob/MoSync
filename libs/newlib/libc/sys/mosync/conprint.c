@@ -246,7 +246,10 @@ void WriteConsole(const char* str, int len)
 			line = sConsole.lines[(sConsole.cursorPos.y + sConsole.firstLine) %
 				sConsole.height].line;
 			res = mbtowc(&line[sConsole.cursorPos.x++], str + pos, MB_LEN_MAX);//len - pos);
-			if(res <= 0) {
+			if(res == 0) {
+				break;
+			}
+			if(res < 0) {
 				maDumpCallStackEx(str, pos);
 				maPanic(res, "WriteConsole mbtowc");
 			}
