@@ -47,6 +47,9 @@
 #include "SDL_nullevents_c.h"
 #include "SDL_nullmouse_c.h"
 
+#include <IX_OPENGL_ES.h>
+#include <mavsprintf.h>
+
 #define DUMMYVID_DRIVER_NAME "mosync"
 
 /* Initialization/Query functions */
@@ -196,6 +199,17 @@ static SDL_Surface *DUMMY_SetVideoMode(_THIS, SDL_Surface *current,
 		SDL_free( this->hidden->buffer );
 	}
 
+	if(flags & SDL_OPENGL) {
+		int res = maOpenGLInitFullscreen(MA_GL_API_GL1);
+		if(res != MA_GL_INIT_RES_OK) {
+			SDL_SetError("maOpenGLInitFullscreen(MA_GL_API_GL1) failed");
+			lprintfln("maOpenGLInitFullscreen(MA_GL_API_GL1) failed: %i", res);
+			return NULL;
+		}
+		current->flags = (flags & SDL_OPENGL) | SDL_FULLSCREEN;
+		return current;
+	}
+
 	this->hidden->buffer = SDL_malloc(width * height * (bpp / 8));
 	if ( ! this->hidden->buffer ) {
 		SDL_SetError("Couldn't allocate buffer for requested mode");
@@ -215,7 +229,8 @@ static SDL_Surface *DUMMY_SetVideoMode(_THIS, SDL_Surface *current,
 	}
 
 	/* Set up the new mode framebuffer */
-	current->flags = flags & SDL_FULLSCREEN;
+	current->flags = flags & SDL_FULLSCREEN;	// shouldn't this be OR?
+	// todo: check OpenGL flag. call maOpenGLInitFullscreen.
 	this->hidden->w = current->w = width;
 	this->hidden->h = current->h = height;
 	current->pitch = current->w * (bpp / 8);
