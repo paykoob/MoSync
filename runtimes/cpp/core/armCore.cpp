@@ -52,7 +52,11 @@ public:
 		DEBIG_PHAT_ERROR;
 	}
 	int GetValidatedStackValue(int offset) {
-		DEBIG_PHAT_ERROR;
+		int address = regs[13] + offset;
+		if(((address&0x03)!=0) || uint(address)<STACK_BOTTOM || uint(address)>STACK_TOP)
+			BIG_PHAT_ERROR(ERR_STACK_OOB);
+		address>>=2;
+		return mem_ds[address];
 	}
 	void InvokeSysCall(int syscall_id) {
 		DEBIG_PHAT_ERROR;
@@ -182,6 +186,8 @@ bool ArmCore::LoadVM(Stream& file) {
 
 	// set the stack pointer
 	mArmRegs[13] = DATA_SEGMENT_SIZE - 1024;
+	STACK_TOP = mArmRegs[13];
+	STACK_BOTTOM = 0;
 
 	// fill registers with debug markers
 	for(int i=0; i<13; i++) {
