@@ -2123,6 +2123,7 @@ namespace Base {
 			{
 				const char* ptr = (const char*)gSyscall->GetValidatedMemRange(a, b);
 				LogBin(ptr, b);
+				fwrite(ptr, b, 1, stdout);
 				if(ptr[b-1] == '\n')	//hack to get rid of EOL
 					b--;
 				report(REPORT_STRING, ptr, b);

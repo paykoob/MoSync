@@ -22,7 +22,7 @@
 
 
 #ifdef MOSYNCDEBUG
-#define LOGD(...) lprintfln(__VA_ARGS__)
+#define LOGD(...) //lprintfln(__VA_ARGS__)
 #else
 #define LOGD(...)
 #endif

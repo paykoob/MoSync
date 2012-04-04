@@ -1014,7 +1014,7 @@ namespace Base {
 		if(res < 0) {
 			LOGF("File: %s\n", fh.name.p());
 		} else if((res > 0) != fh.isDirectory()) {
-			FILE_FAIL(MA_FERR_WRONG_TYPE);
+			return MA_FERR_WRONG_TYPE;
 		}
 		if(fh.mode == MA_ACCESS_READ_WRITE) {
 			if(res == 0) {	//file exists and is not a directory
@@ -1074,7 +1074,9 @@ namespace Base {
 #endif
 
 		fh.fs = NULL;
-		TLTZ_PASS(openFile(fh));
+		int res = openFile(fh);
+		if(res < 0)
+			return res;
 		FileHandle* fhp = fhs.extract();
 		CLEANUPSTACK_PUSH(fhp);
 		gFileHandles.insert(gFileNextHandle, fhp);

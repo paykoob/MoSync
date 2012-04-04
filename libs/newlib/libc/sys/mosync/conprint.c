@@ -28,7 +28,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 // Console width, in characters
 // Note that not all characters on a line may be visible on a given device, due
 // to varying screen widths
-#define CONSOLE_WIDTH 47
+#define CONSOLE_WIDTH 80
 
 typedef struct
 {
