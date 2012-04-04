@@ -29,8 +29,8 @@ extern __declspec(dllimport) ARMword ARMul_DoInstr (ARMul_State * state);
 extern void __declspec(dllimport) ARMul_MemoryInit2 (ARMul_State* state, void* memory, unsigned long initmemsize);
 extern void __declspec(dllimport) ARMul_MemoryExit (ARMul_State* state);
 
-extern void __declspec(dllimport) ARMul_SetSWIhandler (ARMul_State* state, ARMul_SWIhandler*, void* user);
-extern void __declspec(dllimport) ARMul_SetMemErrHandler (ARMul_State* state, ARMul_SWIhandler*);
+extern void __declspec(dllimport) ARMul_SetHandlers (ARMul_State* state, ARMul_SWIhandler* swi,
+	ARMul_SWIhandler* mem, ARMul_SWIhandler* ex, void* user);
 
 extern __declspec(dllimport) ARMword ARMul_GetReg (ARMul_State * state, unsigned mode,
 	unsigned reg);

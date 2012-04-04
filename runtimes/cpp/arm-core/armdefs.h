@@ -155,6 +155,7 @@ struct ARMul_State
 
   ARMul_SWIhandler* swiHandler;
 	ARMul_SWIhandler* memErrHandler;
+	ARMul_SWIhandler* exceptionHandler;
   void* user;
 };
 

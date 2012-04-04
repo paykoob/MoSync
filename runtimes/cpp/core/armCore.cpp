@@ -69,7 +69,7 @@ public:
 			LOG("step\n");
 			mPC = ARMul_DoInstr(mArmState);
 			ARMul_SetPC(mArmState, mPC);
-			waitForRemote(mGdbSignal);
+			waitForRemote(5);
 			LOG("PC: 0x%08x -> 0x%08x\n", oldPC, mPC);
 		} else {
 #if 1
@@ -82,7 +82,7 @@ public:
 			if(mem_ds[mPC >> 2] == (int)0xe7ffdefe) {	// breakpoint
 				LOG("Breakpoint hit at 0x%08x\n", mPC);
 				mGdbSignal = eBreakpoint;
-				waitForRemote(mGdbSignal);
+				waitForRemote(5);	// GDB breakpoint signal
 			} else {
 				mPC = ARMul_DoInstr(mArmState);
 				ARMul_SetPC(mArmState, mPC);
@@ -150,7 +150,21 @@ unsigned swiHandler(ARMul_State * state, ARMword number, void* user) {
 
 static unsigned memErrHandler(ARMul_State * state, ARMword number, void* user) {
 	LOG("Invalid memory access: 0x%x\n", number);
+	ArmCore* core = (ArmCore*)user;
+	if(core->mGdbOn) {
+		core->waitForRemote(11);	//Segfault
+	}
 	BIG_PHAT_ERROR(ERR_MEMORY_OOB);
+	return 0;
+}
+
+static unsigned exceptionHandler(ARMul_State * state, ARMword number, void* user) {
+	LOG("ARM exception: 0x%x\n", number);
+	ArmCore* core = (ArmCore*)user;
+	if(core->mGdbOn) {
+		core->waitForRemote(eInterrupt);
+	}
+	BIG_PHAT_ERROR(4);	//illegal instruction
 	return 0;
 }
 
@@ -177,8 +191,8 @@ bool ArmCore::LoadVM(Stream& file) {
 	ARMul_EmulateInit();
 	mArmState = ARMul_NewState();
 	ARMul_CoProInit(mArmState);
-	ARMul_SetSWIhandler(mArmState, (ARMul_SWIhandler*)::swiHandler, this);
-	ARMul_SetMemErrHandler(mArmState, (ARMul_SWIhandler*)::memErrHandler);
+	ARMul_SetHandlers(mArmState, (ARMul_SWIhandler*)::swiHandler,
+		(ARMul_SWIhandler*)::memErrHandler, (ARMul_SWIhandler*)::exceptionHandler, this);
 	mArmRegs = ARMul_GetRegs(mArmState);
 	regs = (int*)mArmRegs;
 
@@ -187,7 +201,7 @@ bool ArmCore::LoadVM(Stream& file) {
 	// set the stack pointer
 	mArmRegs[13] = DATA_SEGMENT_SIZE - 1024;
 	STACK_TOP = mArmRegs[13];
-	STACK_BOTTOM = 0;
+	STACK_BOTTOM = 0x8000;	// should be higher; but this will do for now.
 
 	// fill registers with debug markers
 	for(int i=0; i<13; i++) {

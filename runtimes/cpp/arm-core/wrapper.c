@@ -60,15 +60,13 @@ unsigned ARMul_OSHandleSWI (ARMul_State * state, ARMword number) {
 	return state->swiHandler(state, number, state->user);
 }
 
-void __declspec(dllexport) ARMul_SetSWIhandler (ARMul_State* state, ARMul_SWIhandler* h, void* user);
-void __declspec(dllexport) ARMul_SetSWIhandler (ARMul_State* state, ARMul_SWIhandler* h, void* user) {
-	state->swiHandler = h;
+void __declspec(dllexport) ARMul_SetHandlers (ARMul_State* state, ARMul_SWIhandler* swi,
+	ARMul_SWIhandler* mem, ARMul_SWIhandler* ex, void* user)
+{
+	state->swiHandler = swi;
+	state->memErrHandler = mem;
+	state->exceptionHandler = ex;
 	state->user = user;
-}
-
-void __declspec(dllexport) ARMul_SetMemErrHandler (ARMul_State* state, ARMul_SWIhandler* h);
-void __declspec(dllexport) ARMul_SetMemErrHandler (ARMul_State* state, ARMul_SWIhandler* h) {
-	state->memErrHandler = h;
 }
 
 __declspec(dllexport) ARMword* ARMul_GetRegs (ARMul_State * state);
@@ -86,5 +84,7 @@ ARMul_OSException (ARMul_State * state  ATTRIBUTE_UNUSED,
 		   ARMword       vector ATTRIBUTE_UNUSED,
 		   ARMword       pc     ATTRIBUTE_UNUSED)
 {
-  return FALSE;
+	state->Emulate = FALSE;
+	state->exceptionHandler(state, vector, state->user);
+  return TRUE;
 }

@@ -78,6 +78,9 @@
 	.fnstart
 #endif
 
+#if 0	//MAPIP
+// on MoSync, the stack pointer is already set.
+
 /* Start by setting up a stack.  */
 #ifdef ARM_RDP_MONITOR
 	/*  Issue Demon SWI to read stack info.  */
@@ -230,6 +233,7 @@
 #endif
 #endif
 #endif
+#endif	//MAPIP
 	/* Zero the memory in the .bss section.  */
 	movs 	a2, #0			/* Second arg: fill value.  */
 	mov	fp, a2			/* Null frame pointer.  */
@@ -282,7 +286,7 @@ __change_mode:
 #ifdef THUMB_V7M_V6M
 	bkpt	AngelSWI
 #else
- 	AngelSWIAsm	AngelSWI
+	AngelSWIAsm	AngelSWI
 #endif
 	ldr	r1, .LC30
 #endif
