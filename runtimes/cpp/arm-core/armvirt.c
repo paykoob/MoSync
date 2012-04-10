@@ -180,10 +180,11 @@ ARMul_MemoryExit (ARMul_State * state)
   return;
 }
 #else	//VIRTUAL_MEMORY
-void __declspec(dllexport) ARMul_MemoryInit2 (ARMul_State* state, void* memory, unsigned long initmemsize);
-void __declspec(dllexport) ARMul_MemoryInit2 (ARMul_State* state, void* memory, unsigned long initmemsize) {
+void __declspec(dllexport) ARMul_MemoryInit2 (ARMul_State* state, void* memory, ARMword initmemsize, ARMword ds);
+void __declspec(dllexport) ARMul_MemoryInit2 (ARMul_State* state, void* memory, ARMword initmemsize, ARMword ds) {
 	state->MemSize = initmemsize;
 	state->MemDataPtr = (unsigned char*)memory;
+	state->dataSectionStartAddress = ds;
 }
 void ARMul_MemoryExit (ARMul_State* state) {
 	// do nothing
@@ -194,7 +195,7 @@ static ARMword GetWord (ARMul_State* state, ARMword address, int check) {
 	return *(ARMword*)(state->MemDataPtr + (address & ~3));
 }
 static void PutWord (ARMul_State* state, ARMword address, ARMword data, int check) {
-	if(address >= state->MemSize || address < 0x8000)
+	if(address >= state->MemSize || address < state->dataSectionStartAddress)
 		state->memErrHandler(state, address, state->user);
 	*(ARMword*)(state->MemDataPtr + (address & ~3)) = data;
 }

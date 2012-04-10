@@ -17,14 +17,24 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "maapi.h"
 
-extern "C" void GCCATTRIB(noreturn) __cxa_pure_virtual();
-extern "C" void __cxa_pure_virtual() {
-	maExit(-42);
+#ifdef __arm__
+extern "C" void ansi_heap_init_crt0(char *start, int length);
+static char sHeap[1024*512];
+
+extern "C" int resource_selector();
+
+extern "C" int MAMain();
+extern "C" int __mosync_main();
+int __mosync_main() {
+	// todo: put before static constructors.
+	ansi_heap_init_crt0(sHeap, sizeof(sHeap));
+	//resource_selector();
+#define MSG "heap and resources initialized.\n"
+	maWriteLog(MSG, sizeof(MSG)-1);
+	return MAMain();
 }
 
-#ifdef __arm__
-extern "C" int MAMain();
-int main() {
-	return MAMain();
+void exit(int i) {
+	maExit(i);
 }
 #endif

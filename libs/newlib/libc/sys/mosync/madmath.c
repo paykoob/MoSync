@@ -108,6 +108,7 @@ int __nedf2(double a, double b)
 	return dcmp(a,b);
 }
 
+#ifndef __arm__
 // these should not be needed, as long == int.
 long __fixsfdi(float a)
 {
@@ -118,5 +119,6 @@ long __fixdfdi(double a)
 {
 	return __fixdfsi(a);
 }
+#endif
 
 #endif	//MAPIP

@@ -12,6 +12,8 @@
 using namespace Core;
 using namespace std;
 
+static unsigned exceptionHandler(ARMul_State * state, ARMword number, void* user);
+
 class ArmCore : public VMCoreInt {
 public:
 	ArmCore(Syscall& aSyscall) : VMCoreInt(aSyscall) {}
@@ -69,7 +71,7 @@ public:
 			LOG("step\n");
 			mPC = ARMul_DoInstr(mArmState);
 			ARMul_SetPC(mArmState, mPC);
-			waitForRemote(5);
+			waitForRemote(5);	// GDB breakpoint signal
 			LOG("PC: 0x%08x -> 0x%08x\n", oldPC, mPC);
 		} else {
 #if 1
@@ -90,7 +92,6 @@ public:
 		}
 		}
 	}
-
 
 	bool getCustomReg(int regNum, int& val) {
 		switch(regNum) {
@@ -113,6 +114,14 @@ private:
 
 #define REG(num) mArmRegs[num]
 #define REG_r14 0
+#define REG_r15 1
+
+#undef MA_DV_HI
+#define MA_DV_HI lo
+
+#undef MA_DV_LO
+#define MA_DV_LO hi
+
 #define REG_i0 0
 #define REG_i1 1
 #define REG_i2 2
@@ -196,12 +205,11 @@ bool ArmCore::LoadVM(Stream& file) {
 	mArmRegs = ARMul_GetRegs(mArmState);
 	regs = (int*)mArmRegs;
 
-	ARMul_MemoryInit2(mArmState, mem_ds, DATA_SEGMENT_SIZE);
-
 	// set the stack pointer
 	mArmRegs[13] = DATA_SEGMENT_SIZE - 1024;
 	STACK_TOP = mArmRegs[13];
-	STACK_BOTTOM = 0x8000;	// should be higher; but this will do for now.
+
+	ARMword ds;
 
 	// fill registers with debug markers
 	for(int i=0; i<13; i++) {
@@ -329,8 +337,9 @@ bool ArmCore::LoadVM(Stream& file) {
 			if(phdr.p_type == PT_NULL)
 				continue;
 			else if(phdr.p_type == PT_LOAD) {
+				bool text = (phdr.p_flags & PF_X);
 				LOG("%s section: 0x%x, 0x%x bytes\n",
-					(phdr.p_flags & PF_X) ? "text" : "data",
+					text ? "text" : "data",
 					phdr.p_vaddr, phdr.p_filesz);
 #if 0
 				if(ArenaLo < phdr.p_vaddr + phdr.p_filesz)
@@ -338,6 +347,9 @@ bool ArmCore::LoadVM(Stream& file) {
 #endif
 				TEST(file.seek(Seek::Start, phdr.p_offset));
 				TEST(file.read(this->GetValidatedMemRange(phdr.p_vaddr, phdr.p_filesz), phdr.p_filesz));
+				if(!text) {
+					ds = phdr.p_vaddr;
+				}
 			} else {
 				//FAIL(UE_INCOMPATIBLE_ELF);
 			}
@@ -357,6 +369,9 @@ bool ArmCore::LoadVM(Stream& file) {
 
 		}	//if
 	}	//for
+
+	STACK_BOTTOM = ds;	// should be higher; but this will do for now.
+	ARMul_MemoryInit2(mArmState, mem_ds, DATA_SEGMENT_SIZE, ds);
 
 	return true;
 }

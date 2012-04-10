@@ -74,6 +74,8 @@ void ATTRIBUTE(noreturn, panicFunction(const char* msg, const char* function));
 
 #define ASSERT_MSG(cond, msg) do{ if(!(cond)) PANIC_MESSAGE(msg); }while(0)
 
+#define ASSERTE(cond) ASSERT_MSG(cond, #cond)
+
 #ifdef  __cplusplus
 }
 #endif

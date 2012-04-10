@@ -32,4 +32,7 @@ SKIPPED = [
 '941014-1.c', #pipe-tool reports: illegal function pointer manipulation.
 'builtin-bitops-1.c', #builtin.functions
 '930622-2.c', #gcc bug: calls __fixdfdi instead of __fixdfti or __fixtfti
+
+#'20040208-1.c',	#apparently overflowing doubles.
+'20101011-1.c',	#signal(SIGFPE)
 ]

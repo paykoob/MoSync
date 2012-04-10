@@ -19,6 +19,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "maheap.h"
 #include "stdio.h"
 #include "mavsprintf.h"
+#include "maassert.h"
 
 malloc_handler gMallocHandler = default_malloc_handler;
 malloc_hook gMallocHook = NULL;
@@ -108,7 +109,7 @@ void ansi_heap_init_crt0(char *start, int length)
 	set_free_hook(tlsf_free);
 	set_realloc_hook((realloc_hook)tlsf_realloc);
 	set_block_size_hook((block_size_hook)tlsf_block_size);
-		
+
 	MASTD_HEAP_LOG("TLSF initialized!");
 }
 
@@ -125,6 +126,7 @@ void * malloc(size_t size)
 	maSetMemoryProtection(FALSE);
 #endif
 
+	ASSERTE(gMallocHook);
 	result = gMallocHook(size);
 
 	if(result == 0)
@@ -182,15 +184,15 @@ void free(void *mem)
 	int wasMemoryProtected = maGetMemoryProtection();
 	maSetMemoryProtection(FALSE);
 	if(gBlockSizeHook)
-		maProtectMemory(mem, gBlockSizeHook(mem));	
+		maProtectMemory(mem, gBlockSizeHook(mem));
 #endif
 
 	gFreeHook(mem);
-	
+
 #ifdef MEMORY_PROTECTION
 	maSetMemoryProtection(wasMemoryProtected);
 #endif
-	
+
 }
 
 //****************************************

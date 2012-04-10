@@ -405,7 +405,7 @@ __change_mode:
 	movs	r0, r4
 	movs	r1, r5
 #endif
-	bl	FUNCTION (main)
+	bl	FUNCTION (__mosync_main)
 
 	bl	FUNCTION (exit)		/* Should not return.  */
 

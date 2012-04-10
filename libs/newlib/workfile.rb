@@ -38,6 +38,8 @@ mod.class_eval do
 		if(@GCC_IS_ARM)
 			#@IGNORED_FILES << 'matask.c'
 			#@IGNORED_FILES << 'macpp.cpp'
+			@IGNORED_FILES << 'floatdidf.c'
+			@IGNORED_FILES << 'floatdisf.c'
 		else
 			@SOURCES << 'libc/sys/mosync/libgcc'
 		end
