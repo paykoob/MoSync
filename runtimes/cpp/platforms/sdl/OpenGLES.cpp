@@ -15,10 +15,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
 */
 
+#include "config_platform.h"
 #include "OpenGLES.h"
 #include <windows.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_syswm.h>
+#include <helpers/log.h>
 
 namespace Base {
 
@@ -36,6 +38,7 @@ namespace Base {
 
 	static LRESULT CALLBACK WindowProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
+#if 1
 		switch (uMsg)	// Evaluate Window Message
 		{
 		case WM_PAINT:
@@ -43,6 +46,7 @@ namespace Base {
 				return 0;
 			}
 		}
+#endif
 
 		return DefWindowProc (hWnd, uMsg, wParam, lParam);		
 	}
@@ -195,29 +199,37 @@ namespace Base {
 
 		return true;
 	}
+	static void handleWM_PAINT(HWND hWnd) {
+		PAINTSTRUCT ps;
+		BeginPaint(hWnd, &ps);
+		EndPaint(hWnd, &ps);
+	}
 
 	bool openGLClose(const SubView& subView) {
 
 		return false;
 	}
-
+#define LPF(...) LOG(__VA_ARGS__); printf(__VA_ARGS__)
 	bool openGLProcessEvents(const SubView &subView) {
 		if(subView.data == NULL) return false;
 		SubViewData *subViewData = (SubViewData*)subView.data;
 		HWND hWnd = subViewData->window;
 
+		//LPF("openGLProcessEvents\n");
 		MSG msg;
 		while(PeekMessage(&msg, hWnd, 0, 0, PM_REMOVE) > 0) {
+			//LPF("hWnd %i\n", msg.message);
 			TranslateMessage(&msg);
 			if(msg.message == WM_PAINT || msg.message == WM_SETFOCUS)
-				ValidateRect(hWnd, NULL);
+				handleWM_PAINT(hWnd);
 			DispatchMessage(&msg);
 		}
 
 		while(PeekMessage(&msg, sMainWnd, 0, 0, PM_REMOVE) > 0) {
+			//LPF("sMainWnd %i\n", msg.message);
 			TranslateMessage(&msg);
 			if(msg.message == WM_PAINT || msg.message == WM_SETFOCUS)
-				ValidateRect(sMainWnd, NULL);
+				handleWM_PAINT(hWnd);
 			DispatchMessage(&msg);
 		}
 

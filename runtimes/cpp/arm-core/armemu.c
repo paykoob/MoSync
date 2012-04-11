@@ -4126,6 +4126,9 @@ GetDPSRegRHS (ARMul_State * state, ARMword instr)
 static void
 WriteR15 (ARMul_State * state, ARMword src)
 {
+	if(src < 0x8000) {
+		state->memErrHandler(state, src, state->user);
+	}
   /* The ARM documentation states that the two least significant bits
      are discarded when setting PC, except in the cases handled by
      WriteR15Branch() below.  It's probably an oversight: in THUMB
@@ -4153,6 +4156,9 @@ WriteR15 (ARMul_State * state, ARMword src)
 static void
 WriteSR15 (ARMul_State * state, ARMword src)
 {
+	if(src < 0x8000) {
+		state->memErrHandler(state, src, state->user);
+	}
 #ifdef MODE32
   if (state->Bank > 0)
     {
@@ -4191,6 +4197,9 @@ WriteSR15 (ARMul_State * state, ARMword src)
 static void
 WriteR15Branch (ARMul_State * state, ARMword src)
 {
+	if(src < 0x8000) {
+		state->memErrHandler(state, src, state->user);
+	}
 #ifdef MODET
   if (src & 1)
     {

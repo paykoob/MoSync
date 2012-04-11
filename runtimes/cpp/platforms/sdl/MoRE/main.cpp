@@ -384,8 +384,11 @@ void MoSyncError::addRuntimeSpecificPanicInfo(char* ptr, bool newLines) {
 void Base::reportCallStack() {
 	if(gCore == NULL)
 		return;
+	const int* fcs = Core::GetFakeCallStack(gCore);
+	if(!fcs)
+		return;
 	maDumpCallStackEx("reportCallStack", 0);
-	report(REPORT_CALL_STACK, Core::GetFakeCallStack(gCore),
+	report(REPORT_CALL_STACK, fcs,
 		Core::GetFakeCallStackDepth(gCore) << 2);
 }
 

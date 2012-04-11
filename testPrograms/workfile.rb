@@ -8,8 +8,9 @@ name = ARGV[0]
 ARGV.delete_at(0)
 
 require File.expand_path('../rules/mosync_exe.rb')
+require File.expand_path('../rules/util.rb')
 
-default_constant(:USE_ARM, false)
+default_const(:USE_ARM, false)
 
 work = PipeExeWork.new
 work.instance_eval do
@@ -17,7 +18,8 @@ work.instance_eval do
 	@EXTRA_SOURCEFILES = [name]
 	@NAME = name
 	@EXTRA_INCLUDES = ['.']
-	@LIBRARIES = ['mautil', 'mtxml']
+	#@EXTRA_CFLAGS = ' -save-temps'
+	@LIBRARIES = ['mautil', 'mtxml', 'sdl']
 	@EXTRA_LINKFLAGS = ' -datasize=1024000 -heapsize=386000 -stacksize=64000' if(!USE_ARM)
 	@PACK_PARAMETERS = ' --s60v3uid E1234512 --debug --permissions "Internet Access"'
 end

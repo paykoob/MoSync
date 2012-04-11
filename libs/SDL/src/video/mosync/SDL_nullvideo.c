@@ -66,6 +66,8 @@ static void DUMMY_UnlockHWSurface(_THIS, SDL_Surface *surface);
 static void DUMMY_FreeHWSurface(_THIS, SDL_Surface *surface);
 static int DUMMY_FlipHWSurface(_THIS, SDL_Surface *surface);
 
+static void DUMMY_GL_SwapBuffers(_THIS);
+
 //static MAFrameBufferInfo sFrameBufferInfo;
 
 /* etc. */
@@ -136,6 +138,7 @@ static SDL_VideoDevice *DUMMY_CreateDevice(int devindex)
 	device->GetWMInfo = NULL;
 	device->InitOSKeymap = DUMMY_InitOSKeymap;
 	device->PumpEvents = DUMMY_PumpEvents;
+	device->GL_SwapBuffers = DUMMY_GL_SwapBuffers;
 
 	device->free = DUMMY_DeleteDevice;
 
@@ -190,6 +193,10 @@ static SDL_Rect **DUMMY_ListModes(_THIS, SDL_PixelFormat *format, Uint32 flags)
     if(format->BitsPerPixel != Private->fbi.bitsPerPixel)
             return NULL;
     return SDL_modelist;
+}
+
+static void DUMMY_GL_SwapBuffers(_THIS) {
+	maUpdateScreen();
 }
 
 static SDL_Surface *DUMMY_SetVideoMode(_THIS, SDL_Surface *current,

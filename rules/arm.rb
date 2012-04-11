@@ -6,6 +6,7 @@ module MoSyncArmGccMod
 		flags = ''
 		flags << ' -fno-exceptions -mfloat-abi=soft'
 		flags << ' -DUSE_NEWLIB' if(USE_NEWLIB)
+		#flags << ' -D_POSIX_SOURCE'	#avoid silly bsd functions
 		return flags
 	end
 	def set_defaults

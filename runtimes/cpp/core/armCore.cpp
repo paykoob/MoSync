@@ -192,6 +192,10 @@ static DWORD swapw(DWORD w) {
 bool ArmCore::LoadVM(Stream& file) {
 	Elf32_Ehdr ehdr;
 
+#ifdef FAKE_CALL_STACK
+	fakeCallStack = NULL;
+#endif
+
 	// hard-coded size for now
 	// ARM has only one memory segment; data and code are one.
 	DATA_SEGMENT_SIZE = 64*1024*1024;
