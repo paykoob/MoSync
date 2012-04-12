@@ -28,6 +28,8 @@
 #define DECLSPEC
 #define SDLCALL
 
+#define SDL_HAS_64BIT_TYPE 1
+
 /* This is the minimal configuration that can be used to build SDL */
 
 #include <stdarg.h>
@@ -41,9 +43,6 @@ typedef unsigned short uint16_t;
 typedef signed int int32_t;
 typedef unsigned int uint32_t;
 typedef unsigned int size_t;
-typedef unsigned long uintptr_t;
-#endif
-#ifdef __arm__
 typedef unsigned long uintptr_t;
 #endif
 

@@ -37,6 +37,7 @@
 #elif defined(__MACOSX__)
 #include "SDL_config_macosx.h"
 #elif defined(__WIN32__)
+#error yo
 #include "SDL_config_win32.h"
 #elif defined(__OS2__)
 #include "SDL_config_os2.h"
