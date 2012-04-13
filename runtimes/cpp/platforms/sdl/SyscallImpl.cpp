@@ -996,11 +996,13 @@ namespace Base {
 #endif	//MOBILEAUTHOR
 
 			case SDL_KEYDOWN:
+#if 0
 				if(event.key.keysym.sym == SDLK_ESCAPE) {
 					LOGT("SDLK_ESCAPE");
 					MASetClose();
 					break;
 				}
+#endif
 				if(event.key.keysym.sym == SDLK_F4) {
 					LOGT("SDLK_F4");
 					MARotateScreen();
