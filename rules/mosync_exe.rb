@@ -241,7 +241,7 @@ module MoSyncExeModule
 			if(@ICON)
 				iconTask = FileTask.new(self, @ICON)
 			else
-				iconTask = DefaultIconTask.new(self, @BUILDDIR_BASE, @PACK_MODEL)
+				#iconTask = DefaultIconTask.new(self, @BUILDDIR_BASE, @PACK_MODEL)
 			end
 
 			@prerequisites << @TARGET = MoSyncPackTask.new(self,

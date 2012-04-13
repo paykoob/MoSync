@@ -6,7 +6,7 @@ require File.expand_path('../../rules/mosync_lib.rb')
 mod = Module.new
 mod.class_eval do
 	def setup_pipe
-		@SOURCES = ['.', 'src', 'src/thread/generic'] + Dir['src/*/'] + Dir['src/*/mosync/']
+		@SOURCES = ['src', 'src/thread/generic'] + Dir['src/*/'] + Dir['src/*/mosync/']
 		@SOURCES << 'src/stdlib' if(!USE_NEWLIB)
 
 		@HEADER_DIRS = ['include']
