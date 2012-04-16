@@ -29,6 +29,7 @@ MA 02110-1301, USA.
 #include <Wormhole/Libs/PhoneGap/PhoneGapMessageHandler.h>
 #include <Wormhole/Libs/JSNativeUI/NativeUIMessageHandler.h>
 #include <Wormhole/Libs/JSNativeUI/ResourceMessageHandler.h>
+#include <mavsprintf.h>
 #include "MAHeaders.h"
 
 // Namespaces we want to access.

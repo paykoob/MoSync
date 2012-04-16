@@ -90,14 +90,4 @@ bool isWindowsPhone();
  */
 MAUtil::String getFormatedDuration(int milliseconds);
 
-/**
- * The screen width.
- */
-extern int screenWidth;
-
-/**
- * The screen height.
- */
-extern int screenHeight;
-
 #endif /* UTIL_H_ */

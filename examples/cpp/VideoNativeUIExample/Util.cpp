@@ -24,13 +24,14 @@ MA 02110-1301, USA.
  */
 
 #include <maapi.h>
+#include <mactype.h>
 
 #include "Util.h"
 
 #define BUF_MAX 256
 
-int screenWidth;
-int screenHeight;
+static int screenWidth;
+static int screenHeight;
 
 /**
  * Get the screen size.
