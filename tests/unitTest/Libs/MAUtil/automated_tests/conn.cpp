@@ -295,6 +295,7 @@ public:
 				u.c[0], u.c[1], u.c[2], u.c[3], addr.inet4.port);
 		} else {
 			printf("getAddr error: %i\n", res);
+			fail();
 		}
 		conn->read(mReadBuffer, DATA_SIZE);
 	}

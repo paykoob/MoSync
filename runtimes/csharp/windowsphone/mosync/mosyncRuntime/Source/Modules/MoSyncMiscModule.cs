@@ -111,6 +111,8 @@ namespace MoSync
              * Discussion: this needs to be re-enabled for the backlight to work
              *             so an maStartBacklight should be needed for WP7;
              *             what about maToggleBacklight(bool)?
+             *
+             * We have maWakeLock instead on Windows Phone, Android, iOS.
              */
             syscalls.maResetBacklight = delegate()
             {
@@ -322,6 +324,23 @@ namespace MoSync
 						};
         }
 
+			ioctls.maWakeLock = delegate(int flag)
+			{
+				if (MoSync.Constants.MA_WAKE_LOCK_ON == flag)
+				{
+					Microsoft.Phone.Shell.PhoneApplicationService.Current.
+						UserIdleDetectionMode =
+							Microsoft.Phone.Shell.IdleDetectionMode.Enabled;
+				}
+				else
+				{
+					Microsoft.Phone.Shell.PhoneApplicationService.Current.
+						UserIdleDetectionMode =
+							Microsoft.Phone.Shell.IdleDetectionMode.Disabled;
+				}
+				return 1;
+			};
+        }
 
         /**
          * Retrieves the values of MoSync System Properties
