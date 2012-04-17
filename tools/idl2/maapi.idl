@@ -886,10 +886,17 @@ interface MAAPI {
 	void maConnWriteFromData(in MAHandle conn, in MAHandle data, in int offset, in int size);
 
 	/**
-	* \brief An address for the TCP/IPv4 protocol.
+	* \brief An address for the protocols TCP or UDP over IPv4.
 	*/
 	struct MAConnAddrInet4 {
+		/**
+		* The octets of the address are ordered by significance.
+		* Thus, to get the first octet, do this: ((addr >> 24) & 0xff).
+		*/
 		int addr;
+		/**
+		* Valid port numbers are 1 to 65535, inclusive.
+		*/
 		int port;
 	}
 
@@ -909,6 +916,9 @@ interface MAAPI {
 	* \brief An address for the Bluetooth Serial Port protocol.
 	*/
 	struct MAConnAddrBt {
+		/**
+		* Valid port numbers are 1 to 30, inclusive.
+		*/
 		int port;
 		MABtAddr addr;
 	}

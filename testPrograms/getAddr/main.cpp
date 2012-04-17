@@ -17,20 +17,53 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include <MAUtil/Moblet.h>
 #include <conprint.h>
-#include <IX_CONNSERVER.H>
 
 using namespace MAUtil;
 
-class MyMoblet : public Moblet {
+static void dumpInet4Addr(MAHandle h) {
+	MAConnAddr addr;
+	int res = maConnGetAddr(h, &addr);
+	printf("maConnGetAddr res: %i\n", res);
+	printf("family: %i\n", addr.family);
+	int b = addr.inet4.addr;
+	printf("%i.%i.%i.%i:%i\n",
+		(b >> 24) & 0xff,
+		(b >> 16) & 0xff,
+		(b >> 8) & 0xff,
+		(b) & 0xff,
+		addr.inet4.port);
+	maConnClose(h);
+}
+
+class MyMoblet : public Moblet, ConnListener {
 public:
 	MyMoblet() {
 		printf("Hello World!\n");
-		ConnAddr addr;
+		MAConnAddr addr;
 		addr.family = CONN_FAMILY_BT;
 		int res = maConnGetAddr(HANDLE_LOCAL, &addr);
 		printf("maConnGetAddr res: %i\n", res);
 		byte* a = addr.bt.addr.a;
 		printf("%02x%02x%02x%02x%02x%02x\n", a[0], a[1], a[2], a[3], a[4], a[5]);
+
+		MAHandle h = maConnect("socket://");
+		printf("socket server: %i\n", h);
+		if(h > 0) {
+			dumpInet4Addr(h);
+		}
+
+		h = maConnect("socket://modev.mine.nu:5001");
+		printf("socket conn: %i\n", h);
+		if(h > 0) {
+			setConnListener(h, this);
+		}
+	}
+
+	void connEvent(const MAConnEventData& data) {
+		printf("conn result: %i\n", data.result);
+		if(data.result >= 0) {
+			dumpInet4Addr(data.handle);
+		}
 	}
 
 	void keyPressEvent(int keyCode) {

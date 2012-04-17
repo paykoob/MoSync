@@ -274,7 +274,7 @@ int InetConnection::getAddr(MAConnAddr& addr) {
 	if(mSock == INVALID_SOCKET)
 		return CONNERR_GENERIC;
 	addr.family = CONN_FAMILY_INET4;
-	addr.inet4.addr = mInetAddr;
+	addr.inet4.addr = htonl(mInetAddr);
 	addr.inet4.port = mPort;
 	return 1;
 }

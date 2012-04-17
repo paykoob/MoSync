@@ -17,16 +17,25 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "networking.h"
 
-NETSYSCALL(MAHandle) maConnect(final String url) {
+NETSYSCALL(MAHandle) maConnect(final String url)
+#ifdef CONN_PANIC
+	throws IOException
+#endif
+{
 	DEBUG_CONN("Connect "+mConnNextHandle+" "+url+"\n");
 	if(mConnections.size() >= CONN_MAX)
 		return CONNERR_MAX;
-	if(url.startsWith("socket://:") || url.equals("socket://") ||
-		url.startsWith("btspp://localhost:"))
+	boolean isSocketServerUrl = url.startsWith("socket://:") || url.equals("socket://");
+	boolean isBtsppServerUrl = url.startsWith("btspp://localhost:");
+	if(isSocketServerUrl || isBtsppServerUrl)
 	{
-		MAServerConn mac = new MAServerConn(mConnNextHandle);
+		MAServerConn mac = new MAServerConn(mConnNextHandle,
+			isBtsppServerUrl ? CONN_FAMILY_BT : CONN_FAMILY_INET4);
+#ifndef CONN_PANIC
 		try {
+#endif
 			mac.notifier = (StreamConnectionNotifier)Connector.open(url);
+#ifndef CONN_PANIC
 		} catch(IOException e) {
 			PRINT_STACK_TRACE;
 			return CONNERR_GENERIC;
@@ -34,6 +43,7 @@ NETSYSCALL(MAHandle) maConnect(final String url) {
 			PRINT_STACK_TRACE;
 			return CONNERR_FORBIDDEN;
 		}
+#endif
 		mConnections.put(new Integer(mConnNextHandle), mac);
 		return mConnNextHandle++;
 	} else if(url.startsWith("datagram://")) {
@@ -71,16 +81,20 @@ NETSYSCALL(int) maConnGetAddr(MAHandle conn, Address addr) throws Exception {
 			return 1;
 		} else
 #endif
+		// Not practical for TCP/IP; you'd have to open a ServerSocketConnection.
 		{
-			return CONNERR_INTERNAL;	//TODO: implement for TCP/IP
+			return CONNERR_INTERNAL;
 		}
 	}
 	MAConn mac = (MAConn)mConnections.get(new Integer(conn));
 	if(mac instanceof MAStreamConn) {
 		MAStreamConn masc = (MAStreamConn)mac;
-		if(masc.conn instanceof SocketConnection) {
-			//todo: implement
-			return CONNERR_INTERNAL;
+		if(masc.conn instanceof SocketConnection) {	//TCP
+			SocketConnection sc = (SocketConnection)masc.conn;
+			WINT(addr, CONN_FAMILY_INET4);
+			writeInet4AddressToMemory(sc.getAddress(), addr + 4);
+			WINT(addr + 8, sc.getPort());
+			return 1;
 		}
 #ifdef MA_PROF_SUPPORT_JAVAPACKAGE_BLUETOOTH
 		//check bluetooth
@@ -96,8 +110,7 @@ NETSYSCALL(int) maConnGetAddr(MAHandle conn, Address addr) throws Exception {
 	} else if(mac instanceof MAServerConn) {
 		MAServerConn masc = (MAServerConn)mac;
 		MYASSERT(masc.notifier != null);
-		//if bluetooth
-		//we only have bluetooth servers for now.
+		if(masc.family == CONN_FAMILY_BT)
 		{
 			LocalDevice ld = LocalDevice.getLocalDevice();
 			ServiceRecord sr = ld.getRecord(masc.notifier);
@@ -112,11 +125,42 @@ NETSYSCALL(int) maConnGetAddr(MAHandle conn, Address addr) throws Exception {
 			writeBtAddressToMemory(ld.getBluetoothAddress(), addr + 8);
 			return 1;
 		}
+		else if(masc.family == CONN_FAMILY_INET4)
+		{
+			ServerSocketConnection ssc = (ServerSocketConnection)masc.notifier;
+			WINT(addr, CONN_FAMILY_INET4);
+			writeInet4AddressToMemory(ssc.getLocalAddress(), addr + 4);
+			WINT(addr + 8, ssc.getLocalPort());
+			return 1;
+		}
+		else
+		{
+			return CONNERR_INTERNAL;
+		}
 #endif	//MA_PROF_SUPPORT_JAVAPACKAGE_BLUETOOTH
 	}
 	return CONNERR_INTERNAL;
 }
 
+final void writeInet4AddressToMemory(String s, Address dst) {
+	DEBUG_ALWAYS("inet4: '"+s+"'\n");
+	int pos = 0;
+	int inet4 = 0;
+	// top byte is most significant.
+	for(int i=3; i>=1; i--) {
+		int commaIndex = s.indexOf('.', pos);
+		DEBUG_ALWAYS("pos: "+pos+", commaIndex: "+commaIndex+"\n");
+		int a = Integer.parseInt(s.substring(pos, commaIndex));
+		DUMP(a);
+		inet4 |= a << (i*8);
+		pos = commaIndex + 1;
+	}
+	int a = Integer.parseInt(s.substring(pos));
+	DUMP(a);
+	inet4 |= a;
+	DUMP(HEX(inet4));
+	WINT(dst, inet4);
+}
 
 NETSYSCALL(void) maConnClose(MAHandle conn) {
 	DEBUG_CONN("ConnClose "+conn+"\n");

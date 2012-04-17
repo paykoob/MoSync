@@ -125,9 +125,11 @@ public class MARecordConn extends MAConn {
 
 public class MAServerConn extends MAConn {
 	StreamConnectionNotifier notifier;
+	final int family;
 
-	MAServerConn(MAHandle h) {
+	MAServerConn(MAHandle h, int f) {
 		super(h);
+		family = f;
 	}
 	final void prepareRead() {
 		BIG_PHAT_ERROR;
