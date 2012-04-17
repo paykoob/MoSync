@@ -342,7 +342,7 @@ static void fillPanicReport(MAPanicReport& pr, int rt, int code) {
 	ut.UniversalTime();
 	pr.time = unixTime(ut);
 	pr.ip = -1;
-	CAppUi* ui = (CAppUi*)(CEikonEnv::Static()->AppUi());
+	CAppUi* ui = GetAppUi();
 	const Core::VMCore* core = ui->GetCore();
 	if(core) if(core->mem_cs) {
 		pr.ip = Core::GetIp(core);
@@ -432,7 +432,7 @@ static void logTDesC(const TDesC& text) {
 void ShowAknErrorNote(const TDesC& text) {
 	LOG("ShowAknErrorNote:\n");
 	logTDesC(text);
-	CAppUi* ui = (CAppUi*)(CEikonEnv::Static()->AppUi());
+	CAppUi* ui = GetAppUi();
 	if(!ui->isExiting()) {
 		LOG("Showing ErrorNote...\n");
 		ui->Stop();
@@ -476,7 +476,7 @@ void MoSyncErrorExit(int errorCode) {
 #ifdef PUBLIC_DEBUG
 	writePanicReport(REPORT_PANIC, errorCode);
 #endif
-	CAppUi* ui = (CAppUi*)(CEikonEnv::Static()->AppUi());
+	CAppUi* ui = GetAppUi();
 	const Core::VMCore* core = ui->GetCore();
 	TBuf<128> buffer;
 	bool formatted = false;

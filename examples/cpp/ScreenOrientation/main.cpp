@@ -54,10 +54,19 @@ public:
 	//Method for handling key presses.
 	void keyPressEvent(int keyCode, int nativeCode)
 	{
-		if(MAK_0 == keyCode || MAK_BACK == keyCode)
-		{
-			//Exit on any key press
+		switch(keyCode) {
+		case MAK_0:
+		case MAK_BACK:
 			maExit(0);
+		case MAK_LEFT:
+			maScreenSetOrientation(SCREEN_ORIENTATION_PORTRAIT);
+			break;
+		case MAK_UP:
+			maScreenSetOrientation(SCREEN_ORIENTATION_LANDSCAPE);
+			break;
+		case MAK_FIRE:
+			maScreenSetOrientation(SCREEN_ORIENTATION_DYNAMIC);
+			break;
 		}
 	}
 

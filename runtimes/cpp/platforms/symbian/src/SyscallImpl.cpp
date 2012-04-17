@@ -63,6 +63,7 @@ using namespace MoSyncError;
 
 static int maSendToBackground();
 static int maBringToForeground();
+static int maScreenSetOrientation(int orientation);
 
 #ifdef CALL
 //***************************************************************************
@@ -359,7 +360,7 @@ void Syscall::ConstructL(VMCore* aCore) {
 }
 
 void Base::StopEverything() {
-	CAppUi* ui = (CAppUi*)(CEikonEnv::Static()->AppUi());
+	CAppUi* ui = GetAppUi();
 	if(ui) {
 		Syscall* syscall = ui->GetSyscall();
 		if(syscall) {
@@ -1633,9 +1634,23 @@ SYSCALL(longlong, maIOCtl(int function, int a, int b, int c)) {
 
 	maIOCtl_syscall_case(maTextBox);
 
+	maIOCtl_case(maScreenSetOrientation);
+
 	default:
 		return IOCTL_UNAVAILABLE;
 	}
+}
+
+static int maScreenSetOrientation(int orientation) {
+	CAppUi::TAppUiOrientation o;
+	switch(orientation) {
+	case SCREEN_ORIENTATION_LANDSCAPE: o = CAppUi::EAppUiOrientationLandscape; break;
+	case SCREEN_ORIENTATION_PORTRAIT: o = CAppUi::EAppUiOrientationPortrait; break;
+	case SCREEN_ORIENTATION_DYNAMIC: o = CAppUi::EAppUiOrientationAutomatic; break;
+	default: BIG_PHAT_ERROR(ERR_ORIENTATION_INVALID);
+	}
+	GetAppUi()->SetOrientationL(o);
+	return 0;
 }
 
 #ifdef CALL

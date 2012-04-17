@@ -8376,12 +8376,14 @@ group CameraFunctions "Camera Functions" {
 
 		/**
 		 * Set the screen orientation.
-		 * Currently implemented only on Android.
+		 * Currently implemented only on Android and Symbian.
 		 * @param orientation One of the \link #SCREEN_ORIENTATION_LANDSCAPE
 		 * #SCREEN_ORIENTATION_PORTRAIT #SCREEN_ORIENTATION_DYNAMIC \endlink
 		 * constants.
 		 * @return \< 0 on error.
-		 * @deprecated use #maAlert instead.
+		 * \note The arrow key orientation changes together with the screen.
+		 * For example, when changing from portrait to landscape, the hardware key
+		 * that once generated #MAK_LEFT events will now generate #MAK_DOWN events.
 		 */
 		int maScreenSetOrientation(in int orientation);
 
