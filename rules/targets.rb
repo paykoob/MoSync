@@ -75,21 +75,9 @@ class Targets
 		@@targets.store(name, Target.new(name, preqs, &block))
 	end
 
-	# parse ARGV
-	def Targets.setup
-		return if(@@goals.size != 0)
-		if(defined?(@@args) != nil)
-			#puts "Got args from reset."
-			args = @@args
-		else
-			#puts "ARGS not defined; going with ARGV."
-			args = ARGV
-		end
+	def Targets.parseArgs(args)
 		#puts args.inspect
 		args.each do |a| handle_arg(a) end
-		if(@@goals.empty?) then
-			@@goals = [:default]
-		end
 		if(!defined?(CONFIG))
 			set_const(:CONFIG, 'debug')
 		end
@@ -100,6 +88,18 @@ class Targets
 		default_const(:NATIVE_RUNTIME, false)
 		default_const(:PROFILING, false)
 		default_const(:ELIM, false)
+	end
+
+	# parse ARGV
+	def Targets.setup
+		return if(@@goals.size != 0)
+		if(defined?(@@args) != nil)
+			#puts "Got args from reset."
+			parseArgs(@@args)
+		end
+		if(@@goals.empty?) then
+			@@goals = [:default]
+		end
 	end
 
 	def Targets.handle_arg(a)
@@ -128,3 +128,5 @@ end
 def target(args, &block)
 	Targets.add(args, &block)
 end
+
+Targets.parseArgs(ARGV)
