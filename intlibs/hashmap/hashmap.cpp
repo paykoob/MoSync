@@ -158,7 +158,7 @@ void HashMapBase::rehash() {
 		BasePair& pair(oldBase[i]);
 		if(pair.value != NULL) {
 			insert(pair.key, pair.value, true);
-		}			
+		}
 	}
 	CLEANUPSTACK_POPD(oldBase);
 	DEBUG_ASSERT(m.numElem == oldNumElem);
@@ -260,7 +260,7 @@ const HashMapBase::BasePair& HashMapBase::TIteratorC::next() {
 //******************************************************************************
 
 void StringMap::dispose(BasePair& pair) {
-	LOG_HASH("StringMap::dispose(0x%x)\n", pair.value);
+	LOG_HASH("StringMap::dispose(%p)\n", pair.value);
 	free(pair.value);
 }
 

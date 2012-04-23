@@ -1064,14 +1064,15 @@ namespace Base {
 	}
 
 	static Uint32 SDLCALL MATimerCallback(Uint32 interval, void* sequence) {
-		LOGD("MATimerCallback %i...", (int)sequence);
+		int s = (int)(size_t)sequence;
+		LOGD("MATimerCallback %i...", s);
 		DEBUG_ASRTZERO(SDL_LockMutex(gTimerMutex));
 		{
-			SDL_UserEvent event = { FE_TIMER, (int)(size_t)sequence, NULL, NULL };
+			SDL_UserEvent event = { FE_TIMER, s, NULL, NULL };
 			FE_PushEvent((SDL_Event*)&event);
 		}
 		DEBUG_ASRTZERO(SDL_UnlockMutex(gTimerMutex));
-		LOGD("MATimerCallback %i done\n", (int)sequence);
+		LOGD("MATimerCallback %i done\n", s);
 		return (Uint32)-1;
 	}
 

@@ -18,14 +18,15 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <ma.h>
 #include <conprint.h>
 
-int MAMain() {
+int MAMain(void) __attribute((noreturn));
+int MAMain(void) {
 	const int baseTime = maGetMilliSecondCount();
 	InitConsole();
 	gConsoleLogging = 1;
 	printf("Hello World!\n");
 
 	while(1) {
-		EVENT event;
+		MAEvent event;
 		while(maGetEvent(&event)) {
 			switch(event.type) {
 				case EVENT_TYPE_CLOSE:
@@ -38,6 +39,7 @@ int MAMain() {
 					printf("focus lost: %d", maGetMilliSecondCount() - baseTime);
 					break;
 				case EVENT_TYPE_KEY_PRESSED:
+					printf("kp %i(%c)\n", event.key, event.key);
 					if(event.key == MAK_0)
 						maExit(0);
 					break;
@@ -45,6 +47,4 @@ int MAMain() {
 		}
 		maWait(0);
 	}
-
-	return 0;
 }

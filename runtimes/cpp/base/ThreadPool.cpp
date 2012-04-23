@@ -65,7 +65,7 @@ void ThreadPool::execute(Runnable* r) {
 
 //this will wait for all outstanding operations to complete. not so useful.
 void ThreadPool::close() {
-	LOGD("Closing %i threads.\n", mThreads.size());
+	LOGD("Closing %" PFZT " threads.\n", mThreads.size());
 	for(uint i=0; i<mThreads.size(); i++) {
 		WorkerThread* wt = mThreads[i];
 		delete wt;

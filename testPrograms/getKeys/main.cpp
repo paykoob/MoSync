@@ -41,4 +41,5 @@ extern "C" int MAMain() {
 	gConsoleLogging = 1;
 
 	Moblet::run(new GKMoblet());
+	return 0;
 }
