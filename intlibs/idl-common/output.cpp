@@ -451,7 +451,15 @@ static void streamMembers(ostream& stream, string tab, const vector<Member>& mem
 static void streamStruct(ostream& stream, const Struct& s, const string& name,
 	const Interface& inf, int ix, bool runtime, bool native)
 {
-	stream << "typedef " << s.type << " " << name << " {\n";
+	stream << "typedef " << s.type;
+	if(native) {
+		stream << "\n"
+			"#ifdef __GNUC__\n"
+			"\t__attribute((packed,aligned(4)))\n"
+			"#endif\n"
+		;
+	}
+	stream << " " << name << " {\n";
 	streamMembers(stream, "\t", s.members, inf, runtime, native);
 	stream << "} " << name << ";\n";
 }
