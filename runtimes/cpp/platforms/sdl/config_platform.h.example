@@ -21,7 +21,9 @@
 
 #define RESOURCE_MEMORY_LIMIT
 
-//#define SUPPORT_OPENGL_ES
+#ifdef WIN32
+#define SUPPORT_OPENGL_ES
+#endif
 
 #define GDB_DEBUG
 

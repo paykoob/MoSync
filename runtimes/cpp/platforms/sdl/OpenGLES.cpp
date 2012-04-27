@@ -15,10 +15,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
 */
 
+#include "config_platform.h"
 #include "OpenGLES.h"
 #include <windows.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_syswm.h>
+#include <helpers/log.h>
 
 namespace Base {
 
@@ -44,7 +46,7 @@ namespace Base {
 			}
 		}
 
-		return DefWindowProc (hWnd, uMsg, wParam, lParam);		
+		return DefWindowProc (hWnd, uMsg, wParam, lParam);
 	}
 
 	static BOOL RegisterWindowClass (CHAR* className, HINSTANCE hInstance)	// Register A Window Class For This Application.
@@ -91,23 +93,23 @@ namespace Base {
 		SetWindowLong(mainWnd, GWL_STYLE, windowStyle | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW); // Not needed: WS_CLIPSIBLINGS
 
 		CHAR className[256];
-		if(!GetClassName(mainWnd, className, 256)) 
+		if(!GetClassName(mainWnd, className, 256))
 			return false;
 
 		RegisterWindowClass(className, GetModuleHandle(NULL));
 
 		HWND handle = CreateWindowEx(
-			0, 
-			className, //"test", 
-			(LPCTSTR) "SubView", 
-			WS_CHILD | WS_BORDER, 
+			0,
+			className, //"test",
+			(LPCTSTR) "SubView",
+			WS_CHILD | WS_BORDER,
 			left,
 			top,
 			width,
-			height, 
-			mainWnd, 
-			(HMENU) (int) (CHILD_IDENTIFIER), 
-			GetModuleHandle(NULL), 
+			height,
+			mainWnd,
+			(HMENU) (int) (CHILD_IDENTIFIER),
+			GetModuleHandle(NULL),
 			NULL
 			);
 
@@ -168,7 +170,7 @@ namespace Base {
 			0, 0, 0								// Layer Masks Ignored
 		};
 
-		int PixelFormat;	
+		int PixelFormat;
 
 		if (!(PixelFormat=ChoosePixelFormat(hDC,&pfd)))				// Did Windows Find A Matching Pixel Format?
 		{
@@ -195,29 +197,37 @@ namespace Base {
 
 		return true;
 	}
+	static void handleWM_PAINT(HWND hWnd) {
+		PAINTSTRUCT ps;
+		BeginPaint(hWnd, &ps);
+		EndPaint(hWnd, &ps);
+	}
 
 	bool openGLClose(const SubView& subView) {
 
 		return false;
 	}
-
+#define LPF(...) //LOG(__VA_ARGS__); printf(__VA_ARGS__)
 	bool openGLProcessEvents(const SubView &subView) {
 		if(subView.data == NULL) return false;
 		SubViewData *subViewData = (SubViewData*)subView.data;
 		HWND hWnd = subViewData->window;
 
+		LPF("openGLProcessEvents\n");
 		MSG msg;
 		while(PeekMessage(&msg, hWnd, 0, 0, PM_REMOVE) > 0) {
+			LPF("hWnd %i\n", msg.message);
 			TranslateMessage(&msg);
 			if(msg.message == WM_PAINT || msg.message == WM_SETFOCUS)
-				ValidateRect(hWnd, NULL);
+				handleWM_PAINT(hWnd);
 			DispatchMessage(&msg);
 		}
 
 		while(PeekMessage(&msg, sMainWnd, 0, 0, PM_REMOVE) > 0) {
+			LPF("sMainWnd %i\n", msg.message);
 			TranslateMessage(&msg);
 			if(msg.message == WM_PAINT || msg.message == WM_SETFOCUS)
-				ValidateRect(sMainWnd, NULL);
+				handleWM_PAINT(hWnd);
 			DispatchMessage(&msg);
 		}
 
@@ -240,7 +250,7 @@ namespace Base {
 			DispatchMessage(&msg);
 		}
 		*/
-	
+
 		return true;
 	}
 

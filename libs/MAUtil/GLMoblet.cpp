@@ -101,7 +101,7 @@ GLMoblet::GLMoblet(int apiVersions) :
 	}
 
 	if(!glInitialized) {
-		maPanic(1, "Failed to initialize OpenGL|ES. OpenGL|ES is only available on Android and iOS. Also, please check that the device is able to run the version of OpenGL|ES you requested.");
+		maPanic(1, "Failed to initialize OpenGL|ES. OpenGL|ES is only available on MoRE, Android and iOS. Also, please check that the device is able to run the version of OpenGL|ES you requested.");
 	}
 
 	mListener = new GLMobletListener(this);
@@ -138,7 +138,7 @@ bool GLMoblet::isDrawing() const {
 }
 
 float GLMoblet::getActualFramesPerSecond() const {
-	if(!isDrawing()) 
+	if(!isDrawing())
 		return 0.0f;
 	else {
 		int millisSinceStartDrawing = maGetMilliSecondCount() - mMillisOfStartDrawing;
