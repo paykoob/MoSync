@@ -14,7 +14,7 @@
 #include <instform.h>
 
 #ifdef _MSC_VER
-#pragma warning( disable : 4201) 
+#pragma warning( disable : 4201)
 #endif
 
 // ===========================================================================
@@ -32,7 +32,7 @@
 
 
 // maximum length of strings used in condition expressions
-#define MAX_STRING 255
+#define MAX_STRING (32*1024)
 
 #define MAX_FUNC_ARGS 2
 
@@ -123,11 +123,11 @@ enum TLanguage
 	ELangTagalog = 39,
 	/** Belarussian. */
 	ELangBelarussian = 40,
-	/** Bengali. */ 
+	/** Bengali. */
 	ELangBengali = 41,
 	/** Bulgarian. */
 	ELangBulgarian = 42,
-	/** Burmese. */ 
+	/** Burmese. */
 	ELangBurmese = 43,
 	/** Catalan. */
 	ELangCatalan = 44,
@@ -149,7 +149,7 @@ enum TLanguage
 	ELangScotsGaelic = 52,
 	/** Georgian. */
 	ELangGeorgian = 53,
-	/** Greek. */ 
+	/** Greek. */
 	ELangGreek = 54,
 	/** Cyprus Greek. */
 	ELangCyprusGreek = 55,
@@ -157,7 +157,7 @@ enum TLanguage
 	ELangGujarati = 56,
 	/** Hebrew. */
 	ELangHebrew = 57,
-	/** Hindi. */ 
+	/** Hindi. */
 	ELangHindi = 58,
 	/** Indonesian. */
 	ELangIndonesian = 59,
@@ -185,7 +185,7 @@ enum TLanguage
 	ELangMalay = 70,
 	/** Malayalam. */
 	ELangMalayalam = 71,
-	/** Marathi. */ 
+	/** Marathi. */
 	ELangMarathi = 72,
 	/** Moldovian. */
 	ELangMoldavian = 73,
@@ -214,7 +214,7 @@ enum TLanguage
 	/** Finland Swedish. */
 	ELangFinlandSwedish = 85,
 	ELangReserved1 = 86,		// reserved for future use
-	/** Tamil. */ 
+	/** Tamil. */
 	ELangTamil = 87,
 	/** Telugu. */
 	ELangTelugu = 88,
@@ -228,7 +228,7 @@ enum TLanguage
 	ELangTurkmen = 92,
 	/** Ukrainian. */
 	ELangUkrainian = 93,
-	/** Urdu. */ 
+	/** Urdu. */
 	ELangUrdu = 94,
 	ELangReserved2 = 95,	// reserved for future use
 	/** Vietnamese. */
@@ -253,7 +253,7 @@ enum TParseException
 	ErrHeaderNotDefined,
 	ErrNoMainDependency,
 	ErrFileNotFound,
-	ErrPackageNotASISFile,			
+	ErrPackageNotASISFile,
 	ErrBadCondFormat,
 	ErrReadFailed,
 	ErrBadOption,
@@ -274,7 +274,7 @@ typedef int TOKEN;
 #define NUMERIC_TOKEN		1
 #define ALPHA_TOKEN			2
 #define QUOTED_STRING_TOKEN	3
-#define AND_TOKEN			4	
+#define AND_TOKEN			4
 #define OR_TOKEN			5
 #define NOT_TOKEN			6
 #define EXISTS_TOKEN		7
@@ -284,7 +284,7 @@ typedef int TOKEN;
 #define LE_TOKEN			11
 #define NE_TOKEN			12
 #define IF_TOKEN			13
-#define ELSEIF_TOKEN		14	
+#define ELSEIF_TOKEN		14
 #define ELSE_TOKEN			15
 #define ENDIF_TOKEN			16
 #define TYPE_TOKEN			17
@@ -426,7 +426,7 @@ class MParserObserver
 		virtual void DoErrMsg(const _TCHAR* pszText) const = 0;		// Output error messages
 		virtual BOOL Verbose() const = 0;							// Is verbose output required?
 		virtual BOOL SetVerbose(BOOL fVerbose) = 0;		  			// Reset the verbosity status
-		virtual void SetLineNumber(WORD wLineNumber) = 0; 			
+		virtual void SetLineNumber(WORD wLineNumber) = 0;
 	};
 
 class CSISWriter;
@@ -437,8 +437,8 @@ class CParsePkg
 	public:
 		CParsePkg();
 		void ParseL(HANDLE hFile, CSISWriter *pWriter, BOOL fIsStub, MParserObserver *pObserver = NULL);
-		void SetSearchDirectory(LPCWSTR pszPath);	    
-		
+		void SetSearchDirectory(LPCWSTR pszPath);
+
 	private:
 		void ParseEmbeddedBlockL();
 		void ParseLanguagesL();
@@ -459,9 +459,9 @@ class CParsePkg
 		PKGLINECONDITION* ParseRelation();
 		PKGLINECONDITION* ParseUnary();
 		PKGLINECONDITION* ParseFactor();
-		
+
 		DWORD ParseOption(const SParseOpt* options, DWORD dwNumOptions, DWORD* pdwOptions);
-		
+
 		void ExpectToken(TOKEN aToken);
 		void GetNextToken();
 		BOOL GetStringToken();
@@ -470,7 +470,7 @@ class CParsePkg
 		void GetNumericToken();
 		BOOL IsNumericToken();
 		void GetNextChar();
-		
+
 		const _TCHAR* GetTokenText(TOKEN aToken);
 	private:
 		BOOL m_stubFile;
@@ -483,7 +483,7 @@ class CParsePkg
 		BOOL m_fInLangFileBlock;		// Are we processing a language dependent file block
 		WORD m_wCurrLang;				// If we are in a lang/lang file block - which lang are we processing
 		CSISWriter *m_pSISWriter;		// Stuff all our intermediate data in here
-		
+
 		WCHAR m_pkgChar;
 		HANDLE m_file;
 		TOKEN m_token;
@@ -492,10 +492,10 @@ class CParsePkg
 		BOOL m_enoughForStub;
 	};
 
-inline void CParsePkg::Verbage(const _TCHAR* pszText) 
-	{ 
-	if(m_pObserver) 
-		m_pObserver->DoVerbage(pszText); 
+inline void CParsePkg::Verbage(const _TCHAR* pszText)
+	{
+	if(m_pObserver)
+		m_pObserver->DoVerbage(pszText);
 	}
 
 #endif // __PKG_PARSER_H_
