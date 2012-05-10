@@ -406,7 +406,7 @@ struct SIGNATURENODE
 	TUint16 iNumCerts;
 	};
 
-#define MAXOPTLEN 20
+#define MAXOPTLEN 20*1024
 
 struct SParseOpt
 	{

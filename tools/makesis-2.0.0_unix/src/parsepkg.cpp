@@ -123,7 +123,7 @@ const SParseOpt KCtrlOptions[] =
 #define NUMCTRLOPTIONS (sizeof(KCtrlOptions)/sizeof(SParseOpt))
 
 // Parse options lookups
-#define MAXTOKENLEN	30
+#define MAXTOKENLEN	30*1024
 struct SParseToken
 	{
 	WCHAR pszOpt[MAXTOKENLEN];
@@ -148,7 +148,7 @@ const SParseToken KTokens[] =
 #define NUMPARSETOKENS (sizeof(KTokens)/sizeof(SParseToken))
 
 // Language options
-const SParseOpt KLangOptions[] = 
+const SParseOpt KLangOptions[] =
 	{
 		{L"EN", ELangEnglish},
 		{L"FR", ELangFrench},
@@ -390,18 +390,18 @@ void CParsePkg::ParseL(HANDLE hFile, CSISWriter *pWriter, BOOL fIsStub, MParserO
 	{
 	assert(hFile != INVALID_HANDLE_VALUE);
 	assert(pWriter);
-	
+
 	m_file = hFile;
 	m_pSISWriter = pWriter;
 	m_pObserver  = pObserver;
 	m_stubFile = fIsStub;
 	m_enoughForStub = FALSE;
-	
+
 	if (m_pObserver) m_pObserver->SetLineNumber(++m_nLineNo);
-	
-	// Make sure we're at the beginning of the file	
-	::SetFilePointer(m_file, 0L, NULL, FILE_BEGIN);	
-	
+
+	// Make sure we're at the beginning of the file
+	::SetFilePointer(m_file, 0L, NULL, FILE_BEGIN);
+
 	GetNextChar();
 	// skip unicode marker if present
 	if (m_pkgChar==0xFEFF) GetNextChar();
@@ -493,7 +493,7 @@ void CParsePkg::ParseLanguagesL()
 // Parses the language definition line
 	{
 	Verbage(__T("processing languages"));
-	
+
 	if(m_pSISWriter->GetNoLanguages())
 		throw ErrLanguagesAlreadyDefined;
 
@@ -537,7 +537,7 @@ void CParsePkg::ParseHeaderL()
 // Parses the pkg header line
 	{
 	Verbage(__T("processing header"));
-	
+
 	if(m_pSISWriter->AreLangStringInit())
 		throw ErrHeaderAlreadyDefined;
 
@@ -550,7 +550,7 @@ void CParsePkg::ParseHeaderL()
 		pNode->wLang = ELangEnglish;
 		m_pSISWriter->AddLanguageNode(pNode);
 		}
-	
+
 	// process application names
 	ExpectToken('{');
 	for (WORD wNumLangs=0; wNumLangs<m_pSISWriter->GetNoLanguages();wNumLangs++)
@@ -566,45 +566,45 @@ void CParsePkg::ParseHeaderL()
 		}
 	ExpectToken('}');
 	GetNextToken();
-	
+
 	// Now look for the uid & version numbers
    	DWORD dwUID	  = 0L,
 		dwBuild   = 0L,
 		dwFlags   = 0L,
 		dwType	  = 0L;
-	WORD wMajor   = 0, 
+	WORD wMajor   = 0,
 		wMinor    = 0;
-	
+
 	ExpectToken(',');
 	GetNextToken();
 	ExpectToken('(');
 	GetNextToken();
-	
+
 	ExpectToken(NUMERIC_TOKEN);
 	dwUID=m_tokenValue.dwNumber;
 	GetNextToken();
-	
+
 	ExpectToken(')');
 	GetNextToken();
 	ExpectToken(',');
 	GetNextToken();
-	
+
 	ExpectToken(NUMERIC_TOKEN);
 	wMajor=(WORD)m_tokenValue.dwNumber;
 	GetNextToken();
 	ExpectToken(',');
 	GetNextToken();
-	
+
 	ExpectToken(NUMERIC_TOKEN);
 	wMinor=(WORD)m_tokenValue.dwNumber;
 	GetNextToken();
 	ExpectToken(',');
 	GetNextToken();
-	
+
 	ExpectToken(NUMERIC_TOKEN);
 	dwBuild=m_tokenValue.dwNumber;
 	GetNextToken();
-	
+
 	// Parse any options
 	BOOL narrow=FALSE;
 	while (m_token==',')
@@ -626,7 +626,7 @@ void CParsePkg::ParseHeaderL()
 
 	// if narrow not explicitly set default to unicode
 	if (!narrow) dwFlags|=EInstIsUnicode;
-	
+
    	m_pSISWriter->SetVersionInfo(dwUID, wMajor, wMinor, dwBuild, (TSISType)dwType, (WORD)dwFlags);
 	}
 
@@ -634,10 +634,10 @@ void CParsePkg::ParseFileL()
 // Parses a file definition line
 	{
 	Verbage(__T("processing file"));
-	
+
 	if(!m_pSISWriter->AreLangStringInit())
 		throw ErrHeaderNotDefined;
-	
+
 	PKGLINENODE *pNode = new PKGLINENODE;
 	if (!pNode) throw ErrNotEnoughMemory;
 	memset((void *)pNode, '\0', sizeof(PKGLINENODE));
@@ -652,10 +652,10 @@ void CParsePkg::ParseFileL()
 	if (pNode->file->pszSource[0] && !DoesExist(pNode->file->pszSource, &pNode->file->dwSize))
 		throw ErrFileNotFound;
 	GetNextToken();
-	
+
 	ExpectToken('-');
 	GetNextToken();
-	
+
 	ExpectToken(QUOTED_STRING_TOKEN);
 
 	// BAW-5CQEA5 Check for invalid destination (i.e starts with ':')
@@ -674,9 +674,9 @@ void CParsePkg::ParseFileL()
 		{
 		wcscpy(pNode->file->pszDest, m_tokenValue.pszString);
 		}
-		
+
 	GetNextToken();
-	
+
 	// Test for options
 	if (m_token==',')
 		{
@@ -727,15 +727,15 @@ void CParsePkg::ParseFileL()
 					break;
 				}
 			}
-		}	
-	
+		}
+
 	// Test that the file exists
 	if(pNode->file->type==EInstFileTypeNull)
 		{
 		pNode->file->dwSize = 0;
 		pNode->file->pszSource[0]='\0';
 		}
-	
+
 	m_pSISWriter->AddPkgLineNode(pNode);
 	}
 
@@ -743,10 +743,10 @@ void CParsePkg::ParsePackageL()
 // Parses a package (component SIS file) line
 	{
 	Verbage(__T("processing embedded package file"));
-	
+
 	if(!m_pSISWriter->AreLangStringInit())
 		throw ErrHeaderNotDefined;
-	
+
 	PKGLINENODE *pNode = new PKGLINENODE;
 	if (!pNode) throw ErrNotEnoughMemory;
 	memset((void *)pNode, '\0', sizeof(PKGLINENODE));
@@ -756,7 +756,7 @@ void CParsePkg::ParsePackageL()
 	memset((void *)pNode->file, '\0', sizeof(PKGLINEFILE));
 
 	pNode->file->type=EInstFileTypeComponent;
-	
+
 	ExpectToken(QUOTED_STRING_TOKEN);
 	if (!FullPath(pNode->file->pszSource, m_tokenValue.pszString, MAX_PATH))
 	{
@@ -767,14 +767,14 @@ void CParsePkg::ParsePackageL()
 	if(!DoesExist(pNode->file->pszSource, &pNode->file->dwSize))
 		throw ErrFileNotFound;
 	GetNextToken();
-	
+
 	ExpectToken(',');
-	GetNextToken();	
+	GetNextToken();
 	ExpectToken('(');
-	GetNextToken();	
+	GetNextToken();
 	ExpectToken(NUMERIC_TOKEN);
 	pNode->file->options.iComponentUid=m_tokenValue.dwNumber;
-	GetNextToken();	
+	GetNextToken();
 	ExpectToken(')');
 	GetNextToken();
 
@@ -801,58 +801,58 @@ void CParsePkg::ParsePackageL()
 			}
 		CloseHandle(hEmbeddedFile);
 		}
-	
+
 	// Test that the filename is *.SIS
 	if(wcsicmp(&pNode->file->pszSource[wcslen(pNode->file->pszSource) - wcslen(DESTFILE)], DESTFILE))
 		throw ErrPackageNotASISFile;
-	
+
 	pNode->file->pszDest[0] = '\0';
 	m_pSISWriter->AddPkgLineNode(pNode);
 	}
 
 void CParsePkg::ParseDependencyL()
-// Parses a dependency line                         
+// Parses a dependency line
 	{
 	Verbage(__T("processing dependency"));
-	
+
 	if(!m_pSISWriter->AreLangStringInit())
 		throw ErrHeaderNotDefined;
-	
+
 	DEPENDNODE *pNode = new DEPENDNODE;
 	if (!pNode) throw ErrNotEnoughMemory;
 	memset((void *)pNode, '\0', sizeof(DEPENDNODE));
-	
+
 	ExpectToken(NUMERIC_TOKEN);
 	pNode->dwUID=m_tokenValue.dwNumber;
-	GetNextToken();	
-	
+	GetNextToken();
+
 	ExpectToken(')');
-	GetNextToken();	
+	GetNextToken();
 	ExpectToken(',');
-	GetNextToken();	
-	
+	GetNextToken();
+
 	ExpectToken(NUMERIC_TOKEN);
 	pNode->wMajor=(WORD)m_tokenValue.dwNumber;
-	GetNextToken();	
-	
+	GetNextToken();
+
 	ExpectToken(',');
-	GetNextToken();	
-	
+	GetNextToken();
+
 	ExpectToken(NUMERIC_TOKEN);
 	pNode->wMinor=(WORD)m_tokenValue.dwNumber;
-	GetNextToken();	
-	
+	GetNextToken();
+
 	ExpectToken(',');
-	GetNextToken();	
-	
+	GetNextToken();
+
 	ExpectToken(NUMERIC_TOKEN);
 	pNode->dwBuild=m_tokenValue.dwNumber;
-	GetNextToken();	
-	
+	GetNextToken();
+
 	ExpectToken(',');
-	GetNextToken();	
+	GetNextToken();
 	ExpectToken('{');
-	
+
 	WORD wNumLangs = 0;
 	while(wNumLangs < m_pSISWriter->GetNoLanguages())
 		{
@@ -862,7 +862,7 @@ void CParsePkg::ParseDependencyL()
 		if (!pLSNode) throw ErrNotEnoughMemory;
 		memset((void *)pLSNode, '\0', sizeof(LANGSTRINGNODE));
 		wcscpy(pLSNode->pszString,m_tokenValue.pszString);
-		GetNextToken();		
+		GetNextToken();
 		if(wNumLangs < (m_pSISWriter->GetNoLanguages() - 1))
 			ExpectToken(',');
 		pLSNode->pNext = pNode->pLangStringBase;
@@ -870,8 +870,8 @@ void CParsePkg::ParseDependencyL()
 		wNumLangs++;
 		}
 	ExpectToken('}');
-	GetNextToken();	
-	
+	GetNextToken();
+
 	m_pSISWriter->AddDependencyNode(pNode);
 	}
 
@@ -882,20 +882,20 @@ void CParsePkg::ParseSignatureL()
 
 	if(!m_pSISWriter->AreLangStringInit())
 		throw ErrHeaderNotDefined;
-	
+
 	// If generating a stub file then once have signature line don't need to
 	// process rest of PKG file
 	m_enoughForStub=TRUE;
 
 	ExpectToken(QUOTED_STRING_TOKEN);
-	
+
 	SIGNATURENODE* pSig = new SIGNATURENODE;
 	if (!pSig) throw ErrNotEnoughMemory;
 	memset((void *)pSig, '\0', sizeof(SIGNATURENODE));
 
 	wcscpy(pSig->pszPrivateKey,m_tokenValue.pszString);
 
-	
+
 	pSig->iNumCerts = 1;
 
 	//get a temporary filename for creating certificate chain
@@ -915,7 +915,7 @@ void CParsePkg::ParseSignatureL()
 
 	ExpectToken(QUOTED_STRING_TOKEN);
 	wcscpy(pSig->pszPublicKey,m_tokenValue.pszString);
-	
+
 	DWORD dwSize;
 	// Test that the files exist
 	if (!DoesExist(pSig->pszPrivateKey, &dwSize) ||
@@ -923,7 +923,7 @@ void CParsePkg::ParseSignatureL()
 		throw ErrFileNotFound;
 
 	GetNextToken();
-	
+
 	//check for optional items (password)
 	if (m_token==',')
 		{
@@ -935,7 +935,7 @@ void CParsePkg::ParseSignatureL()
 			GetNextToken();
 			ExpectToken(QUOTED_STRING_TOKEN);
 			wcscpy(pSig->pszPassword,m_tokenValue.pszString);
-			GetNextToken();		
+			GetNextToken();
 			}
 		}
 
@@ -949,10 +949,10 @@ void CParsePkg::ParseCapabilityL()
 // Parses a capability line
 	{
 	Verbage(__T("processing capability"));
-	
+
 	if(!m_pSISWriter->AreLangStringInit())
 		throw ErrHeaderNotDefined;
-	
+
 	ExpectToken('(');
 	do
 		{
@@ -961,7 +961,7 @@ void CParsePkg::ParseCapabilityL()
 		CAPABILITYNODE *pNode = new CAPABILITYNODE;
 		if (!pNode) throw ErrNotEnoughMemory;
 		memset((void *)pNode, '\0', sizeof(CAPABILITYNODE));
-	
+
 		ExpectToken(NUMERIC_TOKEN);
 		pNode->iKey=m_tokenValue.dwNumber;
 		GetNextToken();
@@ -984,7 +984,7 @@ void CParsePkg::ParseOptionsBlockL()
 	LANGSTRINGNODE *pLSNode;
 
 	Verbage(__T("processing options block"));
-	
+
 	ExpectToken('(');
 	GetNextToken();
 
@@ -1033,15 +1033,15 @@ void CParsePkg::ParseOptionsBlockL()
 	}
 
 void CParsePkg::ParseLanguageBlockL()
-// To parse the start of a language block											 
+// To parse the start of a language block
 	{
 	Verbage(__T("processing language block"));
-	
+
 	if(!m_pSISWriter->AreLangStringInit())
 		throw ErrHeaderNotDefined;
-	
+
 	BOOL packages=(m_token=='@');
-	
+
 	for (DWORD m_wCurrLang = 0; m_wCurrLang<m_pSISWriter->GetNoLanguages(); m_wCurrLang++)
 		{
 		PKGLINENODE *pNode = new PKGLINENODE;
@@ -1062,29 +1062,29 @@ void CParsePkg::ParseLanguageBlockL()
 			pNode->file->type = EInstFileTypeSimple;
 			}
 		ExpectToken(QUOTED_STRING_TOKEN);
-		wcscpy(pNode->file->pszSource,m_tokenValue.pszString);			
+		wcscpy(pNode->file->pszSource,m_tokenValue.pszString);
 		// Test that the file exists
 		if(!DoesExist(pNode->file->pszSource, &pNode->file->dwSize))
 			throw ErrFileNotFound;
 		m_pSISWriter->AddPkgLineNode(pNode);
-		GetNextToken();	
+		GetNextToken();
 		}
-	
+
 	ExpectToken('}');
-	GetNextToken();	
-	
+	GetNextToken();
+
 	// Test if it was a file or package block
 	if(!packages)
 		{
 		ExpectToken('-');
-		GetNextToken();	
-		
+		GetNextToken();
+
 		// Get the destination & options
 		ExpectToken(QUOTED_STRING_TOKEN);
 		WCHAR pszDest[MAX_PATH] = L"";
 		wcscpy(pszDest,m_tokenValue.pszString);
 		GetNextToken();
-		
+
 		DWORD dwType=0;
 		DWORD dwOptions=0;
 		WCHAR pszMimeType[MAX_MIME_TYPE] = L"";
@@ -1136,47 +1136,47 @@ void CParsePkg::ParseLanguageBlockL()
 					}
 				}
 			}
-		
+
 		m_pSISWriter->SetLangDependFileDestinations(pszDest, pszMimeType, dwType, dwOptions);
 		}
 	else
 		{
 		ExpectToken(',');
-		GetNextToken();	
+		GetNextToken();
 		ExpectToken('(');
-		GetNextToken();	
-		
+		GetNextToken();
+
 		ExpectToken(NUMERIC_TOKEN);
 		m_pSISWriter->SetLangDependCompDestinations(m_tokenValue.dwNumber);
-		GetNextToken();	
-		
+		GetNextToken();
+
 		ExpectToken(')');
-		GetNextToken();	
-		
+		GetNextToken();
+
 		}
 	}
 
 void CParsePkg::ParseIfBlockL()
 	{
 	Verbage(__T("processing IF block"));
-	
+
 	ParseConditionL(EInstPkgLineCondIf);
 	ParseEmbeddedBlockL();
-	
+
 	while (m_token==ELSEIF_TOKEN)
 		{
 		GetNextToken();
 		ParseConditionL(EInstPkgLineCondElseIf);
 		ParseEmbeddedBlockL();
 		}
-	
+
 	if (m_token==ELSE_TOKEN)
 		{
 		GetNextToken();
 		ParseConditionL(EInstPkgLineCondElse);
 		ParseEmbeddedBlockL();
 		}
-	
+
 	ExpectToken(ENDIF_TOKEN);
 	ParseConditionL(EInstPkgLineCondEndIf);
 	GetNextToken();
@@ -1188,7 +1188,7 @@ void CParsePkg::ParseCommentL()
 // Returns  : Success or failure
 	{
 	Verbage(__T("processing comment"));
-	
+
 	// parse to end of line
 	while (m_pkgChar && m_pkgChar!='\n')
 		GetNextChar();
@@ -1196,7 +1196,7 @@ void CParsePkg::ParseCommentL()
 	}
 
 void CParsePkg::ParseConditionL(TInstPackageLineType type)
-// Purpose  : Parses a condition line                         
+// Purpose  : Parses a condition line
 // Inputs   : m_pkgPtr - The string to parse
 // returns  : Success or failure (actually, always TRUE - failure causes an exception to be thrown)
 	{
@@ -1213,7 +1213,7 @@ void CParsePkg::ParseConditionL(TInstPackageLineType type)
 		{
 		pNode->cond=ParseExpr();
 		}
-	
+
 	m_pSISWriter->AddPkgLineNode(pNode);
 	}
 
@@ -1447,7 +1447,7 @@ DWORD CParsePkg::ParseOption(const SParseOpt* options, DWORD dwNumOptions, DWORD
 			option=options[wLoop].dwOpt;
 			break;
 			}
-		}		
+		}
 	if(wLoop == dwNumOptions)
 		throw ErrBadOption;
 	*pdwOptions |= option;
@@ -1530,11 +1530,11 @@ void CParsePkg::GetNextToken()
 			m_pObserver->SetLineNumber(++m_nLineNo);
 		GetNextChar();
 		}
-	
+
 	if (m_pkgChar == '\0')
 		m_token=EOF_TOKEN;
 	else if (IsNumericToken())
-		{ 
+		{
 		GetNumericToken();
 		m_token=NUMERIC_TOKEN;
 		}
@@ -1550,7 +1550,7 @@ void CParsePkg::GetNextToken()
 				m_token=KTokens[wLoop].dwOpt;
 				break;
 				}
-			}		
+			}
 		}
 	else if (m_pkgChar == '\"')
 		{ // have a quoted string
@@ -1560,14 +1560,14 @@ void CParsePkg::GetNextToken()
 	else if (m_pkgChar == '>')
 		{
 		GetNextChar();
-		if (m_pkgChar == '=') 
+		if (m_pkgChar == '=')
 			{
 			m_token=GE_TOKEN;
 			GetNextChar();
-			} 
-		else 
+			}
+		else
 			m_token='>';
-		} 
+		}
 	else if (m_pkgChar == '<')
 		{
 		// check if start of an escaped string, e.g. <123>"abc"
@@ -1576,20 +1576,20 @@ void CParsePkg::GetNextToken()
 		else
 			{
 			GetNextChar();
-			if (m_pkgChar == '=') 
+			if (m_pkgChar == '=')
 				{
 				m_token=LE_TOKEN;
 				GetNextChar();
-				} 
-			else if (m_pkgChar == '>') 
+				}
+			else if (m_pkgChar == '>')
 				{
 				m_token=NE_TOKEN;
 				GetNextChar();
-				} 
-			else 
+				}
+			else
 				m_token='<';
 			}
-		} 
+		}
 	else
 		{
 		m_token=m_pkgChar;
@@ -1604,7 +1604,7 @@ BOOL CParsePkg::GetStringToken()
 //            wMaxLength  - The max length of pszString
 	{
 	DWORD wCount = 0;
-	BOOL done=FALSE;	
+	BOOL done=FALSE;
 	BOOL finished=FALSE;
 	DWORD escapeChars = 0;
 
@@ -1655,7 +1655,7 @@ WORD CParsePkg::ParseEscapeChars()
 			{
 			GetNextChar();
 			GetNumericToken();
-			if (m_pkgChar=='>') 
+			if (m_pkgChar=='>')
 				found++;
 			else
 				{
@@ -1708,9 +1708,9 @@ BOOL CParsePkg::IsNumericToken()
 	if (iswdigit(m_pkgChar))
 		lexemeIsNumber = TRUE;
 	else if (m_pkgChar == '+' || m_pkgChar == '-')
-		{ 
+		{
 		// we may have a number but we must look ahead one char to be certain
-		
+
 		WCHAR oldChar = m_pkgChar;
 		DWORD fileOffset=::SetFilePointer(m_file, 0L, NULL, FILE_CURRENT);
 		GetNextChar();
@@ -1731,9 +1731,9 @@ void CParsePkg::GetNumericToken()
 	WCHAR temp[MAX_STRING];
 	LPWSTR end;
 	BOOL hexString = FALSE;
-	DWORD dwBytesRead;	
+	DWORD dwBytesRead;
 	DWORD fileOffset=::SetFilePointer(m_file, 0L, NULL, FILE_CURRENT);
-	
+
 	temp[0]=m_pkgChar;
 
 	/* Read one digit for each iteration. */
@@ -1787,15 +1787,15 @@ void CParsePkg::GetNextChar()
 
 
 BOOL CParsePkg::DoesExist(LPWSTR pszFile, DWORD *pdwSize)
-// Purpose  : Attempt to determine whether the file exists (w. or W.out the search path), and gets 
+// Purpose  : Attempt to determine whether the file exists (w. or W.out the search path), and gets
 //		      it's file size.
 // Inputs   : pszFile	-	The file to find (as a UNICODE string)
 //			  pdwSize   - store its size here (set to zero if not found)
 // Returns  : Yes or No
 	{
-	BOOL fFound = FALSE;		
+	BOOL fFound = FALSE;
 	*pdwSize = 0;
-	
+
 	/* Convert to Unix filename */
 	LPWSTR tmp = pszFile;
 	while(*tmp) {
@@ -1816,7 +1816,7 @@ BOOL CParsePkg::DoesExist(LPWSTR pszFile, DWORD *pdwSize)
 		else
 			{
 			// If we are using a search directory
-			if(m_pszSearchDir[0] != '\0')		
+			if(m_pszSearchDir[0] != '\0')
 				{
 				WCHAR pszNewPath[MAX_PATH];
 				wcscpy(pszNewPath, m_pszSearchDir);
