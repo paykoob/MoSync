@@ -59,9 +59,9 @@ uchar * DecodeOpcode(OpcodeInfo *thisOpcode, uchar *code_ip)
 	uchar thisRD=0,thisRS=0;
 	uint thisIMM=0, FetchedImm=0;
 	uint rip = (int) code_ip - (int) ArrayPtr(&CodeMemArray, 0);
-	
+
 	uchar *start_code_ip = code_ip;		// Make a copy
-	
+
 	int farflag = 0;
 	int flags;
 
@@ -74,7 +74,7 @@ uchar * DecodeOpcode(OpcodeInfo *thisOpcode, uchar *code_ip)
 //		return 0;
 
 	// Decode the op
-	
+
 	if (thisOp == _FAR)
 	{
 		thisOp = *code_ip++;
@@ -84,11 +84,11 @@ uchar * DecodeOpcode(OpcodeInfo *thisOpcode, uchar *code_ip)
 	if (thisOp >= _FAR)
 		ErrorOnIP(Error_Fatal, rip, "DecodeOpcode: Illegal instruction > _FAR (2)");
 //		return 0;
-	
+
 	flags = OpcodeFetch[thisOp];
-		
+
 	// Fetch register info first
-	
+
 	if (flags & fetch_d)
 		thisRD = *code_ip++;
 
@@ -127,11 +127,11 @@ uchar * DecodeOpcode(OpcodeInfo *thisOpcode, uchar *code_ip)
 		thisIMM = *code_ip++;
 		FetchedImm++;
 	}
-	
+
 	if (flags & fetch_i)
 	{
 		thisIMM = *code_ip++;
-		
+
 		if(thisIMM > 127)
 		{
 			thisIMM = ((thisIMM & 127) << 8) + *code_ip++;
@@ -145,10 +145,10 @@ uchar * DecodeOpcode(OpcodeInfo *thisOpcode, uchar *code_ip)
 		thisIMM = GetVarPoolEntry(thisIMM);
 		FetchedImm++;
 	}
-	
+
 	// ** Special case for SysCalls **
 	// which marks that they use R14
-	
+
 	if (thisOp == _SYSCALL)
 	{
 		flags |= fetch_d;
@@ -156,8 +156,8 @@ uchar * DecodeOpcode(OpcodeInfo *thisOpcode, uchar *code_ip)
 	}
 
 	// !! ARH note remember this could be dangerous !!
-	// !! Expand RS registers > 32 into constants in imm field 
-	
+	// !! Expand RS registers > 32 into constants in imm field
+
 	if ((flags & fetch_s) && (thisRS >= 32))
 	{
 		// Only do this if we have'nt used the imm field
@@ -165,7 +165,7 @@ uchar * DecodeOpcode(OpcodeInfo *thisOpcode, uchar *code_ip)
 		if (FetchedImm == 0)
 			thisIMM = ConstRegValue(thisRS);
 	}
-	
+
 	// !!
 
 	// Save info
@@ -179,7 +179,7 @@ uchar * DecodeOpcode(OpcodeInfo *thisOpcode, uchar *code_ip)
 	thisOpcode->rip		= rip;
 	thisOpcode->str		= OpcodeStrings[thisOp];
 	thisOpcode->len		= code_ip - start_code_ip;
-	
+
 	return code_ip;
 }
 
@@ -193,7 +193,7 @@ int DecodeOpcodeIP(OpcodeInfo *thisOpcode, int code_ip)
 	uchar *sip = ip;
 
 	ip = DecodeOpcode(thisOpcode, ip);
-	
+
 	code_ip += (int) (ip - sip);
 
 	if (code_ip < 0)
@@ -225,17 +225,17 @@ void DecodeAsmEmit(char *out, char *Template, ...)
 char str_cond_table[128];
 
 void strcat_cond(char *in_dst, char *src)
-{		
+{
 	int dstlen = strlen(in_dst);
 	char c;
 	int cond;
 
 	char *dst = &in_dst[dstlen];
-	
+
 	while(1)
 	{
 		c = *src++;
-		
+
 		if (c == 0)
 			break;
 
@@ -258,9 +258,9 @@ void strcat_cond(char *in_dst, char *src)
 
 		c = *src++;
 		cond  = str_cond_table[c & 127];
-		
+
 		// Copy everything if the condition is true
-		
+
 		while(1)
 		{
 			// Get the next char
@@ -279,7 +279,7 @@ void strcat_cond(char *in_dst, char *src)
 
 			if (cond)
 				*dst++ = c;
-			
+
 		}
 	}
 
@@ -347,33 +347,33 @@ void DecodeCase(char *out, OpcodeInfo *thisOpcode)
 	// Write table address
 
 	ref = (SYMBOL *) ArrayGet(&DataAccessArray, thisOpcode->rip);
-			
+
 	if (!ref)
 		ErrorOnIP(Error_Fatal,thisOpcode->rip, "Bad case table reference");
 
 	CaseRef = ref;
-	
+
 	DecodeAsmEmit(out, "#%s<@1_%d>,", ref->Name, ref->LocalScope);
 
 	// Write default address
-	
+
 	ref = (SYMBOL *) ArrayGet(&CallArray, thisOpcode->rip);
-	
+
 	// Check if what it points to in lablearry and use that
-			
+
 	if (!ref)
 		ErrorOnIP(Error_Fatal,thisOpcode->rip, "Bad default case reference");
 
 	addr = ref->Value;
-	
+
 	labref = (SYMBOL *) ArrayGet(&CodeLabelArray, addr);
 
 	if (!labref)
 		ErrorOnIP(Error_Fatal, thisOpcode->rip, "Bad default case label reference");
-	
+
 	ref = labref;
 
-	DecodeAsmEmit(out, "#%s<@1_%d>", ref->Name, ref->LocalScope);	
+	DecodeAsmEmit(out, "#%s<@1_%d>", ref->Name, ref->LocalScope);
 }
 
 //****************************************
@@ -386,7 +386,7 @@ int DecodeDataAccessImm(char *out, OpcodeInfo *thisOpcode)
 	int d=0;
 
 	ref = (SYMBOL *) ArrayGet(&DataAccessArray, thisOpcode->rip);
-			
+
 	if (!ref)
 		return 0;
 
@@ -405,7 +405,7 @@ int DecodeDataAccessImm(char *out, OpcodeInfo *thisOpcode)
 	}
 	else
 		ErrorOnIP(Error_Fatal,thisOpcode->rip, "(DecodeDataAccessImm) illegal section reference %d", ref->Type);
-	
+
 	if (d == 0)
 	{
 		DecodeAsmEmit(out, "&%s<@1_%d>", ref->Name, ref->LocalScope);
@@ -414,11 +414,11 @@ int DecodeDataAccessImm(char *out, OpcodeInfo *thisOpcode)
 
 	if (d > 0)
 	{
-	
+
 		if (ref->EndIP)				// Get rid of 0 lenght reports
 		if (d >= ref->EndIP)
 			ErrorOnIP(Error_Warning, thisOpcode->rip, "Index '%s+%d': may be out of bounds (%d length)", ref->Name, d, ref->EndIP);
-	
+
 		DecodeAsmEmit(out, "&%s<@1_%d>+%d", ref->Name, ref->LocalScope, d);
 		return 1;
 	}
@@ -426,7 +426,7 @@ int DecodeDataAccessImm(char *out, OpcodeInfo *thisOpcode)
 	//FIX ARH 2008-11-03
 	// Some time we got a double negative on a index from variable
 	// so now invert d so that it becomes positive
-	
+
 	d = -d;
 
 	DecodeAsmEmit(out, "&%s<@1_%d>-%d", ref->Name, ref->LocalScope, d);
@@ -446,7 +446,7 @@ int DecodeIndexAccessImm(char *out, OpcodeInfo *thisOpcode)
 	int d=0;
 
 	ref = (SYMBOL *) ArrayGet(&DataAccessArray, thisOpcode->rip);
-			
+
 	if (!ref)
 		return 0;
 
@@ -458,7 +458,7 @@ int DecodeIndexAccessImm(char *out, OpcodeInfo *thisOpcode)
 		d = thisOpcode->imm - (ref->Value + MaxDataIP);
 	else
 		ErrorOnIP(Error_Fatal,thisOpcode->rip,"(DecodeIndexAccessImm) illegal section reference");
-	
+
 	if (d == 0)
 	{
 		DecodeAsmEmit(out, "%s<@1_%d>", ref->Name, ref->LocalScope);
@@ -470,7 +470,7 @@ int DecodeIndexAccessImm(char *out, OpcodeInfo *thisOpcode)
 		if (ref->EndIP)				// Get rid of 0 lenght reports
 		if (d >= ref->EndIP)
 			ErrorOnIP(Error_Warning, thisOpcode->rip, "Index '%s+%d': may be out of bounds (%d length)", ref->Name, d, ref->EndIP);
-	
+
 		DecodeAsmEmit(out, "%s<@1_%d>+%d", ref->Name, ref->LocalScope, d);
 		return 1;
 	}
@@ -478,7 +478,7 @@ int DecodeIndexAccessImm(char *out, OpcodeInfo *thisOpcode)
 	//FIX ARH 2008-11-03
 	// Some time we got a double negative on a index from variable
 	// so now invert d so that it becomes positive
-	
+
 	d = -d;
 
 	DecodeAsmEmit(out, "%s<@1_%d>-%d", ref->Name, ref->LocalScope, d);
@@ -496,7 +496,7 @@ int DecodeDataAccess(char *out, OpcodeInfo *thisOpcode)
 	SYMBOL *ref;
 
 	ref = (SYMBOL *) ArrayGet(&DataAccessArray, thisOpcode->rip);
-			
+
 	if (!ref)
 		return 0;
 
@@ -513,7 +513,7 @@ int DecodeDataAccess(char *out, OpcodeInfo *thisOpcode)
 	int d=0;
 
 	ref = (SYMBOL *) ArrayGet(&DataAccessArray, thisOpcode->rip);
-			
+
 	if (!ref)
 		return 0;
 
@@ -539,23 +539,23 @@ int DecodeCallArray(char *out, OpcodeInfo *thisOpcode)
 {
 	SYMBOL *ref, *labref;
 	int addr;
-	
+
 	ref = (SYMBOL *) ArrayGet(&CallArray, thisOpcode->rip);
-	
+
 	// !! Check if what it points to in lablearry and use that !!
-			
+
 	if (!ref)
 		return 0;
 
 	if (DISAS_DEBUG) DecodeAsmEmit(out, "*DCA*");
 
 	addr = ref->Value;
-	
+
 	labref = (SYMBOL *) ArrayGet(&CodeLabelArray, addr);
 
 	if (!labref)
 		return 0;
-	
+
 	ref = labref;
 
 	DecodeAsmEmit(out, "&%s<@1_%d>", ref->Name, ref->LocalScope);
@@ -580,15 +580,15 @@ void DecodeAsmString(OpcodeInfo *thisOpcode, char *out, int add_scope)
 
 	CaseRef = 0;
 
-	len = strlen(thisOpcode->str);	
+	len = strlen(thisOpcode->str);
 
-	
+
 	for(n=0;n<len;n++)
 	{
 		c = thisOpcode->str[n];
-	
+
 		switch(c)
-		{	
+		{
 			case 'd': 		// Reg rd
 			{
 				if (DISAS_DEBUG) DecodeAsmEmit(out,"(d)");
@@ -601,7 +601,7 @@ void DecodeAsmString(OpcodeInfo *thisOpcode, char *out, int add_scope)
 				if (DISAS_DEBUG) DecodeAsmEmit(out,"(s)");
 				DecodeAsmEmit(out, "%s",DecodeRegName(thisOpcode->rs, 1));
 			}
-			break;		
+			break;
 
 			case 'q': 		// Reg rs or DataAccess
 			{
@@ -619,7 +619,7 @@ void DecodeAsmString(OpcodeInfo *thisOpcode, char *out, int add_scope)
 				{
 					if (DecodeCallArray(out, thisOpcode))
 						break;
-			
+
 					if (DecodeDataAccessImm(out, thisOpcode))
 						break;
 				}
@@ -627,7 +627,7 @@ void DecodeAsmString(OpcodeInfo *thisOpcode, char *out, int add_scope)
 
 				DecodeAsmEmit(out, "%s",DecodeRegName(thisOpcode->rs, 1));
 			}
-			break;		
+			break;
 
 
 			case 'i': 		// Immediate const
@@ -637,7 +637,7 @@ void DecodeAsmString(OpcodeInfo *thisOpcode, char *out, int add_scope)
 
 				if (DecodeCallArray(out, thisOpcode))
 					break;
-		
+
 				if (DecodeDataAccessImm(out, thisOpcode))
 					break;
 
@@ -666,22 +666,22 @@ void DecodeAsmString(OpcodeInfo *thisOpcode, char *out, int add_scope)
 				DecodeAsmEmit(out,"%d",thisOpcode->imm);
 #else
 				{
-					SYMBOL *syscall =  FindSysCall(thisOpcode->imm);			
+					SYMBOL *syscall =  FindSysCall(thisOpcode->imm);
 
 					if (!syscall)
 					{
 						Error(Error_System, "Could'nt locate syscall\n");
 						return;
 					}
-					
+
 					DecodeAsmEmit(out,"#%s",syscall->Name);
 				}
 #endif
-				
-			}		
+
+			}
 			break;
 
-			case 'm': 		// rs+imm	
+			case 'm': 		// rs+imm
 			{
 
 				if (DISAS_DEBUG)
@@ -708,10 +708,10 @@ void DecodeAsmString(OpcodeInfo *thisOpcode, char *out, int add_scope)
 						break;
 				}
 
-			}		
+			}
 			break;
 
-			case 'n': 		// rd+imm	
+			case 'n': 		// rd+imm
 			{
 				if (DISAS_DEBUG) DecodeAsmEmit(out,"(n)");
 
@@ -735,7 +735,7 @@ void DecodeAsmString(OpcodeInfo *thisOpcode, char *out, int add_scope)
 						break;
 				}
 
-			}		
+			}
 			break;
 
 			case 'x': 		// Push
@@ -783,7 +783,7 @@ void DecodeAsmLabel(int ip, char *out)
 	SYMBOL *ref;
 
 	out[0] = 0;
-	
+
 	ref = (SYMBOL *) ArrayGet(&CodeLabelArray, ip);
 
 	if (!ref)
@@ -803,7 +803,7 @@ void DisassembleFunc(char *func, int showHex)
 	SYMBOL *sym, *ref;
 	uchar *ip, *ip_last;
 	int base, n, len;
-	char str[256];
+	char str[32*1024];
 
 	sym = GetGlobalSym(func);
 
@@ -820,7 +820,7 @@ void DisassembleFunc(char *func, int showHex)
 		DisassembleData(sym);
 		return;
 	}
-		
+
 	printf("Function '%s'\n\n", sym->Name);
 
 	ip = (uchar *) ArrayPtr(&CodeMemArray, sym->Value);
@@ -830,7 +830,7 @@ void DisassembleFunc(char *func, int showHex)
 	while(1)
 	{
 		ip_last = ip;
-		
+
 		ip = DecodeOpcode(&thisOp, ip);
 		DecodeAsmString(&thisOp, str, 1);			// scoped variable on
 
@@ -849,29 +849,29 @@ void DisassembleFunc(char *func, int showHex)
 //		printf("%-4x: %-32s\t",thisOp.rip, str);
 
 		// Print CodeLabelArray
-		
+
 		ref = (SYMBOL *) ArrayGet(&CodeLabelArray, base);
-		
+
 		if (ref)
 		{
 			if (sym->Value != base)
 			if (sym->LabelType >= label_Function)
 				break;
-				
+
 			printf("<CLA '%s'>", ref->Name);
 		}
-		
+
 		// Print CallArray
-		
+
 		ref = (SYMBOL *) ArrayGet(&CallArray, base);
-		
+
 		if (ref)
 			printf("<CA '%s'>", ref->Name);
 
 		// Print DataAccessArray
-		
+
 		ref = (SYMBOL *) ArrayGet(&DataAccessArray, base);
-		
+
 		if (ref)
 			printf("<DA '%s'>", ref->Name);
 
@@ -882,7 +882,7 @@ void DisassembleFunc(char *func, int showHex)
 		printf("%-4x: %-32s\n",thisOp.rip, str);
 
 
-		base += len;	
+		base += len;
 	}
 
 	printf("\n");
@@ -926,7 +926,7 @@ void DisassembleData(SYMBOL *sym)
 		if (v)
 		{
 			thisSym = (SYMBOL *) v;
-									
+
 			if (thisSym->Type == SECT_data)
 				printf( "<DP '%s'>", thisSym->Name);
 
@@ -935,10 +935,10 @@ void DisassembleData(SYMBOL *sym)
 		}
 
 		printf("\n");
-		
+
 		// Check if the data symbol is finished, i.e it bumps
 		// into the next symbol
-		
+
 		if (n != ip)
 		{
 			v = ArrayGet(&LabelArray, n);
@@ -960,7 +960,7 @@ int FunctionRegUsage(SYMBOL *sym)
 	OpcodeInfo thisOp;
 	uchar *ip, *ip_end;
 	int regmask = 0;
-	
+
 	if (!sym)
 		return -1;
 
@@ -971,14 +971,14 @@ int FunctionRegUsage(SYMBOL *sym)
 	ip = (uchar *) ArrayPtr(&CodeMemArray, sym->Value);
 
 	while(1)
-	{		
+	{
 		if (ip > ip_end)
 			break;
-	
+
 		ip = DecodeOpcode(&thisOp, ip);
 
 		// Ignor push and pop
-		
+
 		if (thisOp.op == _PUSH)
 			continue;
 
@@ -986,13 +986,13 @@ int FunctionRegUsage(SYMBOL *sym)
 			continue;
 
 		// Check for a dest reg
-		
+
 		if (thisOp.flags & fetch_d)
 			if (thisOp.rd < 32)
 				regmask |= (1 << thisOp.rd);
 
 		// Check for a source reg
-		
+
 		if (thisOp.flags & fetch_s)
 			if (thisOp.rs < 32)
 				regmask |= (1 << thisOp.rs);
@@ -1008,28 +1008,28 @@ int FunctionRegUsage(SYMBOL *sym)
 void EnumerateFunctionLabels(SYMBOL *sym)
 {
 	SYMBOL *ref;
-	
+
 	uchar *ip, *ip_end;
-	
+
 	int real_ip;
 	int Count;
-	
+
 	if (!sym)
 		return;
 
 	ip_end = (uchar *) ArrayPtr(&CodeMemArray, sym->EndIP);
-	ip = (uchar *) ArrayPtr(&CodeMemArray, sym->Value);	
-	
+	ip = (uchar *) ArrayPtr(&CodeMemArray, sym->Value);
+
 	real_ip	= sym->Value;
 	Count = 1;
-		
+
 	while(1)
-	{		
+	{
 		if (ip > ip_end)
 			break;
 
 		// Print labels
-		
+
 		ref = (SYMBOL *) ArrayGet(&CodeLabelArray, real_ip);
 
 		if (ref)
@@ -1044,12 +1044,12 @@ void EnumerateFunctionLabels(SYMBOL *sym)
 			}
 		}
 
-		real_ip++;	
+		real_ip++;
 		ip++;
 	}
 
 	Count--;
-	
+
 	if (Count > MaxEnumLabel)
 		MaxEnumLabel = Count;
 }
@@ -1063,17 +1063,17 @@ int DisassembleFromSource(int codeIP, char *out)
 	char *AsmChars = (char *) ArrayGet(&AsmCharArray, codeIP);
 	char c;
 	int n;
-	
+
 	if (!AsmChars)
 	{
 		DecodeAsmEmit(out,"no source");
 		return 0;
 	}
-	
+
 	for (n=0;n<1024;n++)
 	{
 		c = *AsmChars++;
-		
+
 		if (c == 0)
 			break;
 
@@ -1092,7 +1092,7 @@ int DisassembleFromSource(int codeIP, char *out)
 
 		DecodeAsmEmit(out,"%c",c);
 	}
-	
+
 	return n;
 }
 
@@ -1106,14 +1106,14 @@ int DisassembleDataFromSource(int dataIP, char *out)
 
 	char c;
 	int n;
-	
+
 	if (!AsmChars)
 		return 0;
-	
+
 	for (n=0;n<1024;n++)
 	{
 		c = *AsmChars++;
-		
+
 		if (c == 0)
 			break;
 
@@ -1132,7 +1132,7 @@ int DisassembleDataFromSource(int dataIP, char *out)
 */
 		DecodeAsmEmit(out,"%c",c);
 	}
-	
+
 	return n;
 }
 
@@ -1146,7 +1146,7 @@ int SetFilePtrFromIP(int ip)
 
 	if (AsmChars)
 		FilePtr = AsmChars;
-		
+
 	return (int) AsmChars;
 }
 
@@ -1164,14 +1164,14 @@ int SetFilePtrFromIP(int ip)
 char *cs_skip(char *ws)
 {
 	char *last_ws;
-	
+
 	PushTokenPtr(ws, 0);
 
 	SkipWhiteSpace();
 
 	last_ws = FilePtr;
 	PopTokenPtr();
-	
+
 	return last_ws;
 }
 
@@ -1182,21 +1182,21 @@ char *cs_skip(char *ws)
 void ConvAmp2Hash(char *str)
 {
 	char c;
-	
+
 	while(1)
 	{
 		c = *str;
-		
+
 		if (!c)
 			break;
-	
+
 		if ((c == '#') && (*(str+1) == '0'))
 		{
 			*str++ = 'z';
 			*str++ = 'r';
 			continue;
 		}
-			
+
 		if (c == '&')
 			*str = '#';
 
@@ -1213,7 +1213,7 @@ int CodeSanityChecker(int ip, char *gen_code)
 {
 	char src_code[1024];
 	char *src,*gen ;
-	
+
 	src_code[0] = 0;
 	DisassembleFromSource(ip, src_code);
 
@@ -1235,7 +1235,7 @@ int CodeSanityChecker(int ip, char *gen_code)
 			RebuildEmit("\\\\ gen = '%s'\n", gen_code);
 			return 0;
 		}
-			
+
 		if (*src == 0)
 			break;
 
@@ -1244,7 +1244,7 @@ int CodeSanityChecker(int ip, char *gen_code)
 
 	}
 
-	return 1;	
+	return 1;
 }
 
 #endif

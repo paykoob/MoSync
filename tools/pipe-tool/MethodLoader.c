@@ -63,7 +63,7 @@ char *ArrayTypes[16] =
 
 #define INSTRDEF(str, sym, flag, len, perm) str,
 
-char *opcode_name[256] =
+char *opcode_name[32*1024] =
 {
 #include "Bytecode.h"
 };
@@ -77,7 +77,7 @@ char *opcode_name[256] =
 
 #define INSTRDEF(str, sym, flag, len, perm) len,
 
-short opcode_length[256] =
+short opcode_length[32*1024] =
 {
 #include "Bytecode.h"
 };
@@ -248,7 +248,7 @@ void Dis_TableSwitch()
 //
 //****************************************
 
-char ms_str[256];
+char ms_str[32*1024];
 int ms_trigger;
 
 void DecodeBytecode(int opc, int off)

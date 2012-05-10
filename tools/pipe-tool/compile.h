@@ -120,8 +120,8 @@ enum
 
 enum
 {
-	ErrorMode_null = 0, 
-	ErrorMode_Full, 
+	ErrorMode_null = 0,
+	ErrorMode_Full,
 	ErrorMode_Basic
 };
 
@@ -136,7 +136,7 @@ enum
 	LINK_unresolved,		// An unresolved label
 	LINK_global,			// A global label
 	LINK_jumpdata,			// A int word that contains an label
-	LINK_word,				// One or more shorts 
+	LINK_word,				// One or more shorts
 	LINK_long,				// One or more int words
 	LINK_const,				// A constant
 	LINK_import				// Import file
@@ -266,7 +266,7 @@ enum
 	_SRLI,
 	_NOT,
 	_NEG,
-	_RET,	
+	_RET,
 	_JC_EQ,
 	_JC_NE,
 	_JC_GE,
@@ -297,7 +297,7 @@ typedef struct _MA_HEAD
 	int	CodeLen;			// Length of code section
 	int	DataLen;			// Length of data section
 
-	int	DataSize;			// Prefurred data memory size	
+	int	DataSize;			// Prefurred data memory size
 	int	StackSize;		// Stack size
 	int	HeapSize;			// Heap size
 
@@ -376,7 +376,7 @@ typedef struct
 
 typedef struct
 {
-	char FileName[256];
+	char FileName[32*1024];
 	int Line;
 	int MasterLine;
 	char *MasterPtr;
@@ -489,7 +489,7 @@ typedef struct _CPE
 {
 	char	*Name;			// Symbol name in Symbol buffer
 	char	Len;			// Length of actual name
-	int		Type;			// Symbol type 
+	int		Type;			// Symbol type
 	int	Size;			// Size of a value
 	int	Section;		// Allocated size including arrays and stuff
 	int	Value;			// IP for this label
@@ -544,7 +544,7 @@ typedef struct
 
 typedef struct
 {
-	MemLink * LinkBase; 
+	MemLink * LinkBase;
 	short	* LinkStack;
 	short	LinkBasePos;
 	short	LinkMax;
@@ -603,8 +603,8 @@ typedef struct
 
 typedef struct
 {
-	void *entry;	 
-	
+	void *entry;
+
 } TreeEntry;
 
 typedef struct
@@ -703,8 +703,8 @@ enum
  * the global variable ErrRetSet to mark that a setjmp
  * has been declared.
  *
- * Note: This macro cannot be made into a function 
- *       since setjmp must be called from a function 
+ * Note: This macro cannot be made into a function
+ *       since setjmp must be called from a function
  *       that does not return until longjmp is called.
  *
  * For more information see https://www.securecoding.cert.org/confluence/display/seccode/MSC22-C.+Use+the+setjmp(),+longjmp()+facility+securely
@@ -751,9 +751,9 @@ decset(int ArgWriteMeta, 0)
 
 decset(int ArgQuiet, 0)
 
-dec(char SldName[256])
-dec(char StabsName[256])
-dec(char MetaFileName[256])
+dec(char SldName[32*1024])
+dec(char StabsName[32*1024])
+dec(char MetaFileName[32*1024])
 
 decset(int ArgUseMasterDump, 0)
 
@@ -786,7 +786,7 @@ dec(int Default_AppID)
 dec(int Do_Dump_Symbols)
 dec(int Do_Dump_Unref_Symbols)
 
-dec(char ProfilePath[256])
+dec(char ProfilePath[32*1024])
 
 dec(int	theExitCode)
 dec(char *appname)
@@ -795,7 +795,7 @@ decset(int xerr, 0)
 dec(char DisasFunc[128])
 dec(char GcjFlags[1024])
 
-dec(char DependName[256])
+dec(char DependName[32*1024])
 decset(int Do_Export_Dependencies, 0)
 decset(FILE *DependFile, NULL)
 
@@ -840,7 +840,7 @@ decset(int pass_count, 0)
 
 decset(SYMBOL *CurrentFunction, 0)
 
-dec(char CurrentFile[256])
+dec(char CurrentFile[32*1024])
 decset(int CurrentFileLine, 0)
 
 dec(int Function_Param_Count)
@@ -876,7 +876,7 @@ dec(int	ExpResolved)
 
 decset(int CodeRef, 0)
 dec(int CodeValue)
-dec(char CodeRefName[256])
+dec(char CodeRefName[32*1024])
 
 dec(int ExpFlags)
 
@@ -994,7 +994,7 @@ extern char *regsyms[];
 //********************************************************************************
 
 //****************************************
-// 
+//
 //****************************************
 
 enum
@@ -1050,7 +1050,7 @@ typedef struct
 
 	long	*PoolPtr;
 	short	PoolCount;
-	
+
 	short	AccessFlags;
 	short	ThisClass;
 	short	SuperClass;
@@ -1062,7 +1062,7 @@ typedef struct
 
 	unsigned char *MethodsFPos;
 	short	MethodsCount;
-	
+
 } ClassEntry;
 
 //****************************************
@@ -1134,7 +1134,7 @@ dec(ClassEntry mainClass)
 
 #define INSTRDEF(str, sym, flag, len, perm) sym,
 
-enum 
+enum
 {
 #include "Bytecode.h"
 };
@@ -1164,7 +1164,7 @@ enum
 	tok_null = 0,
 #include "tokentable.h"
 	tok_end
-};	   
+};
 
 //****************************************
 // 		 Build token string table
@@ -1182,7 +1182,7 @@ char *TokenTableStrings[] =
 {
 	"null",
 #include "tokentable.h"
-};	   
+};
 
 #else
 extern char *TokenTableStrings[];

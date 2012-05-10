@@ -50,13 +50,13 @@ static char *brew_reg[] = {"zr","sp","rt","fr","d0","d1","d2","d3",
 static char BrewSyscallUsed[1024];
 
 //****************************************
-//			 
+//
 //****************************************
 
 int RebuildBrewInst(OpcodeInfo *theOp)
 {
 	int ip = theOp->rip;
-	char str[256];
+	char str[32*1024];
 
 #ifdef BREW_DEBUG
 	str[0] = 0;
@@ -69,7 +69,7 @@ int RebuildBrewInst(OpcodeInfo *theOp)
 		case _PUSH:
 //			RebuildEmit("	//push");
 		return 1;
-			
+
 		case _POP:
 //			RebuildEmit("	//pop");
 		return 1;
@@ -92,7 +92,7 @@ int RebuildBrewInst(OpcodeInfo *theOp)
 		break;
 
 		case _LDI:
-			RebuildEmit("	%s = 0x%x;", brew_reg[theOp->rd], theOp->imm);			
+			RebuildEmit("	%s = 0x%x;", brew_reg[theOp->rd], theOp->imm);
 		break;
 
 		case _LDR:
@@ -100,12 +100,12 @@ int RebuildBrewInst(OpcodeInfo *theOp)
 			if (IsRegConst(theOp->rs))
 				RebuildEmit("	%s = 0x%x;", brew_reg[theOp->rd], ConstRegValue(theOp->rs));
 			else
-				RebuildEmit("	%s = %s;", brew_reg[theOp->rd], brew_reg[theOp->rs]);		
+				RebuildEmit("	%s = %s;", brew_reg[theOp->rd], brew_reg[theOp->rs]);
 		}
 		break;
 
 		// Arithmatic
-		
+
 		case _ADD:
 			BrewEmitArith(theOp,"+", 0);
 		break;
@@ -197,7 +197,7 @@ int RebuildBrewInst(OpcodeInfo *theOp)
 		break;
 
 		case _NOT:
-			RebuildEmit("	%s = ~%s;", brew_reg[theOp->rd], brew_reg[theOp->rs]);		
+			RebuildEmit("	%s = ~%s;", brew_reg[theOp->rd], brew_reg[theOp->rs]);
 		break;
 
 		case _NEG:
@@ -287,11 +287,11 @@ int RebuildBrewInst(OpcodeInfo *theOp)
 		break;
 
 		case _XB:
-			RebuildEmit("	%s = (int)((byte) %s);", brew_reg[theOp->rd], brew_reg[theOp->rs]);		
+			RebuildEmit("	%s = (int)((byte) %s);", brew_reg[theOp->rd], brew_reg[theOp->rs]);
 		break;
 
 		case _XH:
-			RebuildEmit("	%s = (int)((short) %s);", brew_reg[theOp->rd], brew_reg[theOp->rs]);		
+			RebuildEmit("	%s = (int)((short) %s);", brew_reg[theOp->rd], brew_reg[theOp->rs]);
 		break;
 
 		default:
@@ -306,7 +306,7 @@ int RebuildBrewInst(OpcodeInfo *theOp)
 
 
 //****************************************
-//			 
+//
 //****************************************
 
 void BrewDecodeReturn()
@@ -334,7 +334,7 @@ void BrewDecodeReturn()
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 void BrewDecodeReturnNull()
@@ -362,7 +362,7 @@ void BrewDecodeReturnNull()
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 void BrewDecodeSysCall(OpcodeInfo *theOp)
@@ -397,8 +397,8 @@ void BrewDecodeSysCall(OpcodeInfo *theOp)
 	for (n=0;n<param_count;n++)
 	{
 		if (need_comma)
-			RebuildEmit(", ");				
-	
+			RebuildEmit(", ");
+
 		RebuildEmit("%s", brew_reg[REG_i0 + n]);
 		need_comma = 1;
 	}
@@ -410,15 +410,15 @@ void BrewDecodeSysCall(OpcodeInfo *theOp)
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 void BrewForceSysCallUsed(char *name)
 {
 	SYMBOL	*sym;
-		
+
 	sym = FindSymbolsOld(name,section_SysCall,section_SysCall);
-	
+
 	if (!sym)
 		return;
 
@@ -426,7 +426,7 @@ void BrewForceSysCallUsed(char *name)
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 void Brew_LoadMem(OpcodeInfo *theOp, char *str)
@@ -446,12 +446,12 @@ void Brew_LoadMem(OpcodeInfo *theOp, char *str)
 			RebuildEmit("	%s = mem_ds[%s >> 2];", brew_reg[theOp->rd], brew_reg[theOp->rs]);
 			return;
 		}
-			
+
 		RebuildEmit("	%s = mem_ds[(%s+0x%x) >> 2];", brew_reg[theOp->rd], brew_reg[theOp->rs], theOp->imm);
 		return;
 	}
-*/	
-	
+*/
+
 	if (theOp->rs == 0)
 	{
 		RebuildEmit("	%s = %s(0x%x);", brew_reg[theOp->rd], str, theOp->imm);
@@ -463,19 +463,19 @@ void Brew_LoadMem(OpcodeInfo *theOp, char *str)
 		RebuildEmit("	%s = %s(%s);", brew_reg[theOp->rd], str, brew_reg[theOp->rs]);
 		return;
 	}
-		
+
 	RebuildEmit("	%s = %s(%s+0x%x);", brew_reg[theOp->rd], str, brew_reg[theOp->rs], theOp->imm);
 }
 
 
 //****************************************
-//			 
+//
 //****************************************
 
 void Brew_StoreMem(OpcodeInfo *theOp, char *str)
 {
 	// optimized ints
-	
+
 /*	if (strcmp(str, "WINT") == 0)
 	{
 		if (theOp->rd == 0)
@@ -494,7 +494,7 @@ void Brew_StoreMem(OpcodeInfo *theOp, char *str)
 		return;
 	}
 */
-// others	
+// others
 
 	if (theOp->rd == 0)
 	{
@@ -513,7 +513,7 @@ void Brew_StoreMem(OpcodeInfo *theOp, char *str)
 
 
 //****************************************
-//			 
+//
 //****************************************
 
 int BrewDecodeLabel(OpcodeInfo *theOp, char *str)
@@ -521,21 +521,21 @@ int BrewDecodeLabel(OpcodeInfo *theOp, char *str)
 
 	SYMBOL *ref, *labref;
 	int addr;
-	
+
 	ref = (SYMBOL *) ArrayGet(&CallArray, theOp->rip);
-	
+
 	// !! Check if what it points to in lablearry and use that !!
-			
+
 	if (!ref)
 		return 0;
 
 	addr = ref->Value;
-	
+
 	labref = (SYMBOL *) ArrayGet(&CodeLabelArray, addr);
 
 	if (!labref)
 		return 0;
-	
+
 	ref = labref;
 
 //	RebuildEmit("	jp &%s_%d", ref->Name, ref->LocalScope);
@@ -545,35 +545,35 @@ int BrewDecodeLabel(OpcodeInfo *theOp, char *str)
 
 
 //****************************************
-//			 
+//
 //****************************************
 
 int BrewDecodeCall(OpcodeInfo *theOp)
 {
 	SYMBOL *ref, *labref;
 	int addr;
-		
+
 	ref = (SYMBOL *) ArrayGet(&CallArray, theOp->rip);
-	
+
 	// !! Check if what it points to in lablearry and use that !!
-			
+
 	if (!ref)
 		return 0;
 
 	addr = ref->Value;
-	
+
 	labref = (SYMBOL *) ArrayGet(&CodeLabelArray, addr);
 
 	if (!labref)
 		return 0;
-	
+
 	ref = labref;
 
 	return BrewCallFunction(ref);
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 void BrewDecodeCallReg(OpcodeInfo *theOp)
@@ -589,17 +589,17 @@ void BrewDecodeCallReg(OpcodeInfo *theOp)
 		RebuildEmit(", i0");
 	else
 		RebuildEmit(", 0");
-	
+
 	if (i1)
 		RebuildEmit(", i1");
 	else
 		RebuildEmit(", 0");
-	
+
 	if (i2)
 		RebuildEmit(", i2");
 	else
 		RebuildEmit(", 0");
-	
+
 	if (i3)
 		RebuildEmit(", i3");
 	else
@@ -611,31 +611,31 @@ void BrewDecodeCallReg(OpcodeInfo *theOp)
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 int BrewDecodeCase(int ip)
 {
 	SYMBOL *ref;
-	
+
 	ref = (SYMBOL *) ArrayGet(&CodeLabelArray, ip);
 
 	if (!ref)
 		return 0;
-	
+
 	RebuildEmit("goto label_%d;", ref->LabelEnum);
 	return 1;
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 int BrewDecodeSwitch(OpcodeInfo *theOp)
 {
 	int start, len, data_ip, def_ip, i;
 	int lab_ip;
-	
+
 	data_ip = theOp->imm;
 
 	start	= GetDataMemLong(data_ip++);
@@ -668,7 +668,7 @@ int BrewDecodeSwitch(OpcodeInfo *theOp)
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 int BrewCallFunction(SYMBOL *ref)
@@ -679,9 +679,9 @@ int BrewCallFunction(SYMBOL *ref)
 	BrewEmitReturnType(rettype);
 
 	RebuildEmit("%s_%d(", ref->Name, ref->LocalScope);
-	
+
 	param_count = ref->Params;
-	
+
 	if (param_count > 4)
 		param_count = 4;
 
@@ -690,22 +690,22 @@ int BrewCallFunction(SYMBOL *ref)
 	for (n=0;n<param_count;n++)
 	{
 		if (need_comma)
-			RebuildEmit(", ");				
-	
+			RebuildEmit(", ");
+
 		RebuildEmit("%s", brew_reg[REG_i0 + n]);
 		need_comma = 1;
 	}
 
 	RebuildEmit(");");
-	
+
 	if (rettype == RET_double)
 		RebuildEmit("\n	r15 = __dbl_high;");
-	
+
 	return 1;
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 void BrewEmitArith(OpcodeInfo *theOp, char *str, int imm)
@@ -715,13 +715,13 @@ void BrewEmitArith(OpcodeInfo *theOp, char *str, int imm)
 		RebuildEmit("	%s %s= 0x%x;", brew_reg[theOp->rd], str, theOp->imm);
 		return;
 	}
-	
+
 	RebuildEmit("	%s %s= %s;", brew_reg[theOp->rd], str, brew_reg[theOp->rs]);
 	return;
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 void BrewEmitDiv(OpcodeInfo *theOp, int imm)
@@ -739,7 +739,7 @@ void BrewEmitDiv(OpcodeInfo *theOp, int imm)
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 void BrewEmitDivu(OpcodeInfo *theOp, int imm)
@@ -757,7 +757,7 @@ void BrewEmitDivu(OpcodeInfo *theOp, int imm)
 }
 
 //****************************************
-//			 
+//
 //****************************************
 
 void BrewEmitJumpCond(OpcodeInfo *theOp, char *str, int unsign)
@@ -836,12 +836,12 @@ void RebuildBrewProlog(SYMBOL *sym, int isproto)
 	int param_count;
 	int need_comma;
 	int n;
-		
+
 	// Find registers used in function
 
 	reg_used = FunctionRegUsage(sym);
 	reg_alloc = 0;
-	
+
 	// Output helpful header
 
 	if (isproto == 0)
@@ -850,7 +850,7 @@ void RebuildBrewProlog(SYMBOL *sym, int isproto)
 		RebuildEmit("// Function: %s\n", sym->Name);
 		RebuildEmit("//****************************************\n\n");
 	}
-	
+
 	// Output function decl
 
 //	RebuildEmit("static ");
@@ -875,7 +875,7 @@ void RebuildBrewProlog(SYMBOL *sym, int isproto)
 	RebuildEmit("%s_%d(", sym->Name, sym->LocalScope);
 
 	param_count = sym->Params;
-	
+
 	if (param_count > 4)
 		param_count = 4;
 
@@ -884,8 +884,8 @@ void RebuildBrewProlog(SYMBOL *sym, int isproto)
 	for (n=0;n<param_count;n++)
 	{
 		if (need_comma)
-			RebuildEmit(", ");				
-	
+			RebuildEmit(", ");
+
 		RebuildEmit("int %s", brew_reg[REG_i0 + n]);
 		need_comma = 1;
 
@@ -904,17 +904,17 @@ void RebuildBrewProlog(SYMBOL *sym, int isproto)
 	// Write local decl
 
 	// Remove regs that are already declared in func decl
-	
+
 	reg_used &= ~reg_alloc;
-	
+
 	// remove sp from locals
-	
+
 	reg_used &= ~(1 << REG_sp);
 	reg_used &= ~(1 << REG_zero);
 
 	if (ThisFunctionRetType == RET_double)
 		reg_used |= (1 << REG_r15);
-	
+
 	if (reg_used)
 	{
 		RebuildEmit("\tint ");
@@ -922,11 +922,11 @@ void RebuildBrewProlog(SYMBOL *sym, int isproto)
 		need_comma = 0;
 
 		for (n=0;n<32;n++)
-		{		
+		{
 			if (reg_used & (1 << n))
 			{
 				if (need_comma)
-					RebuildEmit(", ");				
+					RebuildEmit(", ");
 
 				RebuildEmit("%s", brew_reg[n]);
 				need_comma = 1;
@@ -963,11 +963,11 @@ void RebuildBrewFunc(SYMBOL *sym, int isproto)
 {
 	OpcodeInfo thisOp;
 	SYMBOL *ref;
-	
+
 	uchar *ip, *ip_end, *ip_last;
-	
+
 	int real_ip;
-//	char str[256];
+//	char str[32*1024];
 
 	if (!sym)
 		return;
@@ -1001,12 +1001,12 @@ void RebuildBrewFunc(SYMBOL *sym, int isproto)
 	while(1)
 	{
 		ip_last = ip;
-		
+
 		if (ip > ip_end)
 			break;
 
 		// Print labels
-		
+
 		ref = (SYMBOL *) ArrayGet(&CodeLabelArray, real_ip);
 
 		if (ref)
@@ -1019,7 +1019,7 @@ void RebuildBrewFunc(SYMBOL *sym, int isproto)
 				RebuildEmit("label_%d:;\n", ref->LabelEnum);
 			}
 		}
-	
+
 		if (ArrayGet(&CodeTouchArray, real_ip) == 0)
 			RebuildEmit("// ");
 
@@ -1028,9 +1028,9 @@ void RebuildBrewFunc(SYMBOL *sym, int isproto)
 		ip = DecodeOpcode(&thisOp, ip);
 
 		ThisFunctionExit = 0;
-	
+
 		if (ip > ip_end)
-			ThisFunctionExit = 1;	
+			ThisFunctionExit = 1;
 
 		RebuildBrewInst(&thisOp);
 
@@ -1039,15 +1039,15 @@ void RebuildBrewFunc(SYMBOL *sym, int isproto)
 
 #ifdef DEBUG_REBUILD
 		{
-			int len = 4 + strlen(str);		
+			int len = 4 + strlen(str);
 			str[0] = 0;
-			
+
 			while(len < 40)
 			{
 				RebuildEmit(" ", str);
 				len++;
 			}
-			
+
 			DisassembleFromSource(real_ip, str);
 			RebuildEmit(";%s", str);
 		}
@@ -1056,7 +1056,7 @@ void RebuildBrewFunc(SYMBOL *sym, int isproto)
 //		RebuildEmit("\n");
 
 		// Check for case statement, which need case data after them
-		
+
 /*		if (CaseRef)
 		{
 			RebuildEmit(".data\n");
@@ -1064,7 +1064,7 @@ void RebuildBrewFunc(SYMBOL *sym, int isproto)
 			RebuildEmit(".code\n");
 		}
 */
-		real_ip += (ip - ip_last);	
+		real_ip += (ip - ip_last);
 	}
 
 	RebuildBrewEpilog(sym);
@@ -1143,7 +1143,7 @@ void RebuildBrew_CallReg()
 		RebuildEmit("\n// No virtuals\n\n");
 		return;
 	}
-	
+
 	RebuildEmit("\n");
 	RebuildEmit("//****************************************\n");
 	RebuildEmit("//             CallReg Sink\n");
@@ -1157,7 +1157,7 @@ void RebuildBrew_CallReg()
 	{
 		RebuildEmit("	switch(s & 0xffffff)\n");
 		RebuildEmit("	{\n");
-		
+
 		for (n=0;n<count;n++)
 		{
 			sym = FetchVirtual(n);
@@ -1168,7 +1168,7 @@ void RebuildBrew_CallReg()
 				RebuildEmit("		");
 				BrewCallFunction(sym);
 				RebuildEmit("\n");
-//				RebuildEmit("		return;\n\n");	
+//				RebuildEmit("		return;\n\n");
 
 				ThisFunctionRetType = sym->RetType;
 				BrewDecodeReturn();
@@ -1197,7 +1197,7 @@ void RebuildBrew_EmitDS()
 	int need_comma;
 	int count;
 	int n;
-	
+
 	RebuildEmit("\n");
 	RebuildEmit("//****************************************\n");
 	RebuildEmit("//             Data Section\n");
@@ -1227,11 +1227,11 @@ void RebuildBrew_EmitDS()
 			RebuildEmit(", ");
 			need_comma = 1;
 
-		
+
 			if ((count & 0x7) == 0)
 				RebuildEmit("\n");
 		}
-		
+
 		RebuildEmit("0x%x", GetDataMemLong(n));
 		need_comma = 1;
 
@@ -1256,11 +1256,11 @@ void RebuildBrew_EmitDS()
 			RebuildEmit(", ");
 			need_comma = 1;
 
-		
+
 			if ((count & 0x7) == 0)
 				RebuildEmit("\n");
 		}
-		
+
 		RebuildEmit("0");
 		need_comma = 1;
 
@@ -1270,7 +1270,7 @@ void RebuildBrew_EmitDS()
 #else
 
 	for (n=0;n<(DataIP) >> 2;n++)
-	{		
+	{
 		RebuildEmit("	0x%x,	//%d\n", GetDataMemLong(n), n);
 	}
 
@@ -1282,13 +1282,13 @@ void RebuildBrew_EmitDS()
 }
 
 //****************************************
-// 
+//
 //****************************************
 
 void RebuildBrew_StartUp()
 {
 	SYMBOL *ep;
-	
+
 	RebuildEmit("\n");
 	RebuildEmit("//****************************************\n");
 	RebuildEmit("//          	 Startup\n");
@@ -1312,7 +1312,7 @@ void RebuildBrew_StartUp()
 
 	// init data array
 
-//	RebuildEmit("	System.arraycopy(data_section, 0, mem_ds, 0, ds_len);\n"); 
+//	RebuildEmit("	System.arraycopy(data_section, 0, mem_ds, 0, ds_len);\n");
 	RebuildEmit("	sp = 16384 - 16;\n");
 
 	RebuildEmit("\n");
@@ -1323,9 +1323,9 @@ void RebuildBrew_StartUp()
 	{
 		BrewCallFunction(ep);
 	}
-	
+
 	RebuildEmit("\n}\n");
-	
+
 
 	RebuildEmit("\n");
 
@@ -1335,13 +1335,13 @@ void RebuildBrew_StartUp()
 	RebuildEmit("{\n");
 
 	RebuildEmit("	System.out.print(\" \" + (int) i0 );\n");
-	RebuildEmit("	return;\n");	
-	RebuildEmit("\n}\n");	
+	RebuildEmit("	return;\n");
+	RebuildEmit("\n}\n");
 */
 }
 
 //****************************************
-// 
+//
 //****************************************
 
 void RebuildBrew_EmitSyscallFunc(SYMBOL *sym, int proto, int stub)
@@ -1350,7 +1350,7 @@ void RebuildBrew_EmitSyscallFunc(SYMBOL *sym, int proto, int stub)
 
 	if (!stub)
 		if (!sym->Interface)
-			return;	
+			return;
 
 	if (!proto)
 	{
@@ -1360,7 +1360,7 @@ void RebuildBrew_EmitSyscallFunc(SYMBOL *sym, int proto, int stub)
 		RebuildEmit("//****************************************\n");
 		RebuildEmit("\n");
 	}
-	
+
 	param_count = sym->Params;
 
 	BrewEmitReturnDecl(sym->RetType);
@@ -1375,8 +1375,8 @@ void RebuildBrew_EmitSyscallFunc(SYMBOL *sym, int proto, int stub)
 	for (n=0;n<param_count;n++)
 	{
 		if (need_comma)
-			RebuildEmit(", ");				
-	
+			RebuildEmit(", ");
+
 		RebuildEmit("int %s", brew_reg[REG_i0 + n]);
 		need_comma = 1;
 	}
@@ -1398,12 +1398,12 @@ void RebuildBrew_EmitSyscallFunc(SYMBOL *sym, int proto, int stub)
 		ThisFunctionRetType = sym->RetType;
 		BrewDecodeReturnNull();
 	}
-	
+
 	RebuildEmit("\n}\n");
 }
 
 //****************************************
-// 
+//
 //****************************************
 
 void RebuildBrew_EmitExtensions(int stub)
@@ -1411,7 +1411,7 @@ void RebuildBrew_EmitExtensions(int stub)
 	SYMBOL *sym;
 	int len = sizeof(BrewSyscallUsed);
 	int n;
-	
+
 	for (n=0;n<len;n++)
 	{
 		if (BrewSyscallUsed[n])
@@ -1419,13 +1419,13 @@ void RebuildBrew_EmitExtensions(int stub)
 			sym = FindSysCall(n);
 
 			if (sym)
-				RebuildBrew_EmitSyscallFunc(sym, 0, stub);	
+				RebuildBrew_EmitSyscallFunc(sym, 0, stub);
 		}
 	}
 }
 
 //****************************************
-// 
+//
 //****************************************
 
 void RebuildBrew_EmitExtensionsProto()
@@ -1433,13 +1433,13 @@ void RebuildBrew_EmitExtensionsProto()
 	SYMBOL *sym;
 	int len = sizeof(BrewSyscallUsed);
 	int n;
-	
+
 	for (n=0;n<len;n++)
 	{
 			sym = FindSysCall(n);
 
 			if (sym)
-				RebuildBrew_EmitSyscallFunc(sym, 1, 1);	
+				RebuildBrew_EmitSyscallFunc(sym, 1, 1);
 	}
 }
 
@@ -1500,7 +1500,7 @@ void RebuildBrew_Main()
 //	RebuildBrew_FlowClass();
 
 	ArrayWrite(&RebuildArray, "rebuild.brew.cpp");
-} 
+}
 
 //****************************************
 //			  End Of File

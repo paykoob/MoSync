@@ -69,7 +69,7 @@ static char JavaSyscallUsed[1024];
 int RebuildJavaInst(OpcodeInfo *theOp)
 {
 	int ip = theOp->rip;
-	char str[256];
+	char str[32*1024];
 
 #ifdef JRDEBUG
 	str[0] = 0;
@@ -1059,7 +1059,7 @@ void RebuildJavaFunc(SYMBOL *sym)
 	uchar *ip, *ip_end, *ip_last;
 
 	int real_ip;
-//	char str[256];
+//	char str[32*1024];
 
 	if (!sym)
 		return;

@@ -83,7 +83,7 @@ int main(int argc,char *argv[])
 
 	InitTokenSystem();
 	InitMasterAlloc();
-	
+
 //--------------------------------
 //Create the code and data arrays
 // 	  used for assem mem
@@ -136,9 +136,9 @@ int main(int argc,char *argv[])
 	// Application exit point
 
 	setjmp(ErrorJump);
-	
+
 	// Catch the shutdown when it occurs
-	
+
 	if (EJmp)
 	{
 		DisposeMasterAlloc();			// Shutdown completely
@@ -201,12 +201,12 @@ int main(int argc,char *argv[])
 	while(1)
 	{
 		ArgStr = argv[argno];
-	
+
 		if (!ArgStr)
 			break;
 
 		FilePtr = ArgStr;
-		
+
 		if (!Token("-"))
 			break;
 
@@ -312,13 +312,13 @@ int main(int argc,char *argv[])
 			Do_Dump_Unref_Symbols = 1;
 			continue;
 		}
-	
+
 		if (Token("error-paths"))
 		{
 			ArgFilePaths = 1;
 			continue;
 		}
-	
+
 		if (Token("entry="))
 		{
 			GetName();
@@ -489,7 +489,7 @@ int main(int argc,char *argv[])
 			}
 			else
 				printf("invalid search path '%s'\n",Name);
-						
+
 			continue;
 		}
 
@@ -505,7 +505,7 @@ int main(int argc,char *argv[])
 			}
 			else
 				printf("invalid profile '%s'\n",Name);
-						
+
 			continue;
 		}
 
@@ -574,14 +574,14 @@ int main(int argc,char *argv[])
 	if (!ArgLink && !ArgDumpFile && !ArgCustomConfig)
 	{
 		// Add users defines
-		
+
 		AddLibrarian("defines.lst", 0);
 	}
 
 	if (!ArgLink && !ArgRes && !ArgDumpFile && !ArgCustomConfig)
 	{
 		// Add users defines
-		
+
 		//AddLibrarian("defines.lst", 0);
 
 		if (ArgUseMasterDump == 0)			// if the input is a master dump don't load config_asm
@@ -609,16 +609,16 @@ int main(int argc,char *argv[])
 
 	{
 		int this_arg = argno;
-		
-		AddSourceText("\r\n.library");	
+
+		AddSourceText("\r\n.library");
 
 		while(argv[this_arg])
 		{
 			input = argv[this_arg++];
-			
-			AddSourceText(" '%s'", input);	
+
+			AddSourceText(" '%s'", input);
 		}
-		AddSourceText("\r\n");	
+		AddSourceText("\r\n");
 	}
 
 //--------------------------------
@@ -631,7 +631,7 @@ int main(int argc,char *argv[])
 
 //		SetRelPath(input);
 //		AddSourceText("\r\n.relpath '%s'\r\n", relPath);
-		
+
 		v = AddLibrarian(input, !ArgBuild && !ArgQuiet);
 
 		if (!v)
@@ -639,13 +639,13 @@ int main(int argc,char *argv[])
 			printf("failed to load '%s'\n", input);
 			ExitApp(1);
 		}
-		
+
 	}
 
 	if (ArgDumpFile)
 	{
 		TerminateSourceFile(1);
-	
+
 		WriteSourceFile("_dump.s");
 		DisposeLibrarian();
 		ExitApp(0);
@@ -665,7 +665,7 @@ int main(int argc,char *argv[])
 		DisposeLibrarian();
 		ExitApp(0);
 	}
-	
+
 //--------------------------------
 //		Resourcer Mode ?
 //--------------------------------
@@ -789,7 +789,7 @@ char * AppCodeString(int appcode)
 	memset(appstr, 0, sizeof(appstr));
 
 	// Appcode 1
-		
+
 	v = (appcode >> 24) & 0xff;
 
 	if (!isprint(v))
@@ -799,7 +799,7 @@ char * AppCodeString(int appcode)
 
 
 	// Appcode 2
-		
+
 	v = (appcode >> 16) & 0xff;
 
 	if (!isprint(v))
@@ -808,7 +808,7 @@ char * AppCodeString(int appcode)
 	appstr[1] = v;
 
 	// Appcode 3
-		
+
 	v = (appcode >> 8) & 0xff;
 
 	if (!isprint(v))
@@ -817,7 +817,7 @@ char * AppCodeString(int appcode)
 	appstr[2] = v;
 
 	// Appcode 4
-		
+
 	v = appcode & 0xff;
 
 	if (!isprint(v))
@@ -834,30 +834,30 @@ char * AppCodeString(int appcode)
 ****************************************/
 
 char * GetRelPath(char *path)
-{	
+{
 	int lbrac = -1;
 	int len;
 	int n;
 	char c;
-		
+
 	relPath[0] = 0;
-	
+
 	len = strlen(path);
-	
+
 	if (len == 0)
 		return relPath;
-	
+
 	for (n=0;n<len;n++)
 	{
 		c = path[n];
-		
+
 		if ((c == '\\') || (c == '/'))
 		{
 			lbrac = n;
 
 			path[n] = '/';		// for window's
 		}
-	}	
+	}
 
 	if (lbrac != -1)
 	{
@@ -885,7 +885,7 @@ char * AddRelPrefix(char *name)
 		strcat(relPrefix, relPath);
 
 	strcat(relPrefix, name);
-	
+
 //	printf("\nPrefix '%s'\n", relPrefix);
 	return relPrefix;
 }
@@ -897,13 +897,13 @@ char * AddRelPrefix(char *name)
 char tempName[1024];
 
 char * GetMosyncPath(char *fpath, char *fname)
-{	
+{
 	int len;
-	
+
 	tempName[0] = 0;
 
 	if (mosync_dir)
-	{	
+	{
 		if (mosync_dir[0] == '"')
 		{
 			// Remove quotes on env setting
@@ -912,7 +912,7 @@ char * GetMosyncPath(char *fpath, char *fname)
 			len = strlen(tempName);
 
 			if (tempName[len-1] == '"')
-				tempName[len-1] = 0;	
+				tempName[len-1] = 0;
 		}
 		else
 		{
@@ -948,7 +948,7 @@ void LoadProfileData()
 	// add the MOSYNC dir env
 
 	if (mosync_dir)
-	{	
+	{
 		if (mosync_dir[0] == '"')
 		{
 			// Remove quotes on env setting
@@ -957,7 +957,7 @@ void LoadProfileData()
 			len = strlen(tempName);
 
 			if (tempName[len-1] == '"')
-				tempName[len-1] = 0;	
+				tempName[len-1] = 0;
 		}
 		else
 		{
@@ -971,15 +971,15 @@ void LoadProfileData()
 	}
 
 	// finish off the file name
-	
+
 	strcat(tempName, "profiles\\vendors\\");
 	strcat(tempName, ProfilePath);
 	strcat(tempName, "\\profile.h");
-	
+
 	//printf("profile = '%s'\n", tempName);
-	
+
 	filemem = Open_FileAlloc(tempName);
-	
+
 	if (!filemem)
 		return;
 
@@ -995,19 +995,19 @@ void LoadProfileData()
 extern char * FilePtr;
 
 void MainAsm(char *input, char *output)
-{ 
+{
 	printf("pipe-tool Copyright 2007-2009 Mobile Sorcery AB\n");
 
 	Stabs_Init();
 
 	// Set up input
-	
+
 	FileTop = FilePtr = input;
 
 	// Setup output file
 
 	CodeFile = fopen(output,"wb");
-	
+
 	if (CodeFile == NULL)
 	{
           if (AsmMsg) printf("Error : Problem creating '%s' RTL file\n", output);
@@ -1037,8 +1037,8 @@ void MainAsm(char *input, char *output)
 	{
 		char *codemem = ArrayPtr(&CodeMemArray, 0);
 		int *constpool = VarPool;
-		char distest[256];
-		
+		char distest[32*1024];
+
 		DisasInit(codemem, constpool);
 		DisasInst(0, distest);
 
@@ -1067,7 +1067,7 @@ void MainAsm(char *input, char *output)
 //****************************************
 
 void MainRes(char *input, char *output)
-{		
+{
   	if (AsmMsg) printf("Resource Compiler Copyright 2007-2010 MoSync AB\n\n");
 
 	FileTop = FilePtr = input;
@@ -1148,13 +1148,13 @@ void PerfEnd()
 {
 	long long total_time = 0;
 	double time_spent = 0.0;
-	
+
 	QueryPerformanceCounter(&perf_end);
 	total_time = perf_end.QuadPart - perf_begin.QuadPart;
-	
+
 	if (local_total_time)
 		time_spent = ((double) local_total_time / (double) total_time) * 100.0;
-	
+
 	printf("Time spent %f percent\n", time_spent);
 	printf("Total calls %lld\n", local_total_count);
 
@@ -1169,7 +1169,7 @@ void PerfLocalBegin()
 void PerfLocalEnd()
 {
 	QueryPerformanceCounter(&perf_local_end);
-	
+
 	local_total_time += perf_local_end.QuadPart - perf_local_begin.QuadPart;
 	local_total_count++;
 }

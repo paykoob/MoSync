@@ -52,26 +52,26 @@ void HeaderReader(char *filemem)
 	char *FTop = FileTop;				// Preserve file pointer
 
 	SetError_Mode(ErrorMode_Basic);
-	
+
 	FileTop = FilePtr = filemem;
 
 	hEndComp = 0;
 
 	ResetErrorCount();
-	
+
 	SET_ERROR_RETURN();
 
 	while(1)
-	{	
+	{
 		if (hEndComp)
 			break;
 
 		if (*FilePtr == 0)
 			break;
-	
+
 		if (*FilePtr == 0)
 			break;
-	
+
 		if (HeaderCommands())
 			continue;
 	}
@@ -89,11 +89,11 @@ void HeaderReader(char *filemem)
 //
 //****************************************
 
-extern char NameCopy[256];
-extern char DefineNameCopy[256];
+extern char NameCopy[32*1024];
+extern char DefineNameCopy[32*1024];
 
 short HeaderCommands()
-{	
+{
 	int v;
 
 	SkipWhiteSpace();
@@ -112,8 +112,8 @@ short HeaderCommands()
 		if (NextToken("#"))
 		{
 			// Just define a script
-			
-			RedefENum(DefineNameCopy, 1);	
+
+			RedefENum(DefineNameCopy, 1);
 			rhprint("HeaderRead: .set %s = 1\n", DefineNameCopy);
 
 			SkipWhiteSpace();
@@ -121,7 +121,7 @@ short HeaderCommands()
 		}
 
 		// Test for strings
-		
+
 		if (QToken("\""))
 		{
 			GetStringName(128);
@@ -131,12 +131,12 @@ short HeaderCommands()
 			SkipWhiteSpace();
 			return 1;
 		}
-		
+
 		v = GetExpression();
-		RedefENum(DefineNameCopy, v);	
+		RedefENum(DefineNameCopy, v);
 
 		SkipWhiteSpace();
-		
+
 		rhprint("Profile: unknown define '%s'\n", DefineNameCopy);
 		return 1;
 	}
@@ -149,6 +149,6 @@ short HeaderCommands()
 
 	return 0;
 }
-	
+
 
 

@@ -141,7 +141,7 @@ const char* GetFileLine(int file, int line) {
 int RebuildCppInst(OpcodeInfo *theOp)
 {
 	int ip = theOp->rip;
-	char str[256];
+	char str[32*1024];
 
 #ifdef CPP_DEBUG
 	str[0] = 0;
@@ -1135,7 +1135,7 @@ void RebuildCppFunc(SYMBOL *sym, int isproto)
 	uchar *ip, *ip_end, *ip_last;
 
 	int real_ip;
-//	char str[256];
+//	char str[32*1024];
 
 	if (!sym)
 		return;

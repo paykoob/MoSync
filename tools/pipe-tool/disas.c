@@ -73,7 +73,7 @@ enum
 	_SRLI,
 	_NOT,
 	_NEG,
-	_RET,	
+	_RET,
 	_JC_EQ,
 	_JC_NE,
 	_JC_GE,
@@ -174,7 +174,7 @@ void DisasGenReg(void)
 	int mask;
 
 	p = 32;
-		
+
 	memset(Disas_RegConstTable,0, 128 * sizeof(int));
 
 	for (n=1;n<17;n++)
@@ -225,9 +225,9 @@ const uchar * DisasDecode(DisasInfo *thisOpcode, const uchar *code_ip)
 	uchar thisRD=0,thisRS=0;
 	uint thisIMM=0;
 	uint rip = (char*)code_ip - Disas_CodeMemory;
-	
+
 	const uchar *start_code_ip = code_ip;		// Make a copy
-	
+
 	int farflag = 0;
 	int flags;
 
@@ -237,7 +237,7 @@ const uchar * DisasDecode(DisasInfo *thisOpcode, const uchar *code_ip)
 		return 0;
 
 	// Decode the op
-	
+
 	if (thisOp == _FAR)
 	{
 		thisOp = *code_ip++;
@@ -246,11 +246,11 @@ const uchar * DisasDecode(DisasInfo *thisOpcode, const uchar *code_ip)
 
 	if (thisOp >= _FAR)
 		return 0;
-	
+
 	flags = DisasFetch[thisOp];
-		
+
 	// Fetch register info first
-	
+
 	if (flags & fetch_d)
 		thisRD = *code_ip++;
 
@@ -287,7 +287,7 @@ const uchar * DisasDecode(DisasInfo *thisOpcode, const uchar *code_ip)
 	if (flags & fetch_i)
 	{
 		thisIMM = *code_ip++;
-		
+
 		if(thisIMM > 127)
 		{
 			thisIMM = ((thisIMM & 127) << 8) + *code_ip++;
@@ -296,10 +296,10 @@ const uchar * DisasDecode(DisasInfo *thisOpcode, const uchar *code_ip)
 
 	if (flags & fetch_i)
 		thisIMM = Disas_ConstPool[thisIMM];
-	
+
 	// ** Special case for SysCalls **
 	// which marks that they use R14
-	
+
 	if (thisOp == _SYSCALL)
 	{
 		flags |= fetch_d;
@@ -317,7 +317,7 @@ const uchar * DisasDecode(DisasInfo *thisOpcode, const uchar *code_ip)
 	thisOpcode->rip		= rip;
 	thisOpcode->str		= DisasStrings[thisOp];
 	thisOpcode->len		= code_ip - start_code_ip;
-	
+
 	return code_ip;
 }
 
@@ -331,7 +331,7 @@ int DisasDecodeIP(DisasInfo *thisOpcode, int code_ip)
 	const uchar *sip = ip;
 
 	ip = DisasDecode(thisOpcode, ip);
-	
+
 	code_ip += (int) (ip - sip);
 	return code_ip;
 }
@@ -362,7 +362,7 @@ const char *disas_regs[] = {	"zr","sp","rt","fr","d0","d1","d2","d3",
 						"r8","r9","r10","r11","r12","r13","r14","r15"
 					 };
 
-char regstr[256];
+char regstr[32*1024];
 
 char * DisasRegName(int reg, int use_zero)
 {
@@ -398,14 +398,14 @@ void DisasString(DisasInfo *thisOpcode, char *out)
 
 	out[0] = 0;
 
-	len = strlen(thisOpcode->str);	
-	
+	len = strlen(thisOpcode->str);
+
 	for(n=0;n<len;n++)
 	{
 		c = thisOpcode->str[n];
-	
+
 		switch(c)
-		{	
+		{
 			case 'd': 		// Reg rd
 			{
 				DisasEmit(out,"%s",DisasRegName(thisOpcode->rd, 1));
@@ -416,13 +416,13 @@ void DisasString(DisasInfo *thisOpcode, char *out)
 			{
 				DisasEmit(out, "%s",DisasRegName(thisOpcode->rs, 1));
 			}
-			break;		
+			break;
 
 			case 'q': 		// Reg rs or DataAccess
 			{
 				DisasEmit(out, "%s",DisasRegName(thisOpcode->rs, 1));
 			}
-			break;		
+			break;
 
 
 			case 'i': 		// Immediate const
@@ -432,7 +432,7 @@ void DisasString(DisasInfo *thisOpcode, char *out)
 			}
 			break;
 
-			case 'c': 		// Immediate address				
+			case 'c': 		// Immediate address
 				DisasEmit(out, "#0x%x", thisOpcode->imm);
 			break;
 
@@ -450,22 +450,22 @@ void DisasString(DisasInfo *thisOpcode, char *out)
 					DisasEmit(out,"%s",name);
 				else
 					DisasEmit(out,"%d",thisOpcode->imm);
-			}		
+			}
 			break;
 
-			case 'm': 		// rs+imm	
+			case 'm': 		// rs+imm
 			{
 				DisasEmit(out,"%s,",DisasRegName(thisOpcode->rs, 0));
 				DisasEmit(out,"%d", thisOpcode->imm);
-			}		
+			}
 			break;
 
-			case 'n': 		// rd+imm	
+			case 'n': 		// rd+imm
 			{
 				DisasEmit(out,"%s,",DisasRegName(thisOpcode->rd, 0));
 				DisasEmit(out,"%d", thisOpcode->imm);
 
-			}		
+			}
 			break;
 
 			case 'x': 		// Push
@@ -508,7 +508,7 @@ int DisasInst(int ip, char *out)
 {
 	DisasInfo thisOpcode;
 	int new_ip;
-	
+
 	new_ip = DisasDecodeIP(&thisOpcode, ip);
 	DisasString(&thisOpcode, out);
 	return new_ip;

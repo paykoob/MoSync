@@ -474,7 +474,7 @@ void CheckLocalBounds(int branch_ip)
 //		Decode jump instructions
 //****************************************
 
-char JumpTargetName[256];
+char JumpTargetName[32*1024];
 
 //get imm
 

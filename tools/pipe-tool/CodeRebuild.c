@@ -224,7 +224,7 @@ void RebuildFunc(SYMBOL *sym)
 	uchar *ip, *ip_end, *ip_last;
 
 	int real_ip;
-	char str[256];
+	char str[32*1024];
 
 	if (!sym)
 		return;

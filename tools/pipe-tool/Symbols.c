@@ -1464,7 +1464,7 @@ void DumpIPTrans()
 		{
 			char *SymName = Sym->Name;
 			size_t i, j = 0, len;
-			char temp[256];
+			char temp[32*1024];
 
 			if(!MustConvertPaths) {
 				if(LastSLDSym && LastSLDSym->Type > Sym->Type)

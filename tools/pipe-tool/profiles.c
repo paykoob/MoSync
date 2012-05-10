@@ -37,26 +37,26 @@ void ProfileReader(char *filemem, char *config_path)
 
 	SetError_File(config_path);
 	SetError_Mode(ErrorMode_Basic);
-	
+
 	FileTop = FilePtr = filemem;
 
 	EndComp = 0;
 
 	ResetErrorCount();
-	
+
 	SET_ERROR_RETURN();
 
 	while(1)
-	{	
+	{
 		if (EndComp)
 			break;
 
 		if (*FilePtr == 0)
 			break;
-	
+
 		if (*FilePtr == 0)
 			break;
-	
+
 		if (ProfileCommands())
 			continue;
 	}
@@ -74,11 +74,11 @@ void ProfileReader(char *filemem, char *config_path)
 //
 //****************************************
 
-char NameCopy[256];
-char DefineNameCopy[256];
+char NameCopy[32*1024];
+char DefineNameCopy[32*1024];
 
 short ProfileCommands()
-{	
+{
 	int v;
 
 	SkipWhiteSpace();
@@ -116,20 +116,20 @@ short ProfileCommands()
 					v = GetExpression();
 				}
 
-				RedefENum(DefineNameCopy, v);	
-	
+				RedefENum(DefineNameCopy, v);
+
 				profprint("Profile: const found '%s' = %d\n", DefineNameCopy, v);
 				return 1;
 			}
-			
+
 			GetAsmName();
 
-			RedefENum(DefineNameCopy, 1);	
-	
+			RedefENum(DefineNameCopy, 1);
+
 			profprint("Profile: found '%s'\n", DefineNameCopy);
 			return 1;
 		}
-		
+
 		profprint("Profile: unknown define '%s'\n", DefineNameCopy);
 		return 1;
 	}
@@ -142,6 +142,6 @@ short ProfileCommands()
 
 	return 0;
 }
-	
+
 
 

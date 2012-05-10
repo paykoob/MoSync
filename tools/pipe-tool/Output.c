@@ -74,7 +74,7 @@ void VerboseError(char *tokenptr)
 {
 	int y;
 	unsigned char c;
-	
+
 	for(y=0;y<5;)
 	{
 		if (FilePtr == FileTop)
@@ -87,12 +87,12 @@ void VerboseError(char *tokenptr)
 	}
 
 	printf("\nDebugging Error System\n\n");
-	
+
 	printf("%03d: ",GetLineNumber(FileTop,FilePtr));
 
 	for(y=0;y<10;)
 	{
-	
+
 		if (FilePtr == tokenptr)
 			printf("<ERROR>");
 
@@ -108,7 +108,7 @@ void VerboseError(char *tokenptr)
 		else
 			if (c != 13)
 				printf("%c",c);
-		
+
 		if (c == 10)
 			printf("%03d: ",GetLineNumber(FileTop,FilePtr));
 
@@ -147,16 +147,16 @@ void PrintErrorMessage(int flag, char *errorString)
 	}
 
 	DumpLine = GetLineNumber(FileTop, FilePtr);
-	
+
 	if (asmfile)
 	{
 		PushTokenPtr(asmfile, 1);		// Save Token Scanner Context
-		
+
 		NeedToken(".lfile");
 		SkipWhiteSpace();
-		GetLFileName();	
+		GetLFileName();
 		strcpy(AsmFileName, Name);
-		
+
 		PopTokenPtr();
 
 		AsmLine = GetLineNumber(asmfile, FilePtr);
@@ -166,36 +166,36 @@ void PrintErrorMessage(int flag, char *errorString)
 	if (sourcefile)
 	{
 		PushTokenPtr(sourcefile, 1);		// Save Token Scanner Context
-		
+
 		NeedToken(".sourcefile");
 		SkipWhiteSpace();
-		GetLFileName();	
+		GetLFileName();
 		strcpy(SourceFileName, Name);
-		
+
 		PopTokenPtr();
 	}
 
 	if (sourcedir)
 	{
 		PushTokenPtr(sourcedir, 1);		// Save Token Scanner Context
-		
+
 		NeedToken(".sourcedir");
 		SkipWhiteSpace();
-		GetLFileName();	
+		GetLFileName();
 		strcpy(SourceDirName, Name);
-		
+
 		PopTokenPtr();
 	}
 
 	if (sourceline)
 	{
 		PushTokenPtr(sourceline, 1);
-		
+
 		NeedToken(".line");
 		SkipWhiteSpace();
-		SourceLine = GetNum();	
-		
-		PopTokenPtr();	
+		SourceLine = GetNum();
+
+		PopTokenPtr();
 	}
 
 	if (xerr)
@@ -234,7 +234,7 @@ void PrintErrorMessage(int flag, char *errorString)
 	{
 		printf("_masterdump.s:%d: Extended error report", DumpLine);
 		printf("\n");
-		
+
 		VerboseError(tokenptr);
 	}
 }
@@ -255,7 +255,7 @@ void BasicErrorMessage(int flag, char *errorString)
 	}
 
 	DumpLine = GetLineNumber(FileTop, FilePtr);
-	
+
 	printf("%s:%d: ", error_src_file_name, DumpLine);
 
 	if (flag == Error_Warning)
@@ -269,7 +269,7 @@ void BasicErrorMessage(int flag, char *errorString)
 	{
 		printf("_masterdump.s:%d: Extended error report", DumpLine);
 		printf("\n");
-		
+
 		VerboseError(tokenptr);
 	}
 }
@@ -283,7 +283,7 @@ void Error(int flag, char *Template, ...)
 	char 	tbuf[1280];
 	va_list	args;
 //	char *DebugFilePtr = FilePtr;
-	
+
 	va_start(args,Template);
 	vsprintf(tbuf,Template,args);
 	va_end(args);
@@ -307,9 +307,9 @@ void Error(int flag, char *Template, ...)
 
 	if (flag == Error_Skip)
 		SkipLine();
-	
+
 	// Return to error mark point
-	
+
 	ErrorReturn(1);
 }
 
@@ -317,7 +317,7 @@ void Error(int flag, char *Template, ...)
 //
 //****************************************
 /*
-	char FileName[256];
+	char FileName[32*1024];
 	int Line;
 	int MasterLine;
 	char *MasterPtr;
@@ -330,11 +330,11 @@ void ErrorOnIP(int flag, int ip, char *Template, ...)
 	va_list	args;
 	int res;
 	LineInfo info;
-	
+
 	va_start(args,Template);
 	vsprintf(errorString,Template,args);
 	va_end(args);
-	
+
 	res = FileInfo_From_IP(&info, ip);
 
 	if (!res)
@@ -342,9 +342,9 @@ void ErrorOnIP(int flag, int ip, char *Template, ...)
 		printf("%s:ip=0x%d : Unable to locate source position\n", errorString, ip);
 		return;
 	}
-	
+
 	printf("%s:%d: ", info.FileName, info.Line);
-	
+
 	if (flag == Error_Warning)
 		printf("Warning: %s, ", errorString);
 	else
@@ -356,7 +356,7 @@ void ErrorOnIP(int flag, int ip, char *Template, ...)
 	{
 		printf("_masterdump.s:%d: Extended error report", info.MasterLine);
 		printf("\n");
-		
+
 		if (info.MasterPtr)
 			VerboseError(info.MasterPtr);
 	}
@@ -444,13 +444,13 @@ int FileInfo_From_IP(LineInfo *info, int ip)
 	int file;
 	int n;
 	char *ptr;
-	
+
 	// Copy ip for completeness, save for later use
 
 	info->IP = ip;
 
 	// Clear out other values
-		
+
 	info->MasterPtr = 0;
 	info->MasterLine = 0;
 
@@ -463,7 +463,7 @@ int FileInfo_From_IP(LineInfo *info, int ip)
 	{
 		if (ip == 0)
 			return 0;
-			
+
 		ptr = (char *) ArrayGet(&AsmCharArray, ip);
 
 		if (ptr)
@@ -487,14 +487,14 @@ int FileInfo_From_IP(LineInfo *info, int ip)
 	{
 		if (ip == 0)
 			return 0;
-			
+
 		line = ArrayGet(&SLD_Line_Array, ip);
 
 		if (line)
 			break;
 
 		ip--;
-	}			
+	}
 
 	// We have an IP and a line
 
@@ -517,7 +517,7 @@ int FileInfo_From_IP(LineInfo *info, int ip)
 				break;
 			}
 		}
-	
+
 		Sym++;
 	}
 	while(--n);

@@ -32,7 +32,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 int HexDig(char digit)
 {
 	digit = tolower(digit);
-	
+
 	if (digit >= 'a')
 		return (digit - 'a') + 10;
 
@@ -50,7 +50,7 @@ char * GetSym()
 	unsigned int v = 0;
 	char *NamePtr = xName;
 	char c;
-	
+
 	while (iscsym(*FilePtr))
 	{
 		c = *FilePtr++;
@@ -63,7 +63,7 @@ char * GetSym()
 		if (v++ >= NAME_MAX)
 			Error(Error_Fatal, "Symbol too int");
 	}
-	
+
 	*NamePtr++ = 0;
 
 	return xName;
@@ -76,9 +76,9 @@ char * GetSym()
 char * GetStr()
 {
 	char *lab = xName;
-	
+
 	*lab++ = *FilePtr++;
-	
+
 	while (*FilePtr != '\"')
 		*lab++ = *FilePtr++;
 
@@ -104,13 +104,13 @@ int GetHexNum(register int digits)
 			Error(Error_Skip, "Hex value too int !");
 			ExitApp(1);
 		}
-		
-		c = tolower(*FilePtr++);		
+
+		c = tolower(*FilePtr++);
 		v <<= 4;
-	
+
 		if (isdigit(c))
 			v += c - (unsigned char) '0';
-		else 
+		else
 			v += c - (unsigned char) 'a' + 10;
 
 		digits--;
@@ -132,23 +132,23 @@ int GetHexByte()
 	if (!isxdigit(*FilePtr))
 		Error(Error_Skip, "Missing Hex digit !");
 
-	c = tolower(*FilePtr++);		
+	c = tolower(*FilePtr++);
 	v <<= 4;
-	
+
 	if (isdigit(c))
 		v += c - (unsigned char) '0';
-	else 
+	else
 		v += c - (unsigned char) 'a' + 10;
 
 	if (!isxdigit(*FilePtr))
 		Error(Error_Skip, "Missing Hex digit !");
 
-	c = tolower(*FilePtr++);		
+	c = tolower(*FilePtr++);
 	v <<= 4;
-	
+
 	if (isdigit(c))
 		v += c - (unsigned char) '0';
-	else 
+	else
 		v += c - (unsigned char) 'a' + 10;
 
 	return (int) v;
@@ -173,12 +173,12 @@ int GetDecNum(int digits)
 			Error(Error_Skip, "Decimal value too int !");
 			ExitApp(1);
 		}
-		
+
 		v = (v * 10) + (*FilePtr++ - 0x30);
 		digits--;
 		DigitCount++;
 	}
-	
+
 	return (int) v;
 }
 
@@ -213,7 +213,7 @@ int GetDecByte()
 		Error(Error_Skip, "Missing Decimal digit !");
 
 	v = (v * 10) + (*FilePtr++ - 0x30);
-	
+
 	return (int) v;
 }
 
@@ -237,12 +237,12 @@ int GetOctoByte()
 		if (!octodigit(*FilePtr))
 			break;
 
-		v <<= 3;		
+		v <<= 3;
 	}
-	
+
 	//if (v > 255)
 	//	Error(Error_Skip, "Octal Overflow!");
-	
+
 	return (int) v;
 }
 
@@ -259,7 +259,7 @@ int GetCharNum()
 	for (n=0;n<4;n++)
 	{
 		c = *FilePtr;
-		
+
 		if (c == '\'')
 			return v;
 
@@ -270,7 +270,7 @@ int GetCharNum()
 
 		FilePtr++;
 	}
-	
+
 	return (int) v;
 }
 
@@ -332,7 +332,7 @@ int GetNum()
 	register unsigned int v = 0;
 
 	if (Token("'"))			// found «
-	{		
+	{
 		if (Token("\\"))		// Test "\"
 		{
 			v = GetEscCode();
@@ -348,7 +348,7 @@ int GetNum()
 	if (*FilePtr == '0' && (*(FilePtr+1) =='x' || *(FilePtr+1) == 'X'))
 	{
 		FilePtr+=2;
-		
+
 		return GetHexNum(16);
 	}
 
@@ -361,7 +361,7 @@ int GetNum()
 //		   store it in 'ThisOp' (Slow)
 //****************************************
 
-#define TestOp(str,len) if(strncmp(FilePtr,str,len) == 0){ ThisOp = str; Oplen = len ;return; }	
+#define TestOp(str,len) if(strncmp(FilePtr,str,len) == 0){ ThisOp = str; Oplen = len ;return; }
 
 #define TestOpChar(chr,str) if (*FilePtr == chr) { ThisOp = str; Oplen = 1; return;}
 
@@ -422,7 +422,7 @@ void GetOper()
 
 
 void GetOper()
-{	
+{
 	ThisOp = "";
 	Oplen  = 0;
 
@@ -463,7 +463,7 @@ void GetOper()
 	TestOp(">",1)
 	TestOp("<",1)
 	TestOp("=",1)
-	
+
 	TestOp("&",1)
 	TestOp("|",1)
 	TestOp("^",1)
@@ -471,7 +471,7 @@ void GetOper()
 	TestOp("~",1)
 
 	TestOp("?",1)
-	
+
 	return;
 }
 #endif
@@ -492,7 +492,7 @@ void ClearPart(EVAL *Part)
 {
 	Part->Sym = NULL;
 	Part->Value = 0;
-	Part->Type = 0;				
+	Part->Type = 0;
 }
 
 //****************************************
@@ -501,7 +501,7 @@ void ClearPart(EVAL *Part)
 /*
 int CodeRef = 0;
 int CodeValue;
-char CodeRefName[256];
+char CodeRefName[32*1024];
 */
 //****************************************
 //	   Get numeric expressions only
@@ -528,11 +528,11 @@ int GetExpression()
 	ClearPart(&Part1);
 	assign(&Part1);
 	SkipWhiteSpace();
-	
+
 	if (CodeRef)
 		if (CodeValue != Part1.Value)
 			Error(Error_Skip, "Illegal function pointer manipulation");
-		
+
 	return Part1.Value;
 }
 
@@ -562,7 +562,7 @@ int GetExpPure()
 	SkipWhiteSpace();
 
 	ExpIsPure = 0;
-		
+
 	return Part1.Value;
 }
 
@@ -574,7 +574,7 @@ char * GetExpCodeRef()
 {
 	if (CodeRef)
 		return CodeRefName;
-		
+
 	return 0;
 }
 
@@ -642,7 +642,7 @@ void assign(EVAL *Part1)		/* MAHandle assignments (=) */
 	if (IsOper("="))
 	{
 		SkipOper();
-		
+
 		Error(Error_Skip, "'=' is not implemented yet");
 		ExitApp(1);
 	}
@@ -674,7 +674,7 @@ void logor(EVAL *Part1)
 }
 
 //****************************************
-// 
+//
 //****************************************
 
 void logand(EVAL *Part1)				/* MAHandle addition and substraction */
@@ -689,14 +689,14 @@ void logand(EVAL *Part1)				/* MAHandle addition and substraction */
 	{
 		SkipOper();
 		logand(&Part2);
-		
+
 		Part1->Value = (Part1->Value && Part2.Value);
 		return;
 	}
 }
 
 //****************************************
-// 
+//
 //****************************************
 
 void xor_ev(EVAL *Part1)				/* MAHandle addition and substraction */
@@ -711,14 +711,14 @@ void xor_ev(EVAL *Part1)				/* MAHandle addition and substraction */
 	{
 		SkipOper();
 		xor_ev(&Part2);
-		
+
 		Part1->Value ^= Part2.Value;
 		return;
 	}
 }
 
 //****************************************
-// 
+//
 //****************************************
 
 void or_ev(EVAL *Part1)				/* MAHandle addition and substraction */
@@ -733,14 +733,14 @@ void or_ev(EVAL *Part1)				/* MAHandle addition and substraction */
 	{
 		SkipOper();
 		or_ev(&Part2);
-		
+
 		Part1->Value |= Part2.Value;
 		return;
 	}
 }
 
 //****************************************
-// 
+//
 //****************************************
 
 void and_ev(EVAL *Part1)				/* MAHandle addition and substraction */
@@ -755,21 +755,21 @@ void and_ev(EVAL *Part1)				/* MAHandle addition and substraction */
 	{
 		SkipOper();
 		and_ev(&Part2);
-		
+
 		Part1->Value &= Part2.Value;
 		return;
 	}
-	
+
 	if (IsOper("!="))
 	{
 		SkipOper();
 
 		and_ev(&Part2);
-		
+
 		Part1->Value = ( Part1->Value != Part2.Value);
 		return;
-	}	
-	
+	}
+
 	if (IsOper("=="))
 	{
 		SkipOper();
@@ -779,11 +779,11 @@ void and_ev(EVAL *Part1)				/* MAHandle addition and substraction */
 		Part1->Value = (Part1->Value == Part2.Value);
 		return;
 	}
-	
+
 }
 
 //****************************************
-// 
+//
 //****************************************
 
 void GreaterLess(EVAL *Part1)
@@ -799,7 +799,7 @@ void GreaterLess(EVAL *Part1)
 		SkipOper();
 
 		GreaterLess(&Part2);
-		
+
 		Part1->Value = (Part1->Value > Part2.Value);
 		return;
 	}
@@ -809,7 +809,7 @@ void GreaterLess(EVAL *Part1)
 		SkipOper();
 
 		GreaterLess(&Part2);
-		
+
 		Part1->Value = (Part1->Value < Part2.Value);
 		return;
 	}
@@ -819,7 +819,7 @@ void GreaterLess(EVAL *Part1)
 		SkipOper();
 
 		GreaterLess(&Part2);
-		
+
 		Part1->Value = (Part1->Value >= Part2.Value);
 		return;
 	}
@@ -829,7 +829,7 @@ void GreaterLess(EVAL *Part1)
 		SkipOper();
 
 		GreaterLess(&Part2);
-		
+
 		Part1->Value = (Part1->Value <= Part2.Value);
 		return;
 	}
@@ -837,7 +837,7 @@ void GreaterLess(EVAL *Part1)
 }
 
 //****************************************
-// 
+//
 //****************************************
 
 void shifts(EVAL *Part1)
@@ -853,7 +853,7 @@ void shifts(EVAL *Part1)
 		SkipOper();
 
 		shifts(&Part2);
-		
+
 		Part1->Value >>= Part2.Value;
 		return;
 	}
@@ -863,7 +863,7 @@ void shifts(EVAL *Part1)
 		SkipOper();
 
 		shifts(&Part2);
-		
+
 		Part1->Value <<= Part2.Value;
 		return;
 	}
@@ -871,11 +871,11 @@ void shifts(EVAL *Part1)
 	if (IsOper(">>>"))
 	{
 		unsigned int l1,l2;
-		
+
 		SkipOper();
 
 		shifts(&Part2);
-		
+
 		l1 = Part1->Value;
 		l2 = Part2.Value;
 
@@ -902,7 +902,7 @@ void plus(EVAL *Part1)				/* MAHandle addition and substraction */
 		SkipOper();
 
 		plus(&Part2);
-		
+
 		Part1->Value += Part2.Value;
 		return;
 	}
@@ -973,7 +973,7 @@ void unary(EVAL *Part1)
 
 	if (IsOper("-"))
 	{
-		SkipOper();		
+		SkipOper();
 		unary(Part1);
 
 		Part1->Value = -Part1->Value;
@@ -982,30 +982,30 @@ void unary(EVAL *Part1)
 
 	if (IsOper("+"))
 	{
-		SkipOper();		
+		SkipOper();
 		unary(Part1);
 
 		Part1->Value = +Part1->Value;
 		return;
 	}
-	
+
 	if (IsOper("!"))
 	{
-		SkipOper();		
+		SkipOper();
 		unary(Part1);
 
 		Part1->Value = !Part1->Value ;
 		return;
 	}
-	
+
 	if (IsOper("~"))
 	{
-		SkipOper();		
+		SkipOper();
 		unary(Part1);
 
 		Part1->Value = ~Part1->Value;
 		return;
-	}	
+	}
 
 	// Now process identifiers and numerics
 
@@ -1017,12 +1017,12 @@ void unary(EVAL *Part1)
 
 	if (IsOper("--"))
 	{
-		SkipOper();		
+		SkipOper();
 		SkipWhiteSpace();
 
 		Part1->Value--;
 		return;
-	} 
+	}
 */
 
 }
@@ -1036,18 +1036,18 @@ void Identifier(EVAL *Part1)
 {
 	while(1)
 	{
-	
+
 		if (*FilePtr == '(')
 		{
 			FilePtr++;
 			assign(Part1);
-						
+
 			NeedToken(")");
-			break;		
+			break;
 		}
 
 		if (isdigit(*FilePtr) || *FilePtr == '\'')
-		{	
+		{
 			Part1->Value	= GetNum();
 			Part1->Sym		= NULL;
 			Part1->Type		= 0;
@@ -1065,14 +1065,14 @@ void Identifier(EVAL *Part1)
 		if (iscsymf(*FilePtr))
 		{
 			GetIdentifier(Part1);
-			break;		
+			break;
 		}
 
 		// Strings
-		
+
 		if (*FilePtr == '$')
 		{
-			FilePtr++;			
+			FilePtr++;
 			GetIdentifier(Part1);
 			break;
 		}
@@ -1082,7 +1082,7 @@ void Identifier(EVAL *Part1)
 		Error(Error_Skip, "Unknown Operator '%s'",ThisOp);
 		ExitApp(1);
 	}
-	
+
 	SkipWhiteSpace();
 }
 
@@ -1119,11 +1119,11 @@ void GetIdentifier(EVAL *Part1)
 {
 	char	*ThisLabel;
 	int		scope;
-	
+
 	SYMBOL	*sym;
-		
+
 	ThisLabel = GetSym();
-	
+
 	// Set default scope
 
 	scope = LocalScope;
@@ -1131,9 +1131,9 @@ void GetIdentifier(EVAL *Part1)
 	//----------------------------------------
 	//		  Search local scope
 	//----------------------------------------
-	
+
 	sym = FindSymbols(ThisLabel,section_Enum,section_Enum, scope);
-	
+
 	//----------------------------------------
 	//		  Not in local scope
 	//----------------------------------------
@@ -1153,13 +1153,13 @@ void GetIdentifier(EVAL *Part1)
 			sym = FindSymbols(ThisLabel,section_Enum,section_Enum, scope);
 		}
 	}
-	
+
 	//----------------------------------------
 	//		  local/global scope
 	//----------------------------------------
 
 	if (sym)
-	{		
+	{
 		Part1->Sym = 0;
 		Part1->Value = sym->Value;
 
@@ -1168,20 +1168,20 @@ void GetIdentifier(EVAL *Part1)
 			if (sym->Type == SECT_code)
 			{
 				// Mark the expression flags, say found code ref
-				
+
 				ExpFlags |= REF_code;
 
 				// Remember last code ref symbol
-				
+
 				SetLastSymbolRef(sym);
 
 				// Must be a code reference
-		
+
 				CodeRef = 1;
 				strcpy(CodeRefName, ThisLabel);
-						
+
 				//printf("\nCodeRef '%s'\n", ThisLabel);
-				
+
 				// It must be a function, so make it virtual
 
 				if (sym->LabelType == label_Function)
@@ -1189,7 +1189,7 @@ void GetIdentifier(EVAL *Part1)
 					// Promote to virtual
 					sym->LabelType = label_Virtual;
 					sym->VirtualIndex = VirtualIndex++;
-				}			
+				}
 
 				// Only convert to virtual index if in java mode
 
@@ -1197,7 +1197,7 @@ void GetIdentifier(EVAL *Part1)
 				if (sym->LabelType == label_Virtual)
 				{
 					// Mark the expression flags, say found virtual ref
-					
+
 					ExpFlags |= REF_virtual;
 
 					// Change the value, to reflect functions virtual reference
@@ -1212,7 +1212,7 @@ void GetIdentifier(EVAL *Part1)
 		if (sym->Type == SECT_data)
 		{
 			// Mark the expression flags, say found data ref
-			
+
 			ExpFlags |= REF_data;
 
 			// Special case for bss
@@ -1221,11 +1221,11 @@ void GetIdentifier(EVAL *Part1)
 
 			Part1->Value = sym->Value;
 		}
-	
+
 		if (sym->Type == SECT_bss)
 		{
 			// Mark the expression flags, say found data ref
-			
+
 			ExpFlags |= REF_data;
 
 			// Special case for bss
@@ -1234,7 +1234,7 @@ void GetIdentifier(EVAL *Part1)
 
 			Part1->Value = sym->Value + MaxDataIP;
 		}
-				
+
 		Part1->Type = EXP_numeric;
 
 		if (sym->Type)
@@ -1247,7 +1247,7 @@ void GetIdentifier(EVAL *Part1)
 
 			if (ExpSection == sym->Type)
 				return;
-			
+
 			Error(Error_Fatal, "Cannot evaluate section conflict in expression");
 		}
 		return;
@@ -1262,7 +1262,7 @@ void GetIdentifier(EVAL *Part1)
 		// Check for resource symbols
 
 		sym = FindSymbolsOld(ThisLabel,section_Resource,section_Resource);
-		
+
 		if (sym)
 		{
 			Part1->Value = sym->Value;
@@ -1275,7 +1275,7 @@ void GetIdentifier(EVAL *Part1)
 	//----------------------------------------
 
 	sym = FindSymbolsOld(ThisLabel,section_Script,section_Script);
-	
+
 	if (sym)
 	{
 		Part1->Value = sym->Value;
@@ -1285,11 +1285,11 @@ void GetIdentifier(EVAL *Part1)
 	//----------------------------------------
 	// 		error unresolved external
 	//----------------------------------------
-	
+
 	// fake it in pass1
 
 	if (Pass == 1)
-	{	
+	{
 		Part1->Sym = 0;
 		Part1->Value = 0;
 		Part1->Type = EXP_numeric;
@@ -1338,15 +1338,15 @@ void GetIdentifierString(EVAL *Part1)
 {
 	char	*ThisLabel;
 	SYMBOL	*sym;
-		
+
 	ThisLabel = GetSym();
-	
+
 	//----------------------------------------
 	//		  Strings script mode
 	//----------------------------------------
 
 	sym = FindSymbolsOld(ThisLabel,section_Script,section_Script);
-	
+
 	if (sym)
 	{
 		Part1->Value = sym->Value;
@@ -1356,11 +1356,11 @@ void GetIdentifierString(EVAL *Part1)
 	//----------------------------------------
 	// 		error unresolved external
 	//----------------------------------------
-	
+
 	// fake it in pass1
 
 	if (Pass == 1)
-	{	
+	{
 		Part1->Sym = 0;
 		Part1->Value = 0;
 		Part1->Type = EXP_numeric;

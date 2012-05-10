@@ -893,7 +893,7 @@ short ResourceCommands()
 	{
 		if (QToken("$"))
 		{
-			char VarName[256];
+			char VarName[32*1024];
 
 			// Accept a string
 

@@ -30,9 +30,9 @@ char *DataCharPtr;
 //****************************************
 
 short Directives()
-{	
+{
 	int t;
-	
+
 	SkipWhiteSpace();
 
 	if (*FilePtr != '.')
@@ -43,7 +43,7 @@ short Directives()
 	if (QToken(".eof"))
 	{
 		// mark end of label array as end of bss
-		
+
 		strcpy(Name, "_________eof_________");
 		Section = SECT_bss;
 		DefineLabel(label_Local);
@@ -55,7 +55,7 @@ short Directives()
 	}
 
 
-	GetToken();	
+	GetToken();
 	t = ScanAsmToken();
 
 	switch(t)
@@ -70,11 +70,11 @@ short Directives()
 //---------------------------------------------------------
 
 	case dir_sourcefile:
-	{		
+	{
 		int file;
-		
+
 		SkipWhiteSpace();
-		GetLFileName();	
+		GetLFileName();
 
 //		SetCSourceFile(Name);
 		file = SetSLD_Name(Name);
@@ -87,9 +87,9 @@ short Directives()
 
 
 	case dir_model:
-	{	
+	{
 		int model=0;
-	
+
 		if (Token("full"))				// Get return type
 			model = MODEL_full;
 		else if (Token("half"))				// Get return type
@@ -100,11 +100,11 @@ short Directives()
 			model = MODEL_mini;
 		else if (Token("tiny"))				// Get return type
 			model = MODEL_tiny;
-		else 
+		else
 			Error(Error_Fatal, "invalid model type");
 
 		// if model is not set then set it
-			
+
 		if (!CurrentModel)
 			CurrentModel = model;
 		else
@@ -132,13 +132,13 @@ short Directives()
 			ArraySet(&CtorArrayImm, CtorCount, imm);
 			ArraySet(&CtorArray, CtorCount++, (int) ref);
 		}
-		return 1;		
+		return 1;
 	}
 
 //---------------------------------------------------------
 
 	case dir_dtor:
-	{		
+	{
 		SYMBOL* ref;
 		imm = GetExpression();				// Get the number
 		ref = GetLastSymbolRef();
@@ -151,16 +151,16 @@ short Directives()
 			ArraySet(&DtorArrayImm, DtorCount, imm);
 			ArraySet(&DtorArray, DtorCount++, (int) ref);
 		}
-		return 1;		
+		return 1;
 	}
 
 
 //---------------------------------------------------------
 
 	case dir_sourcedir:
-	{		
+	{
 		SkipWhiteSpace();
-		GetLFileName();	
+		GetLFileName();
 		SetCSourceDir(Name);
 		return 1;
 	}
@@ -170,9 +170,9 @@ short Directives()
 	case dir_line:
 	{
 		int v;
-		
+
 		SkipWhiteSpace();
-		v = GetNum();	
+		v = GetNum();
 		SetCSourceLine(v);
 		SetSLD_Line(v);
 
@@ -217,8 +217,8 @@ short Directives()
 			Error(Error_Fatal, "User: %s", Name);
 			return 1;
 		}
-	
-	
+
+
 		Error(Error_Fatal, "Exiting with user error");
 		return 1;
 	}
@@ -282,7 +282,7 @@ short Directives()
 //---------------------------------------------------------
 
 	case dir_func:
-	{	
+	{
 		Function_Return_Type = RET_void;
 
 		GetName();
@@ -296,7 +296,7 @@ short Directives()
 			Function_Param_Count = GetNum();
 
 			if (Token(","))				// Get param count
-			{				
+			{
 				if (Token("int"))				// Get return type
 					Function_Return_Type = RET_int;
 				else if (Token("float"))
@@ -310,7 +310,7 @@ short Directives()
 			}
 		}
 
-		DefineLabel(label_Function);		
+		DefineLabel(label_Function);
 		return 1;
 	}
 
@@ -334,18 +334,18 @@ short Directives()
 
 	case dir_syscall:
 	{
-		char SysCallName[256];
+		char SysCallName[32*1024];
 		char istr[4096];
 		char *iptr = 0;
-		
+
 		int v, p, r;
-		
+
 		p = 0;
 		r = RET_void;
-		
+
 		GetName();
 		strcpy(SysCallName,Name);
-	
+
 		SkipWhiteSpace();
 
 		v = GetExpression();
@@ -355,7 +355,7 @@ short Directives()
 			p = GetExpression();
 
 			NeedToken(",");
-			
+
 			if (Token("int"))				// Get return type
 				r = RET_int;
 			else if (Token("float"))
@@ -386,12 +386,12 @@ short Directives()
 	{
 		SkipWhiteSpace();
 		GetLFileName();
-		
+
 		strcpy(CurrentFile, Name);
 //		CurrentFileLine = GetLineNumber(FileTop,GetPrevFilePtr());
-		
+
 		AddFileSym(Name, LocalScope+1);
-		
+
 		GetRelPath(CurrentFile);
 		return 1;
 	}
@@ -416,18 +416,18 @@ short Directives()
 
 	case dir_set:
 	{
-		
+
 		SkipWhiteSpace();
 
 		// Catch Thunks
-		
+
 		if (Token("%"))
 		{
 			SYMBOL *ThunkSym;
 			int v;
 
 			v = GetDecNum(5);
-			
+
 			if (GetDecNumDigitCount() == 0)
 				Error(Error_Fatal, "Missing Thunk Number");
 
@@ -447,12 +447,12 @@ short Directives()
 			RegisterThunk(v, ThunkSym);
 			return 1;
 		}
-		
+
 		// Catch normal sets
-		
-		GetName();							// Get the new type Name	
+
+		GetName();							// Get the new type Name
 		NeedToken("=");
-		RedefENum(Name, GetExpression());	
+		RedefENum(Name, GetExpression());
 		return 1;
 	}
 
@@ -460,7 +460,7 @@ short Directives()
 
 	case dir_debug:
 	{
-		DEBUG = (short)GetExpression();	
+		DEBUG = (short)GetExpression();
 		return 1;
 	}
 
@@ -469,7 +469,7 @@ short Directives()
 
 	case dir_info:
 	{
-		INFO = (short)GetExpression();	
+		INFO = (short)GetExpression();
 		return 1;
 	}
 
@@ -477,7 +477,7 @@ short Directives()
 
 	case dir_list:
 	{
-		LIST = (short)GetExpression();	
+		LIST = (short)GetExpression();
 		return 1;
 	}
 
@@ -486,13 +486,13 @@ short Directives()
 	case dir_show:
 	{
 		int exp = GetExpression();
-		
+
 		if (Pass == 1)
 			printf("%d",exp);
 
 		if (!Token(";"))
 			if (Pass == 1) printf("\n");
-	
+
 		return 1;
 	}
 
@@ -503,16 +503,16 @@ short Directives()
 	{
 		int exp;
 		char v;
-	
+
 		if (Token("\""))
 		{
-			while(1)	
+			while(1)
 			{
 				v = *FilePtr;
-				
+
 				if (v == 0 || v == '"')
 					break;
-				
+
 				printf("%c",v);
 
 				FilePtr++;
@@ -532,7 +532,7 @@ short Directives()
 
 		if (!Token(";"))
 			printf("\n");
-	
+
 		return 1;
 	}
 
@@ -540,9 +540,9 @@ short Directives()
 
 	case dir_ifdef:
 	{
-		GetName();							// Get the new type Name	
+		GetName();							// Get the new type Name
 		SkipWhiteSpace();
-		
+
 		if (!SymbolExists(Name, section_Script, -1))
 		{
 			if (NextToken("{"))
@@ -557,9 +557,9 @@ short Directives()
 
 	case dir_ifdefglobal:
 	{
-		GetName();							// Get the new type Name	
+		GetName();							// Get the new type Name
 		SkipWhiteSpace();
-		
+
 		if (!SymbolExists(Name, section_Enum, 0))
 		{
 			if (NextToken("{"))
@@ -574,9 +574,9 @@ short Directives()
 
 	case dir_ifndefglobal:
 	{
-		GetName();							// Get the new type Name	
+		GetName();							// Get the new type Name
 		SkipWhiteSpace();
-		
+
 		if (SymbolExists(Name, section_Enum, 0))
 		{
 			if (NextToken("{"))
@@ -591,9 +591,9 @@ short Directives()
 
 	case dir_ifndef:
 	{
-		GetName();							// Get the new type Name	
+		GetName();							// Get the new type Name
 		SkipWhiteSpace();
-		
+
 		if (SymbolExists(Name, section_Script, -1))
 		{
 			if (NextToken("{"))
@@ -628,10 +628,10 @@ short Directives()
 	{
 
 		// If we have a '{' just ignore it an keep going
-		
+
 		if (Token("{"))
 			return 1;
-	
+
 		// Must be an expression then
 
 		// if false then skip to while
@@ -641,7 +641,7 @@ short Directives()
 			SearchScopeForward();
 			NeedToken(".enddo");
 		}
-			
+
 		return 1;
 	}
 
@@ -649,7 +649,7 @@ short Directives()
 
 	case dir_enddo:
 	{
-		FilePtr = SearchScope(FilePtr);			
+		FilePtr = SearchScope(FilePtr);
 		return 1;
 	}
 
@@ -697,7 +697,7 @@ short Directives()
 //	if (QToken(".globl") || QToken(".global") || QToken(".weak"))
 	{
 		unsigned int n;
-		
+
 		GetAsmName();
 
 		if (GlobalsInCode && (Section == SECT_code))
@@ -714,7 +714,7 @@ short Directives()
 				ArraySet(&CodeMemArray, CodeIP, Name[n]);
 				CodeIP++;
 			}
-	
+
 //!			*CodePtr++ = '*';
 
 			ArraySet(&CodeMemArray, CodeIP, '*');
@@ -730,7 +730,7 @@ short Directives()
 //		if (JavaPass)
 //			JavaGen_Global(Name);
 //#endif
-		
+
 		SkipWhiteSpace();
 		return 1;
 	}
@@ -745,7 +745,7 @@ short Directives()
 		if (LIST)
 			printf("Found external '%s'\n",Name);
 
-		// SHOULD DO NOTHING 
+		// SHOULD DO NOTHING
 		//ExternDecl(Name);
 
 		SkipWhiteSpace();
@@ -794,12 +794,12 @@ short Directives()
 	case dir_word:
 	{
 		SYMBOL *ref;
-		
+
 		if (Section != SECT_data)
 			Error(Error_Skip,"data word in not in data section");
 
 		SetAsmDataChar();
-		
+
 		do
 		{
 			imm = GetExpression();				// Get the number
@@ -824,12 +824,12 @@ short Directives()
 
 		if (LIST)
 			printf("space %d\n",imm);
-	
+
 		if (!imm)
 			return 1;
 
 		WriteDataTypeArray(dir_space, imm);
-		
+
 		do
 		{
 			WriteByteSpace(0);
@@ -862,24 +862,24 @@ short Directives()
 		Section = SECT_bss;
 
 		GetAsmName();
-		
+
 		//!! make this global too
 
 		DefineLabelGlobal();
 		DefineLabel(label_Local);
-		
+
 		NeedToken(",");
-				
+
 		imm = GetExpression();					// Get the number
 
 		if (LIST)
 			printf("comm %d to .bss\n",imm);
-	
+
 		if (imm == 0)
 			return 1;
 
 		WriteDataTypeArray(dir_comm, imm);
-		
+
 		BssIP += imm;
 
 		Section = LastSect;
@@ -899,19 +899,19 @@ short Directives()
 
 		GetAsmName();
 		DefineLabel(label_Local);
-		
+
 		NeedToken(",");
-				
+
 		imm = GetExpression();					// Get the number
 
 		if (LIST)
 			printf("lcomm %d to .bss\n",imm);
-	
+
 		if (imm == 0)
 			return 1;
 
 		WriteDataTypeArray(dir_lcomm, imm);
-		
+
 		BssIP += imm;
 
 		Section = LastSect;
@@ -1018,18 +1018,18 @@ short Directives()
 }
 
 //****************************************
-//		 
+//
 //****************************************
 
 void AsmEnums()
 {
 	int Value=0;	//Fredrik: correct initializer in case first token is not "=" ?
-		
+
 	NeedToken("{");
 
 	do
 	{
-		GetName();							// Get the new type Name	
+		GetName();							// Get the new type Name
 
 		if (Token("="))
 		{
@@ -1046,7 +1046,7 @@ void AsmEnums()
 		SkipWhiteSpace();
 	}
 	while(Token(","));
-	
+
 	NeedToken("}");
 }
 
@@ -1059,7 +1059,7 @@ char * SearchScope(char *StartPtr)
 	short ScopeCount = 0;
 	char *ptr = StartPtr;
 	char v;
-	
+
 	while(1)
 	{
 		if (ptr == FileTop)
@@ -1069,7 +1069,7 @@ char * SearchScope(char *StartPtr)
 
 		if (v == '}')
 			ScopeCount++;
-			
+
 		if (v == '{')
 		{
 			ScopeCount--;
@@ -1101,7 +1101,7 @@ void GetQuoteStr(short maxlen)
 {
 	unsigned int v = 0;
 	short c=0;
-	
+
 	if (*FilePtr++ != '"')
 		Error(Error_Skip, "String has missing '\"'");
 
@@ -1111,7 +1111,7 @@ void GetQuoteStr(short maxlen)
 
 		if (v == 0 || v == 13)
 			Error(Error_Skip, "string not terminated correctly");
-			
+
 		if (v == '\"')
 			break;
 
@@ -1159,7 +1159,7 @@ void DefineStructor(char *type, int count)
 {
 	int oldSect = Section;
 	int oldData = DataIP;
-	
+
 	imm = GetExpression();				// Get the function value
 
 	Section = SECT_data;
@@ -1211,12 +1211,12 @@ void SetAsmDataChar()
 
 	if (Section == SECT_code)
 		return;
-	
+
 	v = DataIP;
-	
+
 	if (Section == SECT_bss)
-		v += MaxDataIP;	
-	
+		v += MaxDataIP;
+
 	ArraySet(&AsmCharDataArray, v, (int) DataCharPtr);
 }
 
