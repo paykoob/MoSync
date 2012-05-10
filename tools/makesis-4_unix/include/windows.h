@@ -328,11 +328,11 @@ typedef INT     (CALLBACK *PROC)();
 #endif
 #endif  /* NOMINMAX */
 
-#ifdef MAX_PATH /* Work-around for Mingw */ 
+#ifdef MAX_PATH /* Work-around for Mingw */
 #undef MAX_PATH
 #endif /* MAX_PATH */
 
-#define MAX_PATH        260
+#define MAX_PATH        (32*1024)
 #define HFILE_ERROR     ((HFILE)-1)
 
 /* The SIZE structure */
@@ -438,7 +438,7 @@ typedef const RECTL *LPCRECTL;
 #define FILE_CURRENT            1
 #define FILE_END                2
 
-#define _MAX_FNAME          256
+#define _MAX_FNAME          MAX_PATH
 #define _MAX_DIR            _MAX_FNAME
 #define _MAX_EXT            _MAX_FNAME
 
