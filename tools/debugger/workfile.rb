@@ -21,6 +21,7 @@ work.instance_eval do
 	end
 	if(HOST == :linux)
 		@LIBRARIES << "bluetooth"
+		@LIBRARIES << "pthread"
 	end
 	@SPECIFIC_CFLAGS = {
 		"Value.cpp" => " -Wno-float-equal -Wno-sign-compare",

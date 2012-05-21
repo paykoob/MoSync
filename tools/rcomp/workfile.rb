@@ -13,7 +13,7 @@ rcomp.instance_eval do
 	end
 	@SPECIFIC_CFLAGS = {
 		'rcompl.cpp' => ' -Wno-unused-function -Wno-undef',
-		'rcomp.cpp' => ' -Wno-unused-function -Wno-undef',
+		'rcomp.cpp' => ' -Wno-unused-function -Wno-undef -Wno-delete-non-virtual-dtor',
 		'numval.cpp' => ' -Wno-float-equal',
 	}
 	#@LIBRARIES = ['z']

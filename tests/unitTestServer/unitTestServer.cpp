@@ -18,6 +18,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 //listen. use a thread pool.
 
 #include <stdio.h>
+#include <unistd.h>
 #include <vector>
 #include <ThreadPool.h>
 #include <FileStream.h>

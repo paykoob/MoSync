@@ -31,7 +31,7 @@ def setup_common
 			@EXTRA_CPPFLAGS += " -D__USE_FULLSCREEN__"
 		end
 		@LIBRARIES = common_libraries + sound_lib + ["gtk-x11-2.0", "bluetooth", "expat", "freeimage",
-			"ssl", "crypto"]
+			"ssl", "crypto", "dl", "pthread", "gobject-2.0"]
 		@EXTRA_INCLUDES = ["../../../base", ".."]
 
 	elsif(HOST == :darwin)

@@ -20,7 +20,7 @@ work.instance_eval do
 			['libirprops.a', 'libuuid.a']
 		@LIBRARIES = ['wsock32', 'ws2_32']
 	elsif(HOST == :linux) then
-		@LIBRARIES = common_libraries + ['bluetooth']
+		@LIBRARIES = common_libraries + ['bluetooth', 'pthread']
 		@EXTRA_SOURCEFILES << '../../runtimes/cpp/platforms/sdl/mutexImpl.cpp'
 	elsif(HOST == :darwin)
 		@LIBRARIES = common_libraries

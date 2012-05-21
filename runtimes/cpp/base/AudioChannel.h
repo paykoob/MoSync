@@ -48,6 +48,7 @@ public:
      * @param audioSource   Pointer to an audio source, default is NULL
      */
     AudioChannel ( int s, AudioSource* audioSource = NULL );
+		virtual ~AudioChannel() {}
 
     /**
      * Set the channel audio source

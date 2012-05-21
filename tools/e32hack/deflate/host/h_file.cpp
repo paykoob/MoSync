@@ -7,6 +7,7 @@
 #include <io.h>
 #else
 #define O_BINARY 0
+#include <unistd.h>
 #endif
 #include <fcntl.h>
 #include <sys/types.h>
@@ -47,7 +48,7 @@ TInt HFile::Open(const TText * const aFileName, TInt32 * const aFileHandle)
 	}
 	*aFileHandle = hFile;
 	return 0;
-}	
+}
 
 /******************************************************************************/
 TBool HFile::Read(const TInt32 aFileHandle, TAny * const aBuffer, const TUint32 aCount)
@@ -57,7 +58,7 @@ TBool HFile::Read(const TInt32 aFileHandle, TAny * const aBuffer, const TUint32 
 		return EFalse;
 	else
 		return ETrue;
-}  
+}
 
 /******************************************************************************/
 TBool HFile::Seek(const TInt32 aFileHandle, const TUint32 aOffset)
