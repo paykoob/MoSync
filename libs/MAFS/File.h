@@ -423,6 +423,28 @@ int MAFS_getFileSystemChecksum(MAHandle fileSystem);
 */
 int MAFS_extractCurrentFileSystem(const char* destPath);
 
+
+/// Describes a file in a file system image.
+typedef struct MAFS_FILE_DATA {
+	/// Data object containing the file system image.
+	MAHandle h;
+	/// Location of start of file in the data object.
+	int offset;
+	/// Size of file.
+	int size;
+} MAFS_FILE_DATA;
+
+/**
+* Find a file in the current file system and retrieve its metadata.
+*
+* You can then use other MoSync functions to operate on the file data directly.
+* For example, maCreateImageFromData(), maConnWriteFromData(), or maSoundPlay().
+*
+* \return \> 0 on success, \< 0 on error.
+*/
+int MAFS_getFileData(MAFS_FILE_DATA*, const char* filename);
+
+
 /*
 // not implemented yet
 int remove ( const char * filename );

@@ -16,11 +16,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 */
 
 #include <ma.h>
+#include <conprint.h>
 #include <maassert.h>
 #include <MAFS/File.h>
 #include "MAHeaders.h"
 
-int testfwrite()
+static void testfwrite(void)
 {
   FILE * pFile;
   char c;
@@ -31,10 +32,9 @@ int testfwrite()
     putc (c , pFile);
   }
   fclose (pFile);
-  return 0;
 }
 
-int testfopen() {
+static void testfopen(void) {
 	FILE *f;
 	int i;
 	setCurrentFileSystem(RES_BUNDLE, 0);
@@ -48,11 +48,21 @@ int testfopen() {
 			;//int a = 2;
 		}
 	}
-
-	return 0;
 }
 
-int MAMain() {
+static void testGetData(void) {
+	MAFS_FILE_DATA fd;
+	int res;
+
+	setCurrentFileSystem(RES_BUNDLE, 0);
+	res = MAFS_getFileData(&fd, "mafs.data");
+	printf("gfd: %i\n", res);
+	MAASSERT(res > 0);
+	printf("h %i, o %i, s %i\n", fd.h, fd.offset, fd.size);
+}
+
+int MAMain(void) {
+	testGetData();
 	testfopen();
 	testfwrite();
 	return 0;

@@ -643,6 +643,26 @@ static MA_FILE* openRead(const char *filename, int modeFlags) {
  	return file;
 }
 
+int MAFS_getFileData(MAFS_FILE_DATA* fd, const char* filename) {
+	VolumeEntry* volEntry;
+
+	if(!sRoot) {
+		LOG("filesystem not initialized");
+		return -3;
+	}
+
+	volEntry = findFile(filename, sRoot);
+	if(!volEntry) {
+		LOG("couldn't find file");
+		return -2;
+	}
+
+	fd->h = sCurrentFileSystem;
+	fd->offset = volEntry->dataOffset;
+	fd->size = volEntry->dataLength;
+	return 1;
+}
+
 MA_FILE * MA_fopen ( const char * filename, const char * mode ) {
 	int modeFlags = getModeFlags(mode);
 	LOG("fopen('%s', '%s')", filename, mode);

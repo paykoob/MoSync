@@ -14,7 +14,7 @@ work.instance_eval do
 	@SOURCES = [name]
 	@NAME = name
 	@EXTRA_INCLUDES = ['.']
-	@LIBRARIES = ['mautil', 'mtxml']
+	@LIBRARIES = ['mautil', 'mtxml', 'mafs']
 	@EXTRA_LINKFLAGS = ' -datasize=1024000 -heapsize=386000 -stacksize=64000'
 	@PACK_PARAMETERS = ' --s60v3uid E1234512 --debug --permissions "Internet Access"'
 end
