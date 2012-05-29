@@ -43,6 +43,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.Devices.Sensors" />
     <Reference Include="Microsoft.Phone" />
+    <Reference Include="Microsoft.Phone.Controls.Maps, Version=7.0.0.0, Culture=neutral, PublicKeyToken=24eec0d8c86cda1e, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Xna.Framework" />
     <Reference Include="Microsoft.Xna.Framework.GamerServices" />
     <Reference Include="Microsoft.Xna.Framework.Graphics" />
@@ -94,12 +95,15 @@
     <Compile Include="Source\Modules\MoSyncModalDialogModule.cs" />
     <Compile Include="Source\Modules\MoSyncNativeUIModule.cs" />
     <Compile Include="Source\Modules\MoSyncOpenGLESModule.cs" />
+    <Compile Include="Source\Modules\MoSyncOptionsBoxModule.cs" />
     <Compile Include="Source\Modules\MoSyncScreenOrientationModule.cs" />
     <Compile Include="Source\Modules\MoSyncSensorsModule.cs" />
     <Compile Include="Source\Modules\NativeUI\MoSyncActivityIndicator.cs" />
     <Compile Include="Source\Modules\NativeUI\MoSyncAd.cs" />
     <Compile Include="Source\Modules\NativeUI\MoSyncCameraPreview.cs" />
     <Compile Include="Source\Modules\NativeUI\MoSyncDialogView.cs" />
+    <Compile Include="Source\Modules\NativeUI\MoSyncMap.cs" />
+    <Compile Include="Source\Modules\NativeUI\MoSyncMapPin.cs" />
     <Compile Include="Source\Modules\NativeUI\MoSyncPanoramaView.cs" />
     <Compile Include="Source\Modules\NativeUI\MoSyncSearchBar.cs" />
     <Compile Include="Source\Modules\NativeUI\MoSyncStackScreen.cs" />
