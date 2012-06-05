@@ -14,11 +14,7 @@
 # Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
-# load local_config.rb, if it exists.
-lc = "#{File.dirname(__FILE__)}/local_config.rb"
-require lc if(File.exists?(lc))
-
-default_const(:PRINT_FLAG_CHANGES, false)
+require "#{File.dirname(__FILE__)}/config.rb"
 
 # This module contains functions for saving and comparing compile or link flags.
 # execFlags and flagsNeeded require the function "cFlags".

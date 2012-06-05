@@ -16,10 +16,7 @@
 
 require "#{File.dirname(__FILE__)}/util.rb"
 require "#{File.dirname(__FILE__)}/targets.rb"
-
-# load local_config.rb, if it exists.
-lc = "#{File.dirname(__FILE__)}/local_config.rb"
-require lc if(File.exists?(lc))
+require "#{File.dirname(__FILE__)}/config.rb"
 
 # Defines default values for all variables that can be used by individual workfiles.
 module Defaults
@@ -88,7 +85,6 @@ def set_defaults
 
 	# If true, the GCC version number will be added to BUILDDIR names for native projects.
 	# Useful if you often switch between different versions of GCC.
-	default_const(:USE_GCC_VERSION_IN_BUILDDIR_NAME, false)
 	if(USE_GCC_VERSION_IN_BUILDDIR_NAME)
 		builddir_postfix = '_'+@gcc_version_info[:string]
 	else
