@@ -91,6 +91,7 @@ class PipeResourceTask < PipeTask
 end
 
 class PipeGccWork < GccWork
+	def isPipeWork; true; end
 	def gccVersionClass; PipeGccWork; end
 	include GccVersion
 
@@ -102,6 +103,7 @@ class PipeGccWork < GccWork
 	def gccmode; "-S"; end
 	def host_flags;
 		flags = ''
+		#flags << ' -v' if(@GCC_IS_V4)
 		flags += ' -g' #if(CONFIG != '')
 		flags += ' -DUSE_NEWLIB' if(USE_NEWLIB)
 		return flags
@@ -146,5 +148,12 @@ class PipeGccWork < GccWork
 		end
 		@TARGET = pipeTaskClass.new(self, @TARGET_PATH, (all_objects + llo), @FLAGS + @EXTRA_LINKFLAGS)
 		@prerequisites += [@TARGET]
+	end
+
+	def makeGccTask(source, ending)
+		task = super
+		default_const(:DEPEND_ON_GCC, false)
+		task.prerequisites << FileTask.new(self, GCC_DRIVER_NAME) if(DEPEND_ON_GCC)
+		return task
 	end
 end

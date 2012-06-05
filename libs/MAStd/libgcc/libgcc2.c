@@ -62,7 +62,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #ifdef MOSYNC_USE_LIBGCC
 /**
  * Causes a panic to be issued that informs the user that
- * something in the 64 bit emulation failed. This function 
+ * something in the 64 bit emulation failed. This function
  * does not return.
  */
 #define abort() maPanic(0, "64 bit emulation aborted.")
@@ -1116,7 +1116,7 @@ __moddi3 (DWtype u, DWtype v)
   if (vv.s.high < 0)
     vv.ll = -vv.ll;
 
-  (void) __udivmoddi4 (uu.ll, vv.ll, &w);
+  (void) __udivmoddi4 (uu.ll, vv.ll, (UDWtype*)&w);
   if (c)
     w = -w;
 

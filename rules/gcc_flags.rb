@@ -22,7 +22,9 @@ module GccFlags
 def define_cflags
 
 #only valid in GCC 4.3 and later
-gcc43_warnings = " -Wvla -Wlogical-op"
+gcc43_warnings = ''
+gcc43_warnings << ' -Wvla' if(!isPipeWork)
+gcc43_warnings << ' -Wlogical-op'
 
 #valid in both C and C++ in GCC 4.3, but only in C in 4.2 and earlier
 gcc43_c_warnings = " -Wmissing-declarations"

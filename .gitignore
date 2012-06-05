@@ -105,6 +105,7 @@ wormhole.js
 /libs/newlib/libc/sys/mosync/syscalls.S
 
 /libs/Wormhole/jslib/html5
+/libs/Wormhole/jslib/mosync-constants.js
 
 /testPrograms/_masterdump.s
 /testPrograms/temp.s

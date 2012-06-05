@@ -168,6 +168,8 @@ class GccWork < BuildWork
 
 	private
 
+	def isPipeWork; false; end
+
 	include GccFlags
 
 	def setup2
