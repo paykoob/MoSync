@@ -98,7 +98,8 @@ class CompileGccTask < FileTask
 
 		# In certain rare cases (error during preprocess caused by a header file)
 		# gcc may output an empty dependency file, resulting in an empty dependency list for
-		# the object file, which means it will not be recompiled, even though it should be.
+		# the object file, which means it would not be recompiled, even though it should be.
+		# Having gcc output the dependency file to a temporary location fixes the problem.
 		FileUtils.mv(@TEMPDEPFILE, @DEPFILE)
 	end
 

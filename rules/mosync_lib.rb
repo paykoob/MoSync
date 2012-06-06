@@ -23,6 +23,7 @@ require "#{File.dirname(__FILE__)}/dll.rb"
 require "#{File.dirname(__FILE__)}/native_lib.rb"
 require "#{File.dirname(__FILE__)}/pipe.rb"
 require "#{File.dirname(__FILE__)}/arm.rb"
+require "#{File.dirname(__FILE__)}/config.rb"
 
 module MoSyncMod
 	include MoSyncInclude
@@ -85,6 +86,27 @@ class MoSyncArmLibWork < NativeLibWork
 	end
 end
 
+class Mapip2LibTask < NativeLibTask
+	def initialize(work, name, objects, linkflags)
+		super(work, name, objects)
+		@FLAGS = linkflags
+	end
+end
+
+class Mapip2LibWork < PipeGccWork
+	include MoSyncMod
+	def setup
+		set_defaults
+		@COMMON_BUILDDIR = mosync_libdir + "/" + @COMMON_BUILDDIR_NAME + "/"
+		@FLAGS = ''
+		setup_pipe
+		modSetup
+		copyHeaders
+		super
+	end
+	def pipeTaskClass; Mapip2LibTask; end
+end
+
 class PipeLibWork < PipeGccWork
 	include MoSyncMod
 	def setup
@@ -131,7 +153,14 @@ def MoSyncLib.invoke(mod)
 	target :arm do
 		MoSyncLib.inin(MoSyncArmLibWork.new, mod)
 	end
-	target :default => [:pipe]
+	target :mapip2 do
+		MoSyncLib.inin(Mapip2LibWork.new, mod)
+	end
+	if(USE_GNU_BINUTILS)
+		target :default => [:mapip2]
+	else
+		target :default => [:pipe]
+	end
 	target :clean do
 		MoSyncLib.clean(PipeLibWork.new, mod)
 		#MoSyncLib.clean(MoSyncDllWork.new, mod)

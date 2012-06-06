@@ -16,11 +16,7 @@ target :arm do
 end
 
 target :default do
-	if(USE_ARM)
-		Work.invoke_subdirs(SUBDIRS, 'arm')
-	else
-		Work.invoke_subdirs(SUBDIRS, 'pipe')
-	end
+	Work.invoke_subdirs(SUBDIRS)
 end
 
 target :clean do

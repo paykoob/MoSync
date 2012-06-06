@@ -87,20 +87,53 @@ class PipeResourceTask < PipeTask
 	end
 end
 
+module PipeGccMod
+	def gccmode; '-S'; end
+	def mod_flags; ' -g'; end
+	def builddir_prefix
+		if(USE_NEWLIB)
+			return 'newlib_'
+		else
+			return 'pipe_'
+		end
+	end
+	def object_ending; '.s'; end
+	def pipeTaskClass; PipeTask; end
+end
+
+module Mapip2GccMod
+	def gccmode; ''; end
+	def mod_flags; ''; end
+	def builddir_prefix
+		if(USE_NEWLIB)
+			return 'mapip2_newlib_'
+		else
+			return 'mapip2_'
+		end
+	end
+	def object_ending; '.o'; end
+	def pipeTaskClass; NativeGccLinkTask; end
+end
+
 class PipeGccWork < GccWork
 	def isPipeWork; true; end
 	def gccVersionClass; PipeGccWork; end
 	include GccVersion
 
+	if(USE_GNU_BINUTILS)
+		include Mapip2GccMod
+	else
+		include PipeGccMod
+	end
+
 	def gcc
 		return GCC_DRIVER_NAME
 	end
 
-	def gccmode; "-S"; end
 	def host_flags;
 		flags = ''
 		flags << GCC_PIPE_EXTRA_FLAGS
-		flags += ' -g' #if(CONFIG != '')
+		flags << mod_flags
 		flags += ' -DUSE_NEWLIB' if(USE_NEWLIB)
 		return flags
 	end
@@ -113,21 +146,12 @@ class PipeGccWork < GccWork
 	def set_defaults
 		default(:BUILDDIR_PREFIX, "")
 		default(:COMMOM_BUILDDDIR_PREFIX, "")
-		if(USE_NEWLIB)
-			@BUILDDIR_PREFIX += "newlib_"
-			@COMMOM_BUILDDDIR_PREFIX += "newlib_"
-		else
-			@BUILDDIR_PREFIX += "pipe_"
-			@COMMOM_BUILDDDIR_PREFIX += "pipe_"
-		end
+		@BUILDDIR_PREFIX << builddir_prefix
+		@COMMOM_BUILDDDIR_PREFIX << builddir_prefix
 		super
 	end
 
 	private
-
-	def object_ending; ".s"; end
-
-	def pipeTaskClass; PipeTask; end
 
 	def setup3(all_objects, have_cppfiles)
 		raise hell if(@gcc_version_info[:arm])
