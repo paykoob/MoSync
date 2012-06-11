@@ -100,7 +100,12 @@ class CompileGccTask < FileTask
 		# gcc may output an empty dependency file, resulting in an empty dependency list for
 		# the object file, which means it would not be recompiled, even though it should be.
 		# Having gcc output the dependency file to a temporary location fixes the problem.
-		FileUtils.mv(@TEMPDEPFILE, @DEPFILE)
+		if(File.exist?(@TEMPDEPFILE))
+			FileUtils.mv(@TEMPDEPFILE, @DEPFILE)
+		else
+			# Some .s files generate no dependency file when compiled.
+			FileUtils.touch(@DEPFILE)
+		end
 	end
 
 	include FlagsChanged
@@ -178,9 +183,11 @@ class GccWork < BuildWork
 		cfiles = collect_files(".c")
 		cppfiles = collect_files(".cpp") + collect_files(".cc")
 
-		if(USE_ARM)
-			@CFLAGS_MAP['.S'] = @CFLAGS + host_flags
-			sfiles = collect_files('.S')
+		sExt = '.S' if(USE_ARM)
+		sExt = '.s' if(USE_GNU_BINUTILS)
+		if(sExt)
+			@CFLAGS_MAP[sExt] = @CFLAGS + host_flags
+			sfiles = collect_files(sExt)
 			cfiles += sfiles
 		end
 

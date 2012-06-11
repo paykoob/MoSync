@@ -11,5 +11,6 @@ default_const(:GCC_PIPE_EXTRA_FLAGS, '')
 default_const(:PRINT_FLAG_CHANGES, false)
 default_const(:PRINT_GCC_VERSION_INFO, false)
 default_const(:GCC_DRIVER_NAME, mosyncdir + "/bin/xgcc")
-default_const(:DEPEND_ON_GCC, false)
+# array of strings, filenames.
+default_const(:PIPE_EXTRA_DEPENDENCIES, [])
 default_const(:USE_GNU_BINUTILS, false)

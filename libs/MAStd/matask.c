@@ -190,20 +190,20 @@ typedef struct
 
 int maRunTaskInit(int SP, int p0, int p1)
 {
-	ASM("push rt,d7			")		// Save main context
+	ASM("push ra,s7			")		// Save main context
 	ASM("ld	[&_MainSP],sp	")
 
 	ASM("ld	sp, i0			")		// retrieve task context
-	ASM("pop	rt,d7		")
+	ASM("pop	ra,s7		")
 
-	ASM("ld	i0,i1			")		// Load up parameters
-	ASM("ld	i1,i2			")
-	ASM("ld	i2,i3			")
+	ASM("ld	p0,p1			")		// Load up parameters
+	ASM("ld	p1,p2			")
+	ASM("ld	p2,p3			")
 
-	ASM("ld	i3,rt			")		// Save task address in i3
+	ASM("ld	p3,ra			")		// Save task address in i3
 
-	ASM("ld	rt,&_maKillTask	")		// Set up kill task as a return address
-	ASM("jp	i3				")		// Run Task
+	ASM("ld	ra,_maKillTask	")		// Set up kill task as a return address
+	ASM("jp	p3				")		// Run Task
 
 	return 0;	//never gonna happen
 }
@@ -215,11 +215,11 @@ int maRunTaskInit(int SP, int p0, int p1)
 
 int maRunTask(int SP)
 {
-	ASM("push rt,d7			")		// Save main context
+	ASM("push ra,s7			")		// Save main context
 	ASM("ld	[&_MainSP],sp	")
 
-	ASM("ld	sp, i0			")		// retrieve task context
-	ASM("pop rt,d7			")
+	ASM("ld	sp, p0			")		// retrieve task context
+	ASM("pop ra,s7			")
 
 	ASM("ret				")		// Run task
 
@@ -233,11 +233,11 @@ int maRunTask(int SP)
 
 void maYield(void)
 {
-	ASM("push rt,d7			");		// Save task context
-	ASM("ld	r14,sp			");
+	ASM("push ra,s7			");		// Save task context
+	ASM("ld	r0,sp			");
 
 	ASM("ld	sp,[&_MainSP]	");		// Retrieve main context
-	ASM("pop rt,d7			");
+	ASM("pop ra,s7			");
 	ASM("ret				");
 }
 
@@ -248,10 +248,10 @@ void maYield(void)
 
 void maKillTask(void)
 {
-	ASM("ld	r14,zr			");		// return sp as null
+	ASM("ld	r0,zr			");		// return sp as null
 
 	ASM("ld	sp,[&_MainSP]	");		// Retrieve main context
-	ASM("pop rt,d7			");
+	ASM("pop ra,s7			");
 	ASM("ret				");
 }
 

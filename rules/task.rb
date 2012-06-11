@@ -163,6 +163,7 @@ class BuildWork < Work
 		@prerequisites << DirTask.new(self, @BUILDDIR)
 		if(@TARGETDIR)
 			@prerequisites << DirTask.new(self, @TARGETDIR)
+			@prerequisites << DirTask.new(self, @TARGETDIR + '/' + @BUILDDIR)
 		end
 		@prerequisites += @PREREQUISITES
 		setup2

@@ -41,7 +41,11 @@ mod.class_eval do
 			@EXTRA_CFLAGS = " -DMOSYNCDEBUG"
 		end
 
-		@EXTRA_OBJECTS = [FileTask.new(self, "crtlib.s"), FileTask.new(self, "mastack.s")]
+		if(USE_GNU_BINUTILS)
+			@IGNORED_FILES << 'crt0.s'
+		else
+			@EXTRA_OBJECTS = [FileTask.new(self, "crtlib.s"), FileTask.new(self, "mastack.s")]
+		end
 		@prerequisites << CopyFileTask.new(self, mosync_include + "/" + @INSTALL_INCDIR + "/new",
 			FileTask.new(self, "../libsupc++/new"))
 		@prerequisites << CopyFileTask.new(self, mosync_include + "/" + @INSTALL_INCDIR + "/macpp.h",

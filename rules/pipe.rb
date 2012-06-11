@@ -102,7 +102,7 @@ module PipeGccMod
 end
 
 module Mapip2GccMod
-	def gccmode; ''; end
+	def gccmode; '-c'; end
 	def mod_flags; ''; end
 	def builddir_prefix
 		if(USE_NEWLIB)
@@ -172,7 +172,9 @@ class PipeGccWork < GccWork
 
 	def makeGccTask(source, ending)
 		task = super
-		task.prerequisites << FileTask.new(self, GCC_DRIVER_NAME) if(DEPEND_ON_GCC)
+		PIPE_EXTRA_DEPENDENCIES.each do |d|
+			task.prerequisites << FileTask.new(self, d)
+		end
 		return task
 	end
 end

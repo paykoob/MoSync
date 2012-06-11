@@ -2,9 +2,9 @@
 //								MoSync asm routines
 //********************************************************************************
 
-	.sourcefile 'crtlib.s'
+//	.sourcefile 'crtlib.s'
 
-	.line 1
+//	.line 1
 
 //****************************************
 //				Globals
@@ -14,196 +14,51 @@
 	.globl	__memtop
 	.align 4
 __memtop:
-	.word	0
-	
+	.long	0
+
 	.globl	__stacktop
 __stacktop:
-	.word	0
+	.long	0
 
 //****************************************
 //			Start up code
 //****************************************
 
-	.code
+	.text
 	.align 4
 	.global crt0_startup
-
-	.set mainok=0
 
 	// sp: top of stack
 	// i0: memory size
 	// i1: stack size
 	// i2: heap size
-.func crt0_startup, 3, void
-	.line 1
+.func crt0_startup
 
-	ld	[&__memtop],i0		// Save top of memory
-	
+	ld	[&__memtop],p0		// Save top of memory
+
 	sub sp, #16			// move stack down memory 16 bytes
 	ld	[&__stacktop],sp	// Save top of memory
-	ld	i0,sp
+	ld	p0,sp
 
-	sub i0,i1			// make i0 into heap_top
-	sub i0,i2			// i0 is now start of heap
-	ld  i1,i2			// make i1 into heap_size
+	sub p0,p1			// make i0 into heap_top
+	sub p0,p2			// i0 is now start of heap
+	ld  p1,p2			// make i1 into heap_size
 
-.ifdefglobal _override_heap_init_crt0
-{		
 	call &_override_heap_init_crt0
-}
-.ifndefglobal _override_heap_init_crt0
-{
-	call &_ansi_heap_init_crt0	// Heap init
-}
 
 	call &_resource_selector
 
-	ld	i0,&__global_ctor_chain 		//constructor chain
+	ld	p0,__global_ctor_chain 		//constructor chain
 	call &_crt_tor_chain
 
-// Deal with different MAMain entry symbols
-
-.ifdefglobal _MATestMain
-{		
-	call &_MATestMain
-	.set mainok=mainok+1
-}
-
-.ifdefglobal __Z10MATestMainv
-{		
-	call &__Z10MATestMainv
-	.set mainok=mainok+1
-}
-
-.ifdefglobal __Z10MATestMainiPPc
-{		
-	call &__Z10MATestMainiPPc
-	.set mainok=mainok+1
-}
-
-.if ( mainok == 0 )
-{
-	.ifdefglobal _MAMain
-	{		
-		call &_MAMain
-		.set mainok=mainok+1
-	}
-
-	.ifdefglobal __Z6MAMainv
-	{
-		call &__Z6MAMainv
-		.set mainok=mainok+1
-	}
-
-	.ifdefglobal __Z6MAMainiPPc
-	{
-		call &__Z6MAMainiPPc
-		.set mainok=mainok+1
-	}
-}
-
-.if ( __final__ )
-{	
-	.if ( mainok == 0 )
-	{
-		.print "Unresolved entry point: MAMain"
-		.exit
-	}
-
-	.if ( mainok > 1 )
-	{
-		.print "Multiple entry points: MAMain"
-		.exit
-	}
-}
+	call &_MAMain
 
 crt_exit:
-	ld	[sp,0], r14		// save return value
+	ld	[sp,0], r0		// save return value
 
-	ld	i0,&__global_dtor_chain			// destructor chain
+	ld	p0,__global_dtor_chain			// destructor chain
 	call &_crt_tor_chain
 
-	ld	i0, [sp,0]
+	ld	p0, [sp,0]
 	call &_maExit
 	ret
-
-//****************************************
-//			Start up code
-//****************************************
-/*
-	.code
-	.align 4
-	.global crt0_startup_basic
-
-.func crt0_startup_basic
-	.line 2
-
-	ld	[&__memtop],i0		// Save top of memory
-	
-	sub i0, #16				// move stack down memory 16 bytes
-	ld	[&__stacktop],i0	// Save top of memory
-
-	ld  sp,i0			// set stack top
-
-	call &MAMain
-	ld	[sp,0], r14		// save return value
-
-	ld	i0, [sp,0]
-	call &maExit
-	ret
-*/
-/*
-//****************************************
-//			  setjmp
-//****************************************
-
-//.if	(__java_static == 0)
-//{
-	.globl setjmp
-
-.func setjmp
-	.line 3
-	ld	[i0,0],sp
-	ld	[i0,4],rt
-	ld	[i0,8],fr
-	ld	[i0,12],d0
-	ld	[i0,16],d1
-	ld	[i0,20],d2
-	ld	[i0,24],d3
-	ld	[i0,28],d4
-	ld	[i0,32],d5
-	ld	[i0,36],d6
-	ld	[i0,40],d7
-	xor	zr,zr
-	ld	r14, zr
-	ret
-
-//}
-
-//****************************************
-//			longjmp
-//****************************************
-
-//.if	(__java_static == 0)
-//{
-	.globl longjmp
-
-.func longjmp
-	.line 4
-	ld	sp,[i0,0]
-	ld	rt,[i0,4]
-	ld	fr,[i0,8]
-	ld	d0,[i0,12]
-	ld	d1,[i0,16]
-	ld	d2,[i0,20]
-	ld	d3,[i0,24]
-	ld	d4,[i0,28]
-	ld	d5,[i0,32]
-	ld	d6,[i0,36]
-	ld	d7,[i0,40]
-	ld	r14,i1
-	ret
-	call &maExit
-
-//}
-*/

@@ -105,6 +105,13 @@ class Mapip2LibWork < PipeGccWork
 		super
 	end
 	def pipeTaskClass; Mapip2LibTask; end
+
+	def setup3(all_objects, have_cppfiles)
+		targetdir = "#{mosync_libdir}/#{@BUILDDIR_NAME}"
+		@prerequisites << DirTask.new(self, targetdir)
+		@TARGET_PATH = "#{targetdir}/#{@NAME}.lib"
+		super(all_objects, have_cppfiles)
+	end
 end
 
 class PipeLibWork < PipeGccWork

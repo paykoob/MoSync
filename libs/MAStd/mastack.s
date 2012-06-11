@@ -1,11 +1,9 @@
-.sourcefile 'mastack.s'
-.line 1
 
-.code
+.text
 .align 4
 .global _getStackTop
-.func _getStackTop, 0, void
+.func _getStackTop
 
-	ld r14, fr
-	sub r14, #8
+	ld r0, fp
+	sub r0, #8
 	ret
