@@ -14,10 +14,6 @@
 # Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
-require "#{File.dirname(__FILE__)}/error.rb"
-require "#{File.dirname(__FILE__)}/host.rb"
-require 'singleton'
-
 $stdout.sync = true
 $stderr.sync = true
 
@@ -43,6 +39,10 @@ end
 def get_class_var(c, sym)
 	c.send(:class_variable_get, sym)
 end
+
+require "#{File.dirname(__FILE__)}/error.rb"
+require "#{File.dirname(__FILE__)}/host.rb"
+require 'singleton'
 
 class String
 	def ext(newEnd)
