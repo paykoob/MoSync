@@ -193,7 +193,7 @@ int maRunTaskInit(int SP, int p0, int p1)
 	ASM("push ra,s7			")		// Save main context
 	ASM("ld	[&_MainSP],sp	")
 
-	ASM("ld	sp, i0			")		// retrieve task context
+	ASM("ld	sp, p0			")		// retrieve task context
 	ASM("pop	ra,s7		")
 
 	ASM("ld	p0,p1			")		// Load up parameters
