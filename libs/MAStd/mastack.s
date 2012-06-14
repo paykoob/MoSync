@@ -1,8 +1,7 @@
 
 .text
-.align 4
 .global _getStackTop
-.func _getStackTop
+_getStackTop:
 
 	ld r0, fp
 	sub r0, #8

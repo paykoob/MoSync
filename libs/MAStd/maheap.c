@@ -26,6 +26,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define HAVE_STACK_DUMP 0
 #endif
 
+struct MA_STACK_FRAME* nextFrame(struct MA_STACK_FRAME* frame) {
+	char* bp = (char*)(frame->_nextFrame);
+	if(!bp)
+		return NULL;
+	else
+		return (struct MA_STACK_FRAME*)(bp - 8);
+}
+
 malloc_handler gMallocHandler = default_malloc_handler;
 malloc_hook gMallocHook = NULL;
 free_hook gFreeHook = NULL;

@@ -39,6 +39,7 @@ _masterdump.s
 data_section.bin
 rebuild.build.cs
 rebuild.build.cpp
+.gdbinit
 
 config_platform.h
 
@@ -103,6 +104,8 @@ wormhole.js
 
 /libs/MAStd/syscalls.S
 /libs/newlib/libc/sys/mosync/syscalls.S
+/libs/MAStd/mapip2_syscalls.s
+/libs/newlib/libc/sys/mosync/mapip2_syscalls.s
 
 /libs/Wormhole/jslib/html5
 /libs/Wormhole/jslib/mosync-constants.js

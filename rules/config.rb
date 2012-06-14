@@ -14,4 +14,5 @@ default_const(:GCC_DRIVER_NAME, mosyncdir + "/bin/xgcc")
 # array of strings, filenames.
 default_const(:PIPE_EXTRA_DEPENDENCIES, [])
 default_const(:USE_GNU_BINUTILS, false)
+default_const(:LD_EXTRA_DEPENDENCIES, [])
 default_const(:EXIT_ON_ERROR, false)

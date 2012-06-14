@@ -18,6 +18,7 @@ require "#{File.dirname(__FILE__)}/gcc.rb"
 require "#{File.dirname(__FILE__)}/mosync_util.rb"
 require "#{File.dirname(__FILE__)}/targets.rb"
 require "#{File.dirname(__FILE__)}/config.rb"
+require "#{File.dirname(__FILE__)}/native_link.rb"
 
 module MoSyncInclude
 	def mosync_include; "#{mosyncdir}/include" + sub_include; end
@@ -101,6 +102,17 @@ module PipeGccMod
 	def pipeTaskClass; PipeTask; end
 end
 
+class Mapip2LinkTask < NativeGccLinkTask
+	def initialize(work, name, objects, linkflags)
+		super(work, name, objects, GCC_DRIVER_NAME)
+		#@FLAGS = linkflags
+		@FLAGS = ' -v -nodefaultlibs -nostartfiles -Wl,--warn-common'
+		LD_EXTRA_DEPENDENCIES.each do |d|
+			@prerequisites << FileTask.new(self, d)
+		end
+	end
+end
+
 module Mapip2GccMod
 	def gccmode; '-c'; end
 	def mod_flags; ''; end
@@ -112,7 +124,7 @@ module Mapip2GccMod
 		end
 	end
 	def object_ending; '.o'; end
-	def pipeTaskClass; NativeGccLinkTask; end
+	def pipeTaskClass; Mapip2LinkTask; end
 end
 
 class PipeGccWork < GccWork

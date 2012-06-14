@@ -42,6 +42,7 @@ static void outputCpp(const Interface& maapi);
 static void outputAsmConfigLst(const Interface& maapi);
 static void outputAsmConfigH(const Interface& maapi);
 static void outputSyscallArmAsm(const Interface& maapi);
+static void outputSyscallMapip2Asm(const Interface& maapi);
 static void outputDllDefine(const Interface& maapi);
 static void outputInvokeSyscallCpp(const Interface& maapi);
 static void outputInvokeSyscallArmRecompiler(const Interface& maapi);
@@ -161,9 +162,11 @@ int main() {
 		copy("Output/maapi.h", "../../libs/MAStd/");
 		copy("Output/syscalls.S", "../../libs/MAStd/");
 		copy("maapi_defs.h", "../../libs/MAStd/");
+		copy("Output/mapip2_syscalls.s", "../../libs/MAStd/");
 		copy("Output/maapi.h", "../../libs/newlib/libc/sys/mosync/");
 		copy("Output/syscalls.S", "../../libs/newlib/libc/sys/mosync/");
 		copy("maapi_defs.h", "../../libs/newlib/libc/sys/mosync/");
+		copy("Output/mapip2_syscalls.s", "../../libs/newlib/libc/sys/mosync/");
 
 		// Create directory for binary files
 		_mkdir((MOSYNCDIR + "/bin").c_str());
@@ -716,6 +719,7 @@ static void outputMaapiCSharp(const vector<string>& ixs, const Interface& maapi)
  */
 static void outputRuntimeBuilderFiles(const Interface& maapi) {
 	outputSyscallArmAsm(maapi);
+	outputSyscallMapip2Asm(maapi);
 	outputCpp(maapi);
 	outputAsmConfigLst(maapi);
 	outputAsmConfigH(maapi);
@@ -782,6 +786,23 @@ static void outputSyscallArmAsm(const Interface& maapi) {
 			".global "<<f.name<<"\n"
 			<<f.name<<":\n"
 			"\tswi "<<f.number<<"\n"
+		;
+	}
+}
+
+static void outputSyscallMapip2Asm(const Interface& maapi) {
+	ofstream stream("Output/mapip2_syscalls.s");
+
+	stream <<
+		".text\n"
+	;
+
+	for(size_t i=0; i<maapi.functions.size(); i++) {
+		const Function& f(maapi.functions[i]);
+		stream <<
+			".global _"<<f.name<<"\n"
+			"_"<<f.name<<":\n"
+			"\tsyscall "<<f.number<<"\n"
 		;
 	}
 }

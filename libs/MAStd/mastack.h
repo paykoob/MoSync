@@ -40,14 +40,7 @@ typedef struct MA_STACK_FRAME {
 struct MA_STACK_FRAME* getStackTop(void);
 
 /// Returns the next stack frame. Will return NULL if this is the last stack frame.
-__inline struct MA_STACK_FRAME* nextFrame(struct MA_STACK_FRAME* frame);
-__inline struct MA_STACK_FRAME* nextFrame(struct MA_STACK_FRAME* frame) {
-	char* bp = (char*)(frame->_nextFrame);
-	if(!bp)
-		return NULL;
-	else
-		return (struct MA_STACK_FRAME*)(bp - 8);
-}
+struct MA_STACK_FRAME* nextFrame(struct MA_STACK_FRAME* frame);
 
 #ifdef __cplusplus
 }	//extern "C"
