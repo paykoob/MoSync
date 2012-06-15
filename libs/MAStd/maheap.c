@@ -176,6 +176,11 @@ block_size_hook set_block_size_hook(block_size_hook new) {
 //				NewPtr
 //****************************************
 
+void override_heap_init_crt0(char* start, int length)
+{
+	ansi_heap_init_crt0(start, length);
+}
+
 void ansi_heap_init_crt0(char *start, int length)
 {
 	int res;

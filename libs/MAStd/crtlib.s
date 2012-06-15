@@ -32,7 +32,7 @@ __stacktop:
 	// i0: memory size
 	// i1: stack size
 	// i2: heap size
-.func crt0_startup
+crt0_startup:
 
 	ld	[&__memtop],p0		// Save top of memory
 
@@ -48,16 +48,16 @@ __stacktop:
 
 	call &_resource_selector
 
-	ld	p0,__global_ctor_chain 		//constructor chain
-	call &_crt_tor_chain
+//	ld	p0,__global_ctor_chain 		//constructor chain
+//	call &_crt_tor_chain
 
 	call &_MAMain
 
 crt_exit:
 	ld	[sp,0], r0		// save return value
 
-	ld	p0,__global_dtor_chain			// destructor chain
-	call &_crt_tor_chain
+//	ld	p0,__global_dtor_chain			// destructor chain
+//	call &_crt_tor_chain
 
 	ld	p0, [sp,0]
 	call &_maExit

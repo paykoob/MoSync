@@ -42,6 +42,13 @@ mod.class_eval do
 			@SOURCES << 'libc/sys/mosync/libgcc'
 		end
 
+		if(USE_GNU_BINUTILS)
+			@IGNORED_FILES << 'crtlib.s'
+			@EXTRA_SOURCEFILES << '../MAStd/crtlib.s'
+		else
+			@EXTRA_OBJECTS = [FileTask.new(self, 'libc/sys/mosync/crtlib.s')]
+		end
+
 		@IGNORED_FILES << 'engine.c'
 		@IGNORED_FILES << 'rename.c'
 
@@ -95,8 +102,6 @@ mod.class_eval do
 			"regcomp.c" => " -Wno-char-subscripts",
 			"mktemp.c" => " -DHAVE_MKDIR",
 		}
-
-		@EXTRA_OBJECTS = [FileTask.new(self, "libc/sys/mosync/crtlib.s")]
 
 		# copy subdirs
 		copyHeaderDir("sys")

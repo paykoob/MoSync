@@ -39,7 +39,7 @@ typedef __gnuc_va_list va_list;
 * Sets the va parameter to the first parameter
 */
 
-#define va_start(v,l) __builtin_stdarg_start((v),l)
+#define va_start(v,l) __builtin_va_start((v),l)
 
 /**
 * va_end

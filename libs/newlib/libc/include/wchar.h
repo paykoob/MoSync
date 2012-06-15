@@ -24,7 +24,7 @@
 # define WEOF ((wint_t)-1)
 #endif
 
-#ifndef __arm__
+#if !defined(__arm__) && !defined(mapip2)
 
 #ifndef WCHAR_MIN
 #define WCHAR_MIN 0
