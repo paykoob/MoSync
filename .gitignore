@@ -119,6 +119,7 @@ wormhole.js
 
 /runtimes/cpp/core/invoke_syscall_arm_recompiler.h
 /runtimes/cpp/core/invoke_syscall_cpp.h
+/runtimes/cpp/core/gen-opcodes.h
 
 /runtimes/cpp/platforms/sdl/mosynclib/mosynclib.def
 /runtimes/cpp/platforms/sdl/MoRE/filesystem/*

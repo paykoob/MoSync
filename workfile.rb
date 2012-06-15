@@ -78,6 +78,15 @@ end
 SKINS = CopyDirWork.new('skins')
 RULES = CopyDirWork.new('rules')
 
+GEN_OPCODES = FileTask.new(nil, 'runtimes/cpp/core/gen-opcodes.h')
+GEN_OPCODES.instance_eval do
+	@gen = 'runtimes/cpp/core/gen-opcodes.rb'
+	@prerequisites << FileTask.new(nil, @gen)
+	def execute
+		sh "ruby #{@gen} ccore #{@NAME}"
+	end
+end
+
 class ExtensionIncludeWork < Work
 	def setup
 		extIncDir = mosyncdir + '/ext-include'
@@ -104,6 +113,7 @@ EXTENSION_INCLUDES = ExtensionIncludeWork.new
 target :base => [SKINS, RULES] do
 	SKINS.invoke
 	RULES.invoke
+	GEN_OPCODES.invoke
 	Work.invoke_subdirs(PRE_DIRS)
 	#Work.invoke_subdir("tools/WrapperGenerator", "compile")
 	Work.invoke_subdir("tools/idl2", "compile")

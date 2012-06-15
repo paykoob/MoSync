@@ -83,7 +83,19 @@ if(mode == 'cgen')
 		end
 		cgen.puts '))'
 	end
-#elsif(mode == 'ccore')
+elsif(mode == 'ccore')
+	open(filename, 'w') do |cgen|
+		i = 0
+		cgen.puts '#ifndef GEN_OPCODES_H'
+		cgen.puts '#define GEN_OPCODES_H'
+		cgen.puts
+		OPCODES.each do |o|
+			cgen.puts "static const int OP_#{o.to_s.upcase} = #{i};"
+			i += 1
+		end
+		cgen.puts
+		cgen.puts '#endif	//GEN_OPCODES_H'
+	end
 else
 	raise "Invalid mode: #{mode}"
 end
