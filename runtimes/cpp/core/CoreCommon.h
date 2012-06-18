@@ -24,72 +24,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define INSTRUCTION_MEMORY_START 0x40000000
 #define ADDRESS_MASK 0x3fffffff
 
-//****************************************
-//		 Instruction descripters
-//****************************************
-#define INSTRUCTIONS(m)\
-	m(PUSH)\
-	m(POP)\
-	m(CALL)\
-	m(CALLI)\
-	m(LDB)\
-	m(STB)\
-	m(LDH)\
-	m(STH)\
-	m(LDW)\
-	m(STW)\
-	m(LDI)\
-	m(LDR)\
-	m(ADD)\
-	m(ADDI)\
-	m(MUL)\
-	m(MULI)\
-	m(SUB)\
-	m(SUBI)\
-	m(AND)\
-	m(ANDI)\
-	m(OR)\
-	m(ORI)\
-	m(XOR)\
-	m(XORI)\
-	m(DIVU)\
-	m(DIVUI)\
-	m(DIV)\
-	m(DIVI)\
-	m(SLL)\
-	m(SLLI)\
-	m(SRA)\
-	m(SRAI)\
-	m(SRL)\
-	m(SRLI)\
-	m(NOT)\
-	m(NEG)\
-	m(RET)\
-	m(JC_EQ)\
-	m(JC_NE)\
-	m(JC_GE)\
-	m(JC_GEU)\
-	m(JC_GT)\
-	m(JC_GTU)\
-	m(JC_LE)\
-	m(JC_LEU)\
-	m(JC_LT)\
-	m(JC_LTU)\
-	m(JPI)\
-	m(JPR)\
-	m(XB)\
-	m(XH)\
-	m(SYSCALL)\
-	m(CASE)\
-	m(FAR)
-
-#define ENUM_INSTRUCTION_ELEM(inst) _ ## inst,
-enum
-{
-	_NUL = 0,
-	INSTRUCTIONS(ENUM_INSTRUCTION_ELEM)
-	_ENDOP
-};
+#include "gen-opcodes.h"
 
 //****************************************
 // 			Register enums

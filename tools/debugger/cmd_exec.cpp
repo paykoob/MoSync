@@ -175,7 +175,7 @@ void skipBreak() {
 //******************************************************************************
 
 void exec_next_instruction(const string& args) {
-	//NOARGS; 
+	//NOARGS;
 	//eclipse seems to send 1 as an argument...
 	if(args.size() && args!=string("1")) {
 		error("Wrong arguments");
@@ -270,13 +270,11 @@ void StubConnection::interruptHit() {
 //******************************************************************************
 // misc
 //******************************************************************************
-	
+
 static int callLen(int pc) {
-	if(gMemCs[pc] == _CALL) {
+	if(gMemCs[pc] == OP_CALLR) {
 		return 2;
-	} else if(gMemCs[pc] == _CALLI) {
-		return 3;
-	} else if(gMemCs[pc] == _FAR && gMemCs[pc + 1] == _CALLI) {
+	} else if(gMemCs[pc] == OP_CALLI) {
 		return 5;
 	} else {
 		return 0;
@@ -461,7 +459,7 @@ void exec_until(const string& args) {
 			return;
 		}
 	}
-	
+
 	if(addresses.size()==0) {
 		error("No valid address found.");
 		return;
@@ -478,10 +476,10 @@ void exec_until(const string& args) {
 
 static ExpressionTree* sReturnTree;
 static void finishStopRetValueEvaluated(const Value* value, const char *err) {
-	if(err) { 
+	if(err) {
 		oprintf("\n");
-		error("%s", err); 
-		return; 
+		error("%s", err);
+		return;
 	}
 	oprintf(",gdb-result-var=\"$1\",return-value=\"%s\"", getValue(value->getTypeBase(),
 		value->getDataAddress(), TypeBase::eNatural).c_str());
@@ -497,7 +495,7 @@ static bool finishStop() {
 	ASSERT_REG;
 	oprintf("*stopped,reason=\"function-finished\",frame={");
 	oprintFrame(r.pc);
-	
+
 	if(sReturnTree) {
 		stackEvaluateExpressionTree(sReturnTree, -1, finishStopRetValueEvaluated, false);
 	} else {

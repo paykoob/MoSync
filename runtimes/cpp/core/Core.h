@@ -105,8 +105,7 @@ namespace Core {
 
 		byte* mem_cs;
 		int* mem_ds;
-		int* mem_cp;
-		
+
 #if defined(_android)
 		JNIEnv* mJniEnv;
 		jobject mJThis;
@@ -140,7 +139,7 @@ namespace Core {
 		void logStateChange(int ip);
 #endif
 		void invokeSysCall(int id);
-		
+
 	};
 
 	class Application;
@@ -191,7 +190,7 @@ namespace Core {
 	const char* GetValidatedStr(const VMCore* core, int address);
 	const wchar* GetValidatedWStr(const VMCore* core, int address);
 	void* GetCustomEventPointer(VMCore* core);
-	
+
 }
 
 #ifndef SYMBIAN

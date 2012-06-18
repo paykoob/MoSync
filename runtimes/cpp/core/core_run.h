@@ -241,60 +241,34 @@ VMLOOP_LABEL
 
 		OPC(RET)
 			fakePop();
-		JMP_GENERIC(REG(REG_rt));
+			JMP_GENERIC(REG(REG_rt));
 		EOP;
 
-		OPC(CALL)
+		OPC(CALLR)
 			FETCH_RD
 			CALL_RD
 			fakePush(REG(REG_rt), RD);
 		EOP;
 		OPC(CALLI)
-			FETCH_IMM16
+			FETCH_CONST
 			CALL_IMM
 			fakePush(REG(REG_rt), IMM);
 		EOP;
 
-		OPC(JC_EQ) 	FETCH_RD_RS_ADDR16	if (RD == RS)	{ JMP_IMM; } 	EOP;
-		OPC(JC_NE)	FETCH_RD_RS_ADDR16	if (RD != RS)	{ JMP_IMM; }	EOP;
-		OPC(JC_GE)	FETCH_RD_RS_ADDR16	if (RD >= RS)	{ JMP_IMM; }	EOP;
-		OPC(JC_GT)	FETCH_RD_RS_ADDR16	if (RD >  RS)	{ JMP_IMM; }	EOP;
-		OPC(JC_LE)	FETCH_RD_RS_ADDR16	if (RD <= RS)	{ JMP_IMM; }	EOP;
-		OPC(JC_LT)	FETCH_RD_RS_ADDR16	if (RD <  RS)	{ JMP_IMM; }	EOP;
+		OPC(JC_EQ) 	FETCH_RD_RS_CONST	if (RD == RS)	{ JMP_IMM; } 	EOP;
+		OPC(JC_NE)	FETCH_RD_RS_CONST	if (RD != RS)	{ JMP_IMM; }	EOP;
+		OPC(JC_GE)	FETCH_RD_RS_CONST	if (RD >= RS)	{ JMP_IMM; }	EOP;
+		OPC(JC_GT)	FETCH_RD_RS_CONST	if (RD >  RS)	{ JMP_IMM; }	EOP;
+		OPC(JC_LE)	FETCH_RD_RS_CONST	if (RD <= RS)	{ JMP_IMM; }	EOP;
+		OPC(JC_LT)	FETCH_RD_RS_CONST	if (RD <  RS)	{ JMP_IMM; }	EOP;
 
-		OPC(JC_LTU)	FETCH_RD_RS_ADDR16	if (RDU <  RSU)	{ JMP_IMM; }	EOP;
-		OPC(JC_GEU)	FETCH_RD_RS_ADDR16	if (RDU >= RSU)	{ JMP_IMM; }	EOP;
-		OPC(JC_GTU)	FETCH_RD_RS_ADDR16	if (RDU >  RSU)	{ JMP_IMM; }	EOP;
-		OPC(JC_LEU)	FETCH_RD_RS_ADDR16	if (RDU <= RSU)	{ JMP_IMM; }	EOP;
+		OPC(JC_LTU)	FETCH_RD_RS_CONST	if (RDU <  RSU)	{ JMP_IMM; }	EOP;
+		OPC(JC_GEU)	FETCH_RD_RS_CONST	if (RDU >= RSU)	{ JMP_IMM; }	EOP;
+		OPC(JC_GTU)	FETCH_RD_RS_CONST	if (RDU >  RSU)	{ JMP_IMM; }	EOP;
+		OPC(JC_LEU)	FETCH_RD_RS_CONST	if (RDU <= RSU)	{ JMP_IMM; }	EOP;
 
-		OPC(JPI)		FETCH_IMM16		JMP_IMM		EOP;
-		OPC(JPR)		FETCH_RD		JMP_RD		EOP;
-
-		OPC(FAR) op = *ip++; switch(op) {
-			OPC(CALLI)
-				FETCH_IMM24
-				CALL_IMM
-				fakePush(REG(REG_rt), IMM);
-			EOP;
-
-			OPC(JC_EQ) 	FETCH_RD_RS_ADDR24	if (RD == RS)	{ JMP_IMM; } 	EOP;
-			OPC(JC_NE)		FETCH_RD_RS_ADDR24	if (RD != RS)	{ JMP_IMM; }	EOP;
-			OPC(JC_GE)		FETCH_RD_RS_ADDR24	if (RD >= RS)	{ JMP_IMM; }	EOP;
-			OPC(JC_GT)		FETCH_RD_RS_ADDR24	if (RD >  RS)	{ JMP_IMM; }	EOP;
-			OPC(JC_LE)		FETCH_RD_RS_ADDR24	if (RD <= RS)	{ JMP_IMM; }	EOP;
-			OPC(JC_LT)		FETCH_RD_RS_ADDR24	if (RD <  RS)	{ JMP_IMM; }	EOP;
-
-			OPC(JC_LTU)	FETCH_RD_RS_ADDR24	if (RDU <  RSU)	{ JMP_IMM; }	EOP;
-			OPC(JC_GEU)	FETCH_RD_RS_ADDR24	if (RDU >= RSU)	{ JMP_IMM; }	EOP;
-			OPC(JC_GTU)	FETCH_RD_RS_ADDR24	if (RDU >  RSU)	{ JMP_IMM; }	EOP;
-			OPC(JC_LEU)	FETCH_RD_RS_ADDR24	if (RDU <= RSU)	{ JMP_IMM; }	EOP;
-
-			OPC(JPI)		FETCH_IMM24		JMP_IMM		EOP;
-		default:
-			LOG("Illegal far instruction 0x%02X @ 0x%04X\n", op, (int)(size_t)(ip - mem_cs) - 1);
-			BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION);
-			//return ip;
-		} EOP;
+		OPC(JPI)	FETCH_CONST		JMP_IMM		EOP;
+		OPC(JPR)	FETCH_RD		JMP_RD		EOP;
 
 		//OPC(XB)		FETCH_RD_RS		RD = (int)((char) RS); EOP;
 		OPC(XB)	FETCH_RD_RS	RD = ((RS & 0x80) == 0) ? (RS & 0xFF) : (RS | ~0xFF); EOP;
@@ -311,8 +285,8 @@ VMLOOP_LABEL
 				return ip;
 		}
 		EOP;
-
-		OPC(CASE) FETCH_RD; FETCH_IMM24; {
+#if 0	// disabled for now
+		OPC(CASE) FETCH_RD; FETCH_CONST; {
 			imm32 <<= 2;
 			uint CaseStart = MEM(int, imm32, READ);
 			uint CaseLength = MEM(int, imm32 + 1*sizeof(int), READ);
@@ -325,6 +299,7 @@ VMLOOP_LABEL
 				JMP_GENERIC(DefaultCaseAddress);
 			}
 		} EOP;
+#endif
 
 #if 0
 #ifdef ENABLE_DEBUGGER
@@ -341,7 +316,7 @@ VMLOOP_LABEL
 		} EOP;
 #endif
 #else
-#ifdef GDB_DEBUG
+#if 0//def GDB_DEBUG
 		OPC(DBG_OP) {
 			ip--;
 			if(mGdbOn && mGdbSignal != eStep) {

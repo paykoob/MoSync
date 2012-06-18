@@ -258,7 +258,10 @@ module MoSyncExeModule
 		if(@EXTENSIONS)
 			extArg = " -x build/mxConfig.txt"
 		end
-		return "#{mosyncdir}/bin/MoRE -program \"#{@TARGET}\" -sld \"#{@SLD}\"#{resArg}#{extArg}#{@EXTRA_EMUFLAGS}"
+		if(!USE_GNU_BINUTILS)
+			sldArg = " -sld \"#{@SLD}\""
+		end
+		return "#{mosyncdir}/bin/MoRE -program \"#{@TARGET}\"#{sldArg}#{resArg}#{extArg}#{@EXTRA_EMUFLAGS}"
 	end
 	def run
 		# run the emulator

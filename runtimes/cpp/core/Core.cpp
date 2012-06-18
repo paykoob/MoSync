@@ -111,6 +111,9 @@ __inline void chrashTestDummy(const char* fmt, ...) {
 #include <vector>
 #endif
 
+#include "gen-opcodes.h"
+#include <elf.h>
+
 namespace Core {
 
 using namespace Base;
@@ -249,12 +252,6 @@ public:
 			for(unsigned int i = 0; i < gCore->DATA_SEGMENT_SIZE; i++) {
 				char temp[1024];
 				int len = sprintf(temp, "ADDR(%x): %x\n", i, ((unsigned char*)gCore->mem_ds)[i]);
-				stateLog.write(temp, len);
-			}
-
-			for(int i = 0; i < gCore->Head.IntLen; i++) {
-				char temp[1024];
-				int len = sprintf(temp, "CONSTANT(%d): %x\n", i, gCore->mem_cp[i]);
 				stateLog.write(temp, len);
 			}
 
@@ -752,6 +749,188 @@ public:
 #endif
 	}
 
+	int LoadElfVM(Stream& file) {
+		Elf32_Ehdr ehdr;
+
+		SAFE_DELETE(mem_cs);
+		SAFE_DELETE(mem_ds);
+
+#ifdef MEMORY_PROTECTION
+		SAFE_DELETE(protectionSet);
+#endif
+
+		// hard-coded size for now
+		// ARM has only one memory segment; data and code are one.
+		CODE_SEGMENT_SIZE = DATA_SEGMENT_SIZE = 16*1024*1024;
+		mem_cs = (byte*)(mem_ds = new int[DATA_SEGMENT_SIZE / sizeof(int)]);
+		DEBUG_ASSERT(mem_ds != NULL);
+
+		// set the stack pointer
+		regs[13] = DATA_SEGMENT_SIZE - 1024;
+		STACK_TOP = regs[13];
+
+		// fill registers with debug markers
+		for(int i=0; i<13; i++) {
+			regs[i] = i;
+		}
+
+#ifdef INSTRUCTION_PROFILING
+			SAFE_DELETE(instruction_count);
+			instruction_count = new int[CODE_SEGMENT_SIZE];
+			if(!instruction_count) BIG_PHAT_ERROR(ERR_OOM);
+			ZEROMEM(instruction_count, sizeof(int)*CODE_SEGMENT_SIZE);
+#endif
+
+#ifdef MEMORY_PROTECTION
+		protectionSet = new byte[(DATA_SEGMENT_SIZE+7)>>3];
+		ZEROMEM(protectionSet, (DATA_SEGMENT_SIZE+7)>>3);
+#endif
+
+		TEST(file.isOpen());
+		TEST(file.readObject(ehdr));
+
+#define EIMAG_CHECK(nr) (ehdr.e_ident[EI_MAG##nr] == ELFMAG##nr)
+
+		if(!(EIMAG_CHECK(0) && EIMAG_CHECK(1) && EIMAG_CHECK(2) && EIMAG_CHECK(3))) {
+			DEBIG_PHAT_ERROR;
+		}
+
+#if 0
+#define ELF_SWAPH(data) ((ehdr.e_ident[EI_DATA] == ELFDATA2MSB) ? swaph(data) : data)
+#define ELF_SWAPW(data) ((ehdr.e_ident[EI_DATA] == ELFDATA2MSB) ? swapw(data) : data)
+#else
+#define ELF_SWAPH(data) (data)
+#define ELF_SWAPW(data) (data)
+#endif
+
+#define ELF_SWAP16(data) data = ELF_SWAPH(data)
+#define ELF_SWAP32(data) data = ELF_SWAPW(data)
+
+#define INVALID_INCOMPAT_CHECK(data, invalid_value, compatible_value) \
+	if(data == invalid_value) { LOG("%s = %s\n", #data, #invalid_value); DEBIG_PHAT_ERROR; }\
+	if(data != compatible_value) { LOG("%s = %X\n", #data, data);\
+	DEBIG_PHAT_ERROR; }
+
+		/*if(ehdr.e_ident[EI_CLASS] == ELFCLASSNONE)
+		return InvalidELF;
+		if(ehdr.e_ident[EI_CLASS] != ELFCLASS32)
+		return IncompatibleELF;*/
+		INVALID_INCOMPAT_CHECK(ehdr.e_ident[EI_CLASS], ELFCLASSNONE, ELFCLASS32);
+		//INVALID_INCOMPAT_CHECK(ehdr.e_ident[EI_DATA], ELFDATANONE, ELFDATA2MSB);
+		if(ehdr.e_ident[EI_DATA] != ELFDATA2MSB && ehdr.e_ident[EI_DATA] != ELFDATA2LSB) {
+			DEBIG_PHAT_ERROR;
+		}
+
+		INVALID_INCOMPAT_CHECK(ELF_SWAPH(ehdr.e_type), ET_NONE, ET_EXEC);
+		INVALID_INCOMPAT_CHECK(ELF_SWAPH(ehdr.e_machine), EM_ARM, EM_NONE);
+		INVALID_INCOMPAT_CHECK(ELF_SWAPW(ehdr.e_version), EV_NONE, EV_CURRENT);
+
+		if(ELF_SWAPH(ehdr.e_ehsize) != sizeof(Elf32_Ehdr)) {
+			DEBIG_PHAT_ERROR;
+		}
+		if(ELF_SWAPH(ehdr.e_shentsize) != sizeof(Elf32_Shdr)) {
+			DEBIG_PHAT_ERROR;
+		}
+		if(ELF_SWAPH(ehdr.e_phentsize) != sizeof(Elf32_Phdr)) {
+			DEBIG_PHAT_ERROR;
+		}
+
+		// entry point
+		IP = ELF_SWAPW(ehdr.e_entry);
+		LOG("Entry point: 0x%x\n", IP);
+
+		{ //Read Section Table
+			ELF_SWAP16(ehdr.e_shstrndx);
+			ELF_SWAP16(ehdr.e_shnum);
+			ELF_SWAP32(ehdr.e_shoff);
+
+			char* strings = NULL;
+			if(ehdr.e_shstrndx != 0) {
+				Elf32_Shdr shdr;
+				TEST(file.seek(Seek::Start, ehdr.e_shoff + ehdr.e_shstrndx * sizeof(Elf32_Shdr)));
+				TEST(file.readObject(shdr));
+				TEST(file.seek(Seek::Start, ELF_SWAPW(shdr.sh_offset)));
+				ELF_SWAP32(shdr.sh_size);
+				strings = new char[shdr.sh_size];
+				TEST(file.read(strings, shdr.sh_size));
+			}
+
+			LOG("%i sections, offset %X:\n", ehdr.e_shnum, ehdr.e_shoff);
+			for(int i=0; i<ehdr.e_shnum; i++) {
+				Elf32_Shdr shdr;
+				TEST(file.seek(Seek::Start, ehdr.e_shoff + i * sizeof(Elf32_Shdr)));
+				TEST(file.readObject(shdr));
+				ELF_SWAP32(shdr.sh_name);
+				ELF_SWAP32(shdr.sh_addr);
+				ELF_SWAP32(shdr.sh_size);
+				if(ehdr.e_shstrndx == 0 && shdr.sh_name != 0) {
+					DEBIG_PHAT_ERROR;
+				}
+				LOG("Name: %s(%i), Type: 0x%X, Flags: %08X, Address: %08X, Offset: 0x%X",
+					(shdr.sh_name == 0) ? "" : (&strings[shdr.sh_name]), shdr.sh_name,
+					ELF_SWAPW(shdr.sh_type), ELF_SWAPW(shdr.sh_flags),
+					shdr.sh_addr, ELF_SWAPW(shdr.sh_offset));
+				LOG(", Size: 0x%X, Link: 0x%X, Info: 0x%X, Addralign: %i, Entsize: %i\n",
+					shdr.sh_size, ELF_SWAPW(shdr.sh_link), ELF_SWAPW(shdr.sh_info),
+					ELF_SWAPW(shdr.sh_addralign), ELF_SWAPW(shdr.sh_entsize));
+
+				//if(shdr.sh_name != 0) if(strcmp(&strings[shdr.sh_name], ".sbss") == 0 ||
+				//strcmp(&strings[shdr.sh_name], ".bss") == 0)
+				//memset(m.getp_translated(shdr.sh_addr, shdr.sh_size), 0, shdr.sh_size);
+				//no need to zero bss, memeory's already zeroed.
+			}
+		}
+
+		{ //Read Program Table
+			ELF_SWAP16(ehdr.e_phnum);
+			ELF_SWAP32(ehdr.e_phoff);
+
+			LOG("%i segments, offset %X:\n", ehdr.e_phnum, ehdr.e_phoff);
+			for(int i=0; i<ehdr.e_phnum; i++) {
+				Elf32_Phdr phdr;
+				TEST(file.seek(Seek::Start, ehdr.e_phoff + i * sizeof(Elf32_Phdr)));
+				TEST(file.readObject(phdr));
+				ELF_SWAP32(phdr.p_type);
+				ELF_SWAP32(phdr.p_offset);
+				ELF_SWAP32(phdr.p_vaddr);
+				ELF_SWAP32(phdr.p_filesz);
+				ELF_SWAP32(phdr.p_flags);
+				LOG("Type: 0x%X, Offset: 0x%X, VAddress: %08X, PAddress: %08X, Filesize: 0x%X",
+					phdr.p_type, phdr.p_offset, phdr.p_vaddr, ELF_SWAPW(phdr.p_paddr), phdr.p_filesz);
+				LOG(", Memsize: 0x%X, Flags: %08X, Align: %i\n",
+					ELF_SWAPW(phdr.p_memsz), phdr.p_flags, ELF_SWAPW(phdr.p_align));
+				if(phdr.p_type == PT_NULL)
+					continue;
+				else if(phdr.p_type == PT_LOAD) {
+					bool text = (phdr.p_flags & PF_X);
+					LOG("%s section: 0x%x, 0x%x bytes\n",
+						text ? "text" : "data",
+						phdr.p_vaddr, phdr.p_filesz);
+#if 0
+					if(ArenaLo < phdr.p_vaddr + phdr.p_filesz)
+						ArenaLo = phdr.p_vaddr + phdr.p_filesz;
+#endif
+					TEST(file.seek(Seek::Start, phdr.p_offset));
+					void* dst = mem_ds;
+					if(phdr.p_vaddr != 0)
+						dst = this->GetValidatedMemRange(phdr.p_vaddr, phdr.p_filesz);
+					LOG("Reading 0x%x bytes to %p...\n", phdr.p_filesz, dst);
+					TEST(file.read(dst, phdr.p_filesz));
+					if(!text) {
+						//ds = phdr.p_vaddr;
+					}
+				} else {
+					DEBIG_PHAT_ERROR;
+				}
+
+			}	//if
+		}	//for
+
+		rIP = mem_cs + IP;
+		//STACK_BOTTOM = ds;	// should be higher; but this will do for now.
+		return 1;
+	}
+
 	//****************************************
 	//Loader
 	//****************************************
@@ -761,6 +940,10 @@ public:
 
 		TEST(file.isOpen());
 		TEST(file.readObject(Head));	// Load header
+		if(Head.Magic == 0x464c457f) {	//ELF.
+			TEST(file.seek(Seek::Start, 0));
+			return LoadElfVM(file);
+		}
 		if(Head.Magic != 0x5844414d) {	//MADX, big-endian
 			LOG("Magic error: 0x%08x should be 0x5844414d\n", Head.Magic);
 			FAIL;
@@ -768,7 +951,6 @@ public:
 
 		SAFE_DELETE(mem_cs);
 		SAFE_DELETE(mem_ds);
-		SAFE_DELETE(mem_cp);
 
 #ifdef MEMORY_PROTECTION
 		SAFE_DELETE(protectionSet);
@@ -876,22 +1058,6 @@ public:
 		}
 		DUMPHEX(DATA_SEGMENT_SIZE);
 
-		DUMPHEX(Head.IntLen);
-		if(Head.IntLen > 0) {
-			mem_cp = new int[Head.IntLen];
-			if(!mem_cp) BIG_PHAT_ERROR(ERR_OOM);
-			TEST(file.read(mem_cp, Head.IntLen * 4));
-		} else {
-			BIG_PHAT_ERROR(ERR_PROGRAM_FILE_BROKEN);
-		}
-#if 0
-		LOGC("Constant pool (%i entries):\n", Head.IntLen);
-		for(int i=0; i<Head.IntLen; i++) {
-			LOGC("%i: 0x%x(%i)\n", i, mem_cp[i], mem_cp[i]);
-		}
-		LOGC("\n");
-#endif
-
 		customEventPointer = ((char*)mem_ds) + (Head.DataSize - maxCustomEventSize);
 
 #ifdef USE_ARM_RECOMPILER
@@ -910,9 +1076,9 @@ public:
 	//Definitions
 	//****************************************
 #ifdef COUNT_INSTRUCTION_USE
-#define OPC(opcode)	case _##opcode: LOGC("%x: %i %s", (int)(ip - mem_cs - 1), _##opcode, #opcode); countInstructionUse(#opcode, op);
+#define OPC(opcode)	case OP_##opcode: LOGC("%x: %i %s", (int)(ip - mem_cs - 1), OP_##opcode, #opcode); countInstructionUse(#opcode, op);
 #else
-#define OPC(opcode)	case _##opcode: LOGC("%x: %i %s", (int)(ip - mem_cs - 1), _##opcode, #opcode);
+#define OPC(opcode)	case OP_##opcode: LOGC("%x: %i %s", (int)(ip - mem_cs - 1), OP_##opcode, #opcode);
 #endif
 #ifdef CORE_DEBUGGING_MODE
 #define EOP	LOGC("\n"); break;
@@ -976,23 +1142,22 @@ void WRITE_REG(int reg, int value) {
 
 #define FETCH_RD	rd = IB; LOGC(" rd%i(0x%08x)", rd, RD);
 #define FETCH_RS	rs = IB; LOGC(" rs%i(0x%08x)", rs, RS);
-#ifdef USE_VAR_INT
+#if 0//def USE_VAR_INT
 #define FETCH_CONST	imm32 = IB; if(imm32>127) {imm32=((imm32&127)<<8)+IB;}\
 	LOGC(" c[%i]", imm32); imm32=mem_cp[imm32]; LOGC("(%i)", imm32);
 #define FETCH_INT	imm32 = IB; if(imm32>127) {imm32=((imm32&127)<<8)+IB;}\
 	LOGC(" i%i", imm32);
 #else
-#define FETCH_CONST	imm32 = IB; imm32=(imm32<<8)+IB;\
-	imm32=mem_cp[imm32]; LOGC(" c%i", imm32);
-#define FETCH_INT imm32 = IB; imm32=(imm32<<8)+IB; LOGC(" i%i", imm32);
+#define FETCH_CONST	FETCH_IMM32
+#define FETCH_INT	FETCH_IMM32
 #endif	//USE_VAR_INT
 
 #define FETCH_IMM8	imm32 = IB; LOGC(" n%i", imm32);
 #define FETCH_IMM16	imm32 = IB << 8; imm32 += IB; LOGC(" m%i(0x%x)", imm32, imm32);
 #define FETCH_IMM24	imm32 = IB << 16; imm32 += IB << 8; imm32 += IB;\
 	LOGC(" i%i(0x%x)", imm32, imm32);
-/*#define FETCH_IMM32	imm32 = IB << 24; imm32 += IB << 16; imm32 += IB << 8;\
-	imm32 += IB; LOGC(" n%i(0x%x)", imm32, imm32);*/
+#define FETCH_IMM32	imm32 = IB << 24; imm32 += IB << 16; imm32 += IB << 8;\
+	imm32 += IB; LOGC(" n%i(0x%x)", imm32, imm32);
 
 #define FETCH_RD_RS		FETCH_RD FETCH_RS
 #define FETCH_RD_CONST		FETCH_RD FETCH_CONST
@@ -1338,7 +1503,6 @@ void WRITE_REG(int reg, int value) {
 #endif
 		delete mem_cs;
 		delete mem_ds;
-		delete mem_cp;
 
 #ifdef MEMORY_PROTECTION
 		delete protectionSet;
@@ -1380,7 +1544,7 @@ private:
 	Syscall& mSyscall;
 };
 
-VMCore::VMCore() : mem_cs(NULL), mem_ds(NULL), mem_cp(NULL)
+VMCore::VMCore() : mem_cs(NULL), mem_ds(NULL)
 #ifdef MEMORY_PROTECTION
 	,protectionSet(NULL)
 	,protectionEnabled(1)
