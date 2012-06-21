@@ -75,6 +75,17 @@ end
 
 puts "Count: #{OPCODES.size} opcodes"
 
+
+REGISTERS = [
+:zr,:sp,:ra,:fp,
+:s0,:s1,:s2,:s3,:s4,:s5,:s6,:s7,
+:p0,:p1,:p2,:p3,
+:g0,:g1,:g2,:g3,:g4,:g5,:g6,:g7,
+:g8,:g9,:g10,:g11,:g12,:g13,
+:r0,:r1,
+]
+
+
 mode = ARGV[0]
 filename = ARGV[1]
 
@@ -128,6 +139,12 @@ elsif(mode == 'ccore')
 			i += 1
 		end
 		file.puts
+		file.puts 'enum {'
+		REGISTERS.each do |r|
+			file.puts "\tREG_#{r},"
+		end
+		file.puts '};'
+		file.puts
 		file.puts '#endif	//GEN_OPCODES_H'
 	end
 elsif(mode == 'binutils/desc')
@@ -180,6 +197,12 @@ elsif(mode == 'binutils/desc')
 		file.puts 'static const mapip2_mnemonic mapip2_mnemonics[] = {'
 		tree.each do |m, op|
 			file.puts "{ \"#{m}\", #{nodePart("_#{m}", op)} },"
+		end
+		file.puts '};'
+		file.puts
+		file.puts 'static const char* const mapip2_register_names[] = {'
+		REGISTERS.each do |r|
+			file.puts "\t\"#{r}\","
 		end
 		file.puts '};'
 	end
