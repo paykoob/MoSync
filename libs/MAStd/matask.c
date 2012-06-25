@@ -202,7 +202,7 @@ int maRunTaskInit(int SP, int p0, int p1)
 
 	ASM("ld	p3,ra			")		// Save task address in i3
 
-	ASM("ld	ra,_maKillTask	")		// Set up kill task as a return address
+	ASM("ld	ra,&_maKillTask	")		// Set up kill task as a return address
 	ASM("jp	p3				")		// Run Task
 
 	return 0;	//never gonna happen

@@ -26,45 +26,4 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "gen-opcodes.h"
 
-//****************************************
-// 			Register enums
-//****************************************
-
-enum
-{
-	REG_zero,
-	REG_sp,
-	REG_rt,
-	REG_fr,
-	REG_d0,
-	REG_d1,
-	REG_d2,
-	REG_d3,
-	REG_d4,
-	REG_d5,
-	REG_d6,
-	REG_d7,
-	REG_i0,
-	REG_i1,
-	REG_i2,
-	REG_i3,
-
-	REG_r0,
-	REG_r1,
-	REG_r2,
-	REG_r3,
-	REG_r4,
-	REG_r5,
-	REG_r6,
-	REG_r7,
-	REG_r8,
-	REG_r9,
-	REG_r10,
-	REG_r11,
-	REG_r12,
-	REG_r13,
-	REG_r14,
-	REG_r15
-};
-
 #endif	//_CORE_COMMON_H_

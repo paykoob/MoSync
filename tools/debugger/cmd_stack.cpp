@@ -102,7 +102,7 @@ void loadStack(void (*cb)()) {
 
 	NEED_REG;
 
-	u32 stackLow = r.gpr[REG_fr] - 8;
+	u32 stackLow = r.gpr[REG_fp] - 8;
 	u32 stackHi = gMemSize;
 	if(stackLow >= stackHi) {	//strictly insufficient. todo: improve.
 		LOG("stackLow: 0x%08x\n", stackLow);
@@ -111,7 +111,7 @@ void loadStack(void (*cb)()) {
 		//let's try to give it one frame at least.
 		FRAME frame;
 		frame.pc = r.pc;
-		frame.pointer = r.gpr[REG_fr];
+		frame.pointer = r.gpr[REG_fp];
 		sFrames.push_back(frame);
 		cb();
 		return;
@@ -126,10 +126,10 @@ void loadStack(void (*cb)()) {
 static void Callback::lsReadMem() {
 	ASSERT_REG;
 	u32 stackHi = gMemSize;
-	u32 stackLow = r.gpr[REG_fr] - 8;
+	u32 stackLow = r.gpr[REG_fp] - 8;
 	u32 sp = r.gpr[REG_sp];
-	u32 framePtr = r.gpr[REG_fr];
-	u32 retAddr = r.gpr[REG_rt];	//initial value is ignored
+	u32 framePtr = r.gpr[REG_fp];
+	u32 retAddr = r.gpr[REG_ra];	//initial value is ignored
 	int offset = MIN(stackLow, sp);
 	int pc = r.pc;
 	uint level = 0;

@@ -241,18 +241,18 @@ VMLOOP_LABEL
 
 		OPC(RET)
 			fakePop();
-			JMP_GENERIC(REG(REG_rt));
+			JMP_GENERIC(REG(REG_ra));
 		EOP;
 
 		OPC(CALLR)
 			FETCH_RD
 			CALL_RD
-			fakePush(REG(REG_rt), RD);
+			fakePush(REG(REG_ra), RD);
 		EOP;
 		OPC(CALLI)
 			FETCH_CONST
 			CALL_IMM
-			fakePush(REG(REG_rt), IMM);
+			fakePush(REG(REG_ra), IMM);
 		EOP;
 
 		OPC(JC_EQ) 	FETCH_RD_RS_CONST	if (RD == RS)	{ JMP_IMM; } 	EOP;

@@ -14,7 +14,7 @@
 
 SAFUNC void _debug_hex(int SCDEBUG_ARG(hex)) { LOGSC("0x%08x", hex); }
 
-#define _SYSCALL_HANDLERES_DEFAULT(type) REG(REG_r14) = _SYSCALL_CONVERTRES_##type(res); LOGSC(");\n");
+#define _SYSCALL_HANDLERES_DEFAULT(type) REG(REG_r0) = _SYSCALL_CONVERTRES_##type(res); LOGSC(");\n");
 
 SAFUNC void debug_MACopyData(const MACopyData* SCDEBUG_ARG(p)) {
 	LOGSC("(%i,%i, %i,%i, %i)",
@@ -179,9 +179,9 @@ SAFUNC double _convert_double(int* ptr) {
 	return dv.d;
 }
 #define _SYSCALL_HANDLERES_double { MA_DV dv; dv.d = res;\
-	REG(REG_r14) = dv.MA_DV_HI; REG(REG_r15) = dv.MA_DV_LO; LOGSC(" = "); DV_debug(dv); LOGSC(");\n"); }
+	REG(REG_r0) = dv.MA_DV_HI; REG(REG_r1) = dv.MA_DV_LO; LOGSC(" = "); DV_debug(dv); LOGSC(");\n"); }
 
 #define _SYSCALL_HANDLERES_longlong { MA_DV dv; dv.ll = res;\
-	REG(REG_r14) = dv.MA_LL_HI; REG(REG_r15) = dv.MA_LL_LO; LOGSC(");\n"); }
+	REG(REG_r0) = dv.MA_LL_HI; REG(REG_r1) = dv.MA_LL_LO; LOGSC(");\n"); }
 
 #define _SYSCALL_HANDLERES_void LOGSC(");\n");

@@ -48,7 +48,8 @@ std::vector<std::string> gInFiles;
 #define MAX_DATA_SIZE 65536*1024*16
 
 // Global memory buffer that contains all the file data.
-unsigned char gFileData[MAX_DATA_SIZE];
+// using new here prevents a link bug on linux.
+static unsigned char* gFileData = new unsigned char[MAX_DATA_SIZE];
 
 // An offset into the gFileData buffer. Updated when reading
 // files. Holds the total size of the file data when all files
@@ -156,7 +157,7 @@ static int readFile(std::string name) {
 		exit(1);
 	}
 	gFileDataPtr+=len;
-	
+
 	fclose(file);
 	return len;
 }

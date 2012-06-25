@@ -25,7 +25,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 //#define LOG_STATE_CHANGE	//TEMP HACK
 //#define DEBUG_DISASM
-//#define CORE_DEBUGGING_MODE
+#define CORE_DEBUGGING_MODE
 //#define SYSCALL_DEBUGGING_MODE
 
 #include <config_platform.h>
@@ -765,14 +765,17 @@ public:
 		mem_cs = (byte*)(mem_ds = new int[DATA_SEGMENT_SIZE / sizeof(int)]);
 		DEBUG_ASSERT(mem_ds != NULL);
 
-		// set the stack pointer
-		regs[13] = DATA_SEGMENT_SIZE - 1024;
-		STACK_TOP = regs[13];
+		// set the initial registers
+		// sp: top of stack
+		regs[REG_sp] = DATA_SEGMENT_SIZE;
+		STACK_TOP = regs[REG_sp];
 
-		// fill registers with debug markers
-		for(int i=0; i<13; i++) {
-			regs[i] = i;
-		}
+		// p0: memory size
+		// p1: stack size
+		// p2: heap size
+		regs[REG_p0] = DATA_SEGMENT_SIZE;
+		regs[REG_p1] = 64*1024;
+		regs[REG_p2] = (1024*1024);
 
 #ifdef INSTRUCTION_PROFILING
 			SAFE_DELETE(instruction_count);
@@ -808,7 +811,7 @@ public:
 
 #define INVALID_INCOMPAT_CHECK(data, invalid_value, compatible_value) \
 	if(data == invalid_value) { LOG("%s = %s\n", #data, #invalid_value); DEBIG_PHAT_ERROR; }\
-	if(data != compatible_value) { LOG("%s = %X\n", #data, data);\
+	if(data != compatible_value) { LOG("%s = 0x%X\n", #data, data);\
 	DEBIG_PHAT_ERROR; }
 
 		/*if(ehdr.e_ident[EI_CLASS] == ELFCLASSNONE)
@@ -821,8 +824,11 @@ public:
 			DEBIG_PHAT_ERROR;
 		}
 
+#ifndef EM_MAPIP2
+#define EM_MAPIP2 0x9127
+#endif
 		INVALID_INCOMPAT_CHECK(ELF_SWAPH(ehdr.e_type), ET_NONE, ET_EXEC);
-		INVALID_INCOMPAT_CHECK(ELF_SWAPH(ehdr.e_machine), EM_ARM, EM_NONE);
+		INVALID_INCOMPAT_CHECK(ELF_SWAPH(ehdr.e_machine), EM_NONE, EM_MAPIP2);
 		INVALID_INCOMPAT_CHECK(ELF_SWAPW(ehdr.e_version), EV_NONE, EV_CURRENT);
 
 		if(ELF_SWAPH(ehdr.e_ehsize) != sizeof(Elf32_Ehdr)) {
@@ -963,9 +969,9 @@ public:
 		STACK_BOTTOM = STACK_TOP-Head.StackSize;
 
 		regs[REG_sp] = STACK_TOP - 16;
-		regs[REG_i0] = Head.DataSize;
-		regs[REG_i1] = Head.StackSize;
-		regs[REG_i2] = Head.HeapSize;
+		regs[REG_p0] = Head.DataSize;
+		regs[REG_p1] = Head.StackSize;
+		regs[REG_p2] = Head.HeapSize;
 		DUMPHEX(Head.DataSize);
 		DUMPHEX(Head.StackSize);
 		DUMPHEX(Head.HeapSize);
@@ -1135,8 +1141,8 @@ void WRITE_REG(int reg, int value) {
 #define	JMP_IMM	JMP_GENERIC(IMM)
 #define	JMP_RD	JMP_GENERIC(RD)
 
-#define	CALL_IMM	REG(REG_rt) = (int32_t) (ip - mem_cs); JMP_IMM;
-#define	CALL_RD		REG(REG_rt) = (int32_t) (ip - mem_cs); JMP_RD;
+#define	CALL_IMM	REG(REG_ra) = (int32_t) (ip - mem_cs); JMP_IMM;
+#define	CALL_RD		REG(REG_ra) = (int32_t) (ip - mem_cs); JMP_RD;
 
 #define IB ((int)(*ip++))
 
@@ -1156,8 +1162,9 @@ void WRITE_REG(int reg, int value) {
 #define FETCH_IMM16	imm32 = IB << 8; imm32 += IB; LOGC(" m%i(0x%x)", imm32, imm32);
 #define FETCH_IMM24	imm32 = IB << 16; imm32 += IB << 8; imm32 += IB;\
 	LOGC(" i%i(0x%x)", imm32, imm32);
-#define FETCH_IMM32	imm32 = IB << 24; imm32 += IB << 16; imm32 += IB << 8;\
-	imm32 += IB; LOGC(" n%i(0x%x)", imm32, imm32);
+// little endian
+#define FETCH_IMM32	imm32 = IB; imm32 += IB << 8; imm32 += IB << 16;\
+	imm32 += IB << 24; LOGC(" n%i(0x%x)", imm32, imm32);
 
 #define FETCH_RD_RS		FETCH_RD FETCH_RS
 #define FETCH_RD_CONST		FETCH_RD FETCH_CONST

@@ -526,7 +526,7 @@ static void setExecFinish() {
 				const TypeBase* returnType = (const TypeBase*) funcType->mReturnType;
 				if(returnType && !(returnType->type()==TypeBase::eBuiltin && ((Builtin*)returnType)->subType()==Builtin::eVoid)) {
 					SYM returnSym;
-					returnSym.address = &r.gpr[REG_r14];
+					returnSym.address = &r.gpr[REG_r0];
 					returnSym.type = returnType;
 					returnSym.storageClass = eRegister;
 

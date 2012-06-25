@@ -29,9 +29,9 @@ __stacktop:
 	.global crt0_startup
 
 	// sp: top of stack
-	// i0: memory size
-	// i1: stack size
-	// i2: heap size
+	// p0: memory size
+	// p1: stack size
+	// p2: heap size
 crt0_startup:
 
 	ld	[&__memtop],p0		// Save top of memory

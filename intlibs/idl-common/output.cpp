@@ -1001,10 +1001,9 @@ void streamInvokeSyscall(ostream& stream, const Interface& maapi, bool java, int
 				continue;
 			}
 			else if((argType == "double" || argType == "long") && java) {
-				//stream << "(REG_i" << ireg << ");\n";
-				stream << "(REG(REG_i" << ireg << "), REG(REG_i" << ireg << "+1));\n";
+				stream << "(REG(REG_p" << ireg << "), REG(REG_p" << ireg << "+1));\n";
 			} else {
-				stream << "(REG(REG_i" << ireg << "));\n";
+				stream << "(REG(REG_p" << ireg << "));\n";
 			}
 			ireg += sizeOfArgType;
 		}

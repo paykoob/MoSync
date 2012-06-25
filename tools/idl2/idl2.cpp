@@ -803,6 +803,7 @@ static void outputSyscallMapip2Asm(const Interface& maapi) {
 			".global _"<<f.name<<"\n"
 			"_"<<f.name<<":\n"
 			"\tsyscall "<<f.number<<"\n"
+			"\tret\n"
 		;
 	}
 }
@@ -981,9 +982,9 @@ static void outputInvokeSyscallArmRecompiler(const Interface& maapi) {
 		stream << "#endif\n";
 
 		if(f.returnType != "void" && f.returnType != "noreturn") {
-			stream << "\tsaveRegister(REG_r14, AA::R0);\n";
+			stream << "\tsaveRegister(REG_r0, AA::R0);\n";
 			if(f.returnType == "double" || f.returnType == "long") {
-				stream << "\tsaveRegister(REG_r15, AA::R1);\n";
+				stream << "\tsaveRegister(REG_r1, AA::R1);\n";
 			}
 		}
 

@@ -154,7 +154,7 @@ elsif(mode == 'binutils/desc')
 		file.puts '#endif'
 		file.puts
 		# plain opcode table
-		file.puts 'static const mapip2_insn mapip2_insns[] = {'
+		file.puts 'const mapip2_insn mapip2_insns[] = {'
 		OPCODES.each do |op|
 			file.puts "{ OP_#{op.name.to_s.upcase}, \"#{op.mnemonic}\", { "+
 				op.operands.collect { |r| r.to_s.upcase + ', ' }.join + "END } },"
@@ -194,13 +194,13 @@ elsif(mode == 'binutils/desc')
 			outputParseNode(file, m.to_s, op)
 		end
 		# todo: use gperf to make a perfect hash table instead of an array.
-		file.puts 'static const mapip2_mnemonic mapip2_mnemonics[] = {'
+		file.puts 'const mapip2_mnemonic mapip2_mnemonics[] = {'
 		tree.each do |m, op|
 			file.puts "{ \"#{m}\", #{nodePart("_#{m}", op)} },"
 		end
 		file.puts '};'
 		file.puts
-		file.puts 'static const char* const mapip2_register_names[] = {'
+		file.puts 'const char* const mapip2_register_names[] = {'
 		REGISTERS.each do |r|
 			file.puts "\t\"#{r}\","
 		end
