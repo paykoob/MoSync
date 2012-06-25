@@ -126,6 +126,14 @@ VMLOOP_LABEL
 #endif
 	op = *ip++;
 
+#ifdef CORE_DEBUGGING_MODE
+	static int ra = REG(REG_ra);
+	if(ra != REG(REG_ra)) {
+		ra = REG(REG_ra);
+		LOGC("ra: 0x%x\n", ra);
+	}
+#endif
+
 	switch (op)
 	{
 		OPC(ADD)	FETCH_RD_RS	ARITH(rd, RD, +, RS);	EOP;
@@ -158,7 +166,7 @@ VMLOOP_LABEL
 		{
 			byte r = rd;
 			unsigned n = imm32;
-			if(rd < 2 || int(rd) + n > 32) {
+			if(rd < 2 || int(rd) + n > 32 || n == 0) {
 				DUMPINT(rd);
 				DUMPINT(n);
 				BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION_FORM); //raise hell
@@ -176,17 +184,17 @@ VMLOOP_LABEL
 
 		OPC(POP) FETCH_RD_IMM8
 		{
-			byte r = rd;
 			unsigned n = imm32;
-			if(rd > 31 || int(rd) - n < 1)
+			byte r = rd + n;
+			if(rd > 31 || int(rd) - n < 1 || n == 0)
 				BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION_FORM); //raise hell
 
 			do {
+				r--;
 				REG(r) = MEM(int32_t, REG(REG_sp), READ);
 				//REG(REG_sp) += 4;
 				ARITH(REG_sp, regs[REG_sp], +, 4);
 				LOGC("\t0x%x", REG(r));
-				r--;
 			} while(--n);
 		}
 		EOP;

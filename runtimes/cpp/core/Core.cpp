@@ -1509,6 +1509,7 @@ void WRITE_REG(int reg, int value) {
 	logInstructionUse();
 #endif
 		delete mem_cs;
+		if(mem_ds != (int*)mem_cs)
 		delete mem_ds;
 
 #ifdef MEMORY_PROTECTION
