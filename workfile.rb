@@ -44,7 +44,8 @@ MORE_DIRS = ["intlibs/helpers/platforms/#{INTLIB_PLATFORM}",
 
 BASE_DIRS = MORE_DIRS + PLATFORM_TOOLS
 
-PIPE_DIRS = ["tools/protobuild", "tools/pipe-tool", "tools/DefaultSkinGenerator"]
+PIPE_DIRS = ['tools/elfStabSld',
+	"tools/protobuild", "tools/pipe-tool", "tools/DefaultSkinGenerator"]
 EXAM_DIRS = ["tests/unitTest", "examples"]
 TOOL_DIRS = ["tools/debugger", "tools/FontGenerator", "tools/PanicDoc", "tools/Bundle",
 	"tests/unitTestServer", "tools/iphone-builder", "tools/icon-injector", "tools/e32hack",

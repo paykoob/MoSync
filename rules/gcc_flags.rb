@@ -83,7 +83,7 @@ if(@GCC_IS_ARM)
 end
 
 if(@GCC_IS_V4) then
-	if(HOST != :win32)
+	if(HOST != :win32 && !isPipeWork)
 		base_flags += " -fvisibility=hidden"
 	end
 	version_warnings += gcc4_warnings
