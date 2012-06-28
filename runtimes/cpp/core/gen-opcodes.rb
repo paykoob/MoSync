@@ -14,6 +14,7 @@ end
 
 OPCODES = [
 	o(:nop, 'nop', []),	# NOP must be the first one, number 0.
+	o(:break, 'break', []),	# debugger breakpoint.
 	o(:ldr, 'ld', [:rd, :rs]),
 	o(:ldi, 'ld', [:rd, :imm]),
 	o(:ldw, 'ld', [:rd, :adaddr]),
