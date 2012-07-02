@@ -767,8 +767,9 @@ public:
 
 		// set the initial registers
 		// sp: top of stack
-		regs[REG_sp] = DATA_SEGMENT_SIZE;
+		regs[REG_sp] = DATA_SEGMENT_SIZE - 16;
 		STACK_TOP = regs[REG_sp];
+		DUMPHEX(STACK_TOP);
 
 		// p0: memory size
 		// p1: stack size
@@ -923,7 +924,8 @@ public:
 					LOG("Reading 0x%x bytes to %p...\n", phdr.p_filesz, dst);
 					TEST(file.read(dst, phdr.p_filesz));
 					if(!text) {
-						//ds = phdr.p_vaddr;
+						STACK_BOTTOM = phdr.p_vaddr + phdr.p_filesz;	// should be higher; but this will do for now.
+						DUMPHEX(STACK_BOTTOM);
 					}
 				} else {
 					DEBIG_PHAT_ERROR;
@@ -933,7 +935,6 @@ public:
 		}	//for
 
 		rIP = mem_cs + IP;
-		//STACK_BOTTOM = ds;	// should be higher; but this will do for now.
 		return 1;
 	}
 
@@ -1173,8 +1174,10 @@ void WRITE_REG(int reg, int value) {
 #define FETCH_RD_RS_ADDR24	FETCH_RD FETCH_RS FETCH_IMM24
 #define FETCH_RD_IMM8		FETCH_RD FETCH_IMM8
 
-#define ARITH(a_reg, a, oper, b) LOGC("\t%i %s %i = ", (a), #oper, (b)); WRITE_REG(a_reg, (a) oper (b));\
-	LOGC("%i", (a));
+#define LOG_ARITH(...)
+
+#define ARITH(a_reg, a, oper, b) LOG_ARITH("\t%i %s %i = ", (a), #oper, (b)); WRITE_REG(a_reg, (a) oper (b));\
+	LOG_ARITH("%i", (a));
 
 #define DIVIDE(a_reg, a, b) if((b) == 0) { BIG_PHAT_ERROR(ERR_DIVISION_BY_ZERO); } else { ARITH(a_reg, a, /, b); }
 

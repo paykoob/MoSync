@@ -162,10 +162,10 @@ VMLOOP_LABEL
 		OPC(NOT)	FETCH_RD_RS	WRITE_REG(rd, ~RS);	EOP;
 		OPC(NEG)	FETCH_RD_RS	WRITE_REG(rd, -RS);	EOP;
 
-		OPC(PUSH)	FETCH_RD_IMM8
+		OPC(PUSH)	FETCH_RD_RS
 		{
 			byte r = rd;
-			unsigned n = imm32;
+			byte n = rs - rd;
 			if(rd < 2 || int(rd) + n > 32 || n == 0) {
 				DUMPINT(rd);
 				DUMPINT(n);
@@ -176,25 +176,29 @@ VMLOOP_LABEL
 				//REG(REG_sp) -= 4;
 				ARITH(REG_sp, regs[REG_sp], -, 4);
 				MEM(int32_t, REG(REG_sp), WRITE) = REG(r);
-				LOGC("\t0x%x", REG(r));
+				LOGC("\t%i 0x%x", r, REG(r));
 				r++;
 			} while(--n);
 		}
 		EOP;
 
-		OPC(POP) FETCH_RD_IMM8
+		OPC(POP) FETCH_RD_RS
 		{
-			unsigned n = imm32;
-			byte r = rd + n;
-			if(rd > 31 || int(rd) - n < 1 || n == 0)
+			byte r = rs;
+			byte n = rs - rd;
+			if(rd > 31 || int(rs) - n < 1 || n == 0) {
+				DUMPINT(rd);
+				DUMPINT(rs);
+				DUMPINT(n);
 				BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION_FORM); //raise hell
+			}
 
 			do {
 				r--;
 				REG(r) = MEM(int32_t, REG(REG_sp), READ);
 				//REG(REG_sp) += 4;
 				ARITH(REG_sp, regs[REG_sp], +, 4);
-				LOGC("\t0x%x", REG(r));
+				LOGC("\t%i 0x%x", r, REG(r));
 			} while(--n);
 		}
 		EOP;
@@ -241,6 +245,7 @@ VMLOOP_LABEL
 		{
 			FETCH_RD_RS_CONST
 			MEM(unsigned int, RD + IMM, WRITE) = RS;
+			LOGC("\t[0x%x] = 0x%x", RD + IMM, RS);
 		}
 		EOP;
 

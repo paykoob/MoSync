@@ -142,6 +142,17 @@ module MoSyncMemorySettings
 	end
 end
 
+class Mapip2SldTask < FileTask
+	def initialize(work, prereq)
+		@progName = prereq.to_s
+		super(work, @progName + '.sld')
+		@prerequisites << prereq
+	end
+	def execute
+		sh "#{mosyncdir}/bin/elfStabSld #{@progName} #{@NAME}"
+	end
+end
+
 module MoSyncExeModule
 	include MoSyncMemorySettings
 	def set_defaults
@@ -225,6 +236,8 @@ module MoSyncExeModule
 
 		super
 
+		@prerequisites << Mapip2SldTask.new(self, @TARGET) if(USE_GNU_BINUTILS)
+
 		if(ELIM)
 			@TARGET.extend(PipeElimTask)
 		end
@@ -258,7 +271,9 @@ module MoSyncExeModule
 		if(@EXTENSIONS)
 			extArg = " -x build/mxConfig.txt"
 		end
-		if(!USE_GNU_BINUTILS)
+		if(USE_GNU_BINUTILS)
+			sldArg = " -sld \"#{@TARGET}.sld\""
+		else
 			sldArg = " -sld \"#{@SLD}\""
 		end
 		return "#{mosyncdir}/bin/MoRE -program \"#{@TARGET}\"#{sldArg}#{resArg}#{extArg}#{@EXTRA_EMUFLAGS}"

@@ -33,6 +33,11 @@ struct Function {
 	unsigned start, end;
 };
 
+struct Variable {
+	const char* name;
+	unsigned scope, address;
+};
+
 template<class T> class Array0 : public Array<T> {
 public:
 	Array0() : Array<T>(0) {}
@@ -76,8 +81,8 @@ int main(int argc, const char** argv) {
 	writeSld(data, sldName);
 
 	remove("temp.sld");
-	rename(sldName, "temp.sld");
-	return 1;
+	//rename(sldName, "temp.sld");
+	return 0;
 }
 
 static void writeSld(const DebuggingData& data, const char* sldName) {
@@ -87,6 +92,7 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 	// declare data for later passes
 	vector<SLD> slds;
 	vector<Function> functions;
+	vector<Variable> variables;
 
 	// file list
 	fputs("Files\n", file);
@@ -96,6 +102,7 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 	Function f;
 	f.name = NULL;
 	for(size_t i=0; i<data.stabs.size(); i++) {
+		// file-header stab
 		size_t stabEnd;
 		size_t strTabFragSize;
 		//if(s.n_type == N_UNDF)
@@ -114,6 +121,7 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 		const char* stabstr = data.stabstr + strOffset;
 		for(; i<stabEnd; i++) {
 			const Stab& s(data.stabs[i]);
+			// source file
 			if(s.n_type == N_SO) {
 				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
 					//i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
@@ -124,20 +132,21 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 					fprintf(file, "%" PRIuPTR ":%" PRIuPTR ":%s\n", fileNum, fileNum, filename);
 				}
 			}
+			// source line
 			if(s.n_type == N_SLINE) {
 				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
 					//i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
 				SLD sld = { s.n_value, s.n_desc, fileNum };
 				slds.push_back(sld);
 			}
+			// function
 			if(s.n_type == N_FUN) {
-				printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
-					i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
+				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+					//i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
 				//DEBUG_ASSERT(s.n_desc < 128);
 				const char* name = stabstr + s.n_strx;
-				char desc = (char)s.n_desc;
 				unsigned address = s.n_value;
-				printf("%s 0x%02x 0x%x\n", name, (unsigned short)desc, address);
+				//printf("%s 0x%02x 0x%x\n", name, s.n_desc, address);
 
 				// finish previous function
 				if(f.name != NULL) {
@@ -148,6 +157,17 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 				f.name = name;
 				f.start = address;
 			}
+			// variable
+#if 0
+			if(s.n_type == N_ROSYM || s.n_type == N_STSYM || s.n_type == N_LCSYM || s.n_type == N_GSYM) {
+				printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+					i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
+				const char* name = stabstr + s.n_strx;
+				unsigned address = s.n_value;
+				//Variable v = { name, fileNum, address };
+				printf("%s %" PRIuPTR " 0x%x\n", name, fileNum, address);
+			}
+#endif
 		}
 		fileNum++;
 		strOffset += strTabFragSize;
@@ -174,6 +194,15 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 		fprintf(file, "%s %x,%x\n",
 			fi.name, fi.start, fi.end);
 	}
+
+	// output VARIABLES
+	fputs("VARIABLES\n", file);
+	for(size_t i=0; i<variables.size(); i++) {
+		const Variable& v(variables[i]);
+		fprintf(file, "%s %i %x\n",
+			v.name, v.scope, v.address);
+	}
+	fputs("\n", file);
 
 	fclose(file);
 }

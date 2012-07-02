@@ -113,17 +113,6 @@ class Mapip2LinkTask < NativeGccLinkTask
 	end
 end
 
-class Mapip2LinkTaskWithSld < MultiFileTask
-	def initialize(work, name, objects, linkflags)
-		@sldName = name + '.sld'
-		super(work, name, [@sldName])
-		@prerequisites = [Mapip2LinkTask.new(work, name, objects, linkflags)]
-	end
-	def execute
-		sh "#{mosyncdir}/bin/elfStabSld #{@NAME} #{@sldName}"
-	end
-end
-
 module Mapip2GccMod
 	def gccmode; '-c'; end
 	def mod_flags; ''; end
@@ -135,7 +124,7 @@ module Mapip2GccMod
 		end
 	end
 	def object_ending; '.o'; end
-	def pipeTaskClass; Mapip2LinkTaskWithSld; end
+	def pipeTaskClass; Mapip2LinkTask; end
 end
 
 class PipeGccWork < GccWork
@@ -190,7 +179,7 @@ class PipeGccWork < GccWork
 			end
 		end
 		@TARGET = pipeTaskClass.new(self, @TARGET_PATH, (all_objects + llo), @FLAGS + @EXTRA_LINKFLAGS)
-		@prerequisites += [@TARGET]
+		@prerequisites << @TARGET
 	end
 
 	def makeGccTask(source, ending)

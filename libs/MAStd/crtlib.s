@@ -40,9 +40,9 @@ crt0_startup:
 	ld	[&__stacktop],sp	// Save top of memory
 	ld	p0,sp
 
-	sub p0,p1			// make i0 into heap_top
-	sub p0,p2			// i0 is now start of heap
-	ld  p1,p2			// make i1 into heap_size
+	sub p0,p1			// make p0 into heap_top
+	sub p0,p2			// p0 is now start of heap
+	ld  p1,p2			// make p1 into heap_size
 
 	call &_override_heap_init_crt0
 

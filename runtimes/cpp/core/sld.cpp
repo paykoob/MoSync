@@ -51,10 +51,13 @@ struct linemap_file_line_less
 {	// functor for operator<
 	bool operator()(const LineMapping& _Left, const LineMapping& _Right) const
 	{	// apply operator< to operands
+#if 0
 		if(_Left.file != _Right.file)
 			return _Left.file < _Right.file;
 		else
 			return _Left.line < _Right.line;
+#endif
+		return _Left.ip < _Right.ip;
 	}
 };
 
@@ -268,7 +271,10 @@ bool loadSLD(const char* filename) {
 		if(sscanf(buffer, "%x:%i:%" PFZT "i", &m.ip, &m.line, &m.file) != 3)
 			break;
 		std::pair<std::set<LineMapping>::iterator, bool> res = sLineSet.insert(m);
-		TEST(res.second);
+		if(!res.second) {
+			LOG("duplicate SLD: %x:%i:%" PFZT "\n", m.ip, m.line, m.file);
+		}
+		//TEST(res.second);
 		gAddressSet.insert(m);
 	}
 	//LOG("Found %i lines\n", gLineMap.size());

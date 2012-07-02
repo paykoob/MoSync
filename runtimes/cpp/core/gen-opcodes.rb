@@ -63,6 +63,9 @@ ARITH_OPCODES = [
 	:and,
 	:or,
 	:xor,
+]
+
+SHIFT_OPCODES = [
 	:sll,
 	:sra,
 	:srl,
@@ -72,6 +75,12 @@ ARITH_OPCODES.each do |op|
 	OPCODES << o(op, op.to_s, [:rd, :rs])
 	i = op.to_s + 'i'
 	OPCODES << o(i.to_sym, op.to_s, [:rd, :imm])
+end
+
+SHIFT_OPCODES.each do |op|
+	OPCODES << o(op, op.to_s, [:rd, :rs])
+	i = op.to_s + 'i'
+	OPCODES << o(i.to_sym, op.to_s, [:rd, :imm8])
 end
 
 puts "Count: #{OPCODES.size} opcodes"
