@@ -76,4 +76,3 @@ work.instance_eval do
 end
 
 work.invoke
-sh 'cd ../../examples/cpp/3dLines/ && ./workfile.rb'

@@ -259,7 +259,7 @@ DEBIG_PHAT_ERROR; }
 	}
 
 	// entry point
-	LOG("Entry point: 0x%x\n", ehdr.e_entry);
+	//LOG("Entry point: 0x%x\n", ehdr.e_entry);
 
 	{ //Read Section Table
 		// this is the ELF string table.
@@ -274,7 +274,7 @@ DEBIG_PHAT_ERROR; }
 			TEST(file.read(strings, shdr.sh_size));
 		}
 
-		LOG("%i sections, offset %X:\n", ehdr.e_shnum, ehdr.e_shoff);
+		//LOG("%i sections, offset %X:\n", ehdr.e_shnum, ehdr.e_shoff);
 		for(int i=0; i<ehdr.e_shnum; i++) {
 			Elf32_Shdr shdr;
 			TEST(file.seek(Seek::Start, ehdr.e_shoff + i * sizeof(Elf32_Shdr)));
@@ -283,6 +283,7 @@ DEBIG_PHAT_ERROR; }
 				DEBIG_PHAT_ERROR;
 			}
 			const char* name = (shdr.sh_name == 0) ? "" : (&strings[shdr.sh_name]);
+#if 0
 			LOG("Name: %s(%i), Type: 0x%X, Flags: %08X, Address: %08X, Offset: 0x%X",
 				name, shdr.sh_name,
 				(shdr.sh_type), (shdr.sh_flags),
@@ -290,6 +291,7 @@ DEBIG_PHAT_ERROR; }
 			LOG(", Size: 0x%X, Link: 0x%X, Info: 0x%X, Addralign: %i, Entsize: %i\n",
 				shdr.sh_size, (shdr.sh_link), (shdr.sh_info),
 				(shdr.sh_addralign), (shdr.sh_entsize));
+#endif
 
 			if(strcmp(name, ".text") == 0) {
 				data.textSectionEndAddress = shdr.sh_offset + shdr.sh_size;

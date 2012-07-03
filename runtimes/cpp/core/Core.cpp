@@ -25,7 +25,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 //#define LOG_STATE_CHANGE	//TEMP HACK
 //#define DEBUG_DISASM
-#define CORE_DEBUGGING_MODE
+//#define CORE_DEBUGGING_MODE
 //#define SYSCALL_DEBUGGING_MODE
 
 #include <config_platform.h>
