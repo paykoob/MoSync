@@ -686,7 +686,7 @@ public:
 #ifdef GDB_DEBUG
 		if(mGdbOn) {
 			if(!mGdbStub) {
-				mGdbStub = new GdbStub(this);
+				mGdbStub = GdbStub::create(this, GdbStub::Mapip2);
 				mGdbStub->setupDebugConnection();
 			}
 			mGdbStub->waitForRemote();
