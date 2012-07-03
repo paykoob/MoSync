@@ -213,9 +213,6 @@ module MoSyncExeModule
 			default(:DEFAULT_LIBS, ['mastd', 'rescompiler'])
 		end
 
-		# libs
-		all_objects += libTasks
-
 		if(defined?(PACK))
 			default(:PACK_MODEL, PACK)
 			default(:PACK_VERSION, '1.0')

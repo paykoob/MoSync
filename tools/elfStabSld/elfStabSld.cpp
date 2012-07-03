@@ -96,7 +96,7 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 
 	// file list
 	fputs("Files\n", file);
-	printf("data.stringSize: %" PRIuPTR "\n", data.stabstr.size());
+	//printf("data.stringSize: %" PRIuPTR "\n", data.stabstr.size());
 	size_t strOffset = 0;
 	size_t fileNum = 0;
 	Function f;

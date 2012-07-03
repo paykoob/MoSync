@@ -130,7 +130,13 @@ flags_base = config_flags + base_flags + include_flags + standard_warnings + les
 
 cflags_base = c_flags + flags_base + lesser_conly + pendantic_c_warnings + end_flags
 
-cppflags_base = cpp_flags + " -fno-rtti" + flags_base + end_flags
+if(isPipeWork && @GCC_IS_V4)
+	no_rtti = ''
+else
+	no_rtti = ' -fno-rtti'
+end
+
+cppflags_base = cpp_flags + no_rtti + flags_base + end_flags
 # -Wno-deprecated
 
 @CFLAGS = cflags_base + @EXTRA_CFLAGS

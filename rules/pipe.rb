@@ -27,11 +27,11 @@ module MoSyncInclude
 end
 
 class PipeTask < MultiFileTask
-	def initialize(work, name, objects, linkflags, files = [])
+	def initialize(work, name, objects, libs, linkflags, files = [])
 		super(work, name, files)
 		@FLAGS = linkflags
 		dirTask = DirTask.new(work, File.dirname(name))
-		@objects = objects
+		@objects = objects + libs
 		@prerequisites += @objects + [dirTask]
 
 		initFlags
@@ -68,7 +68,7 @@ class PipeResourceTask < PipeTask
 	def initialize(work, name, objects)
 		@depFile = "#{File.dirname(name)}/resources.mf"
 		@tempDepFile = "#{@depFile}t"
-		super(work, name, objects, " -depend=#{@tempDepFile} -R")
+		super(work, name, objects, [], " -depend=#{@tempDepFile} -R")
 
 		# only if the file is not already needed do we care about extra dependencies
 		if(!needed?(false)) then
@@ -103,13 +103,19 @@ module PipeGccMod
 end
 
 class Mapip2LinkTask < NativeGccLinkTask
-	def initialize(work, name, objects, linkflags)
+	def initialize(work, name, objects, libs, linkflags)
 		super(work, name, objects, GCC_DRIVER_NAME)
 		#@FLAGS = linkflags
 		@FLAGS = ' -nodefaultlibs -nostartfiles -Wl,--warn-common'
 		LD_EXTRA_DEPENDENCIES.each do |d|
 			@prerequisites << FileTask.new(self, d)
 		end
+		@prerequisites += libs
+		@FLAGS << ' -Wl,--start-group'
+		libs.each do |l|
+			@FLAGS << " #{l}"
+		end
+		@FLAGS << ' -Wl,--end-group'
 	end
 end
 
@@ -178,7 +184,7 @@ class PipeGccWork < GccWork
 				@TARGET_PATH += "e"
 			end
 		end
-		@TARGET = pipeTaskClass.new(self, @TARGET_PATH, (all_objects + llo), @FLAGS + @EXTRA_LINKFLAGS)
+		@TARGET = pipeTaskClass.new(self, @TARGET_PATH, (all_objects + llo), libTasks, @FLAGS + @EXTRA_LINKFLAGS)
 		@prerequisites << @TARGET
 	end
 

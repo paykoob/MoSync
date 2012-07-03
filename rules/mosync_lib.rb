@@ -87,8 +87,8 @@ class MoSyncArmLibWork < NativeLibWork
 end
 
 class Mapip2LibTask < NativeLibTask
-	def initialize(work, name, objects, linkflags)
-		super(work, name, objects)
+	def initialize(work, name, objects, libs, linkflags)
+		super(work, name, objects + libs)
 		@FLAGS = linkflags
 	end
 end
@@ -105,6 +105,7 @@ class Mapip2LibWork < PipeGccWork
 		super
 	end
 	def pipeTaskClass; Mapip2LibTask; end
+	def libTasks; []; end
 
 	def setup3(all_objects, have_cppfiles)
 		targetdir = "#{mosync_libdir}/#{@BUILDDIR_NAME}"
