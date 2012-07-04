@@ -9,8 +9,6 @@ require File.expand_path('rules/mosync_util.rb')
 
 enforceGithooks
 
-PRE_DIRS = ["intlibs/idl-common", "intlibs/filelist"]
-
 if(HOST == :win32) then
 	INTLIB_PLATFORM = "windows"
 	PLATFORM_TOOLS = ["tools/makesis-2.0.0", "tools/makesis-4",
@@ -27,7 +25,13 @@ else
 	]
 end
 
-MORE_DIRS = ["intlibs/helpers/platforms/#{INTLIB_PLATFORM}",
+PRE_DIRS = [
+	"intlibs/idl-common",
+	"intlibs/filelist",
+	"intlibs/helpers/platforms/#{INTLIB_PLATFORM}",
+]
+
+MORE_DIRS = [
 	"intlibs/bluetooth",
 	"intlibs/demangle",
 	"intlibs/dll",
@@ -134,7 +138,7 @@ target :libs => :base do
 	Work.invoke_subdirs_ex(true, LIB_DIRS)
 end
 
-target :examples => :libs do
+target :examples => :default do
 	Work.invoke_subdirs_ex(true, EXAM_DIRS)
 end
 

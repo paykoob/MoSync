@@ -25,6 +25,7 @@ program
 program.comb
 resources
 resources.deps
+Resources
 log.txt
 panic.report
 Stabs.tab
@@ -114,6 +115,7 @@ wormhole.js
 /testPrograms/temp.s
 /testPrograms/copyfiles.bat
 /testPrograms/filesystem/
+/testPrograms/gcc-torture/settings.rb
 
 /runtimes/cpp/generated
 

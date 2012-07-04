@@ -109,6 +109,10 @@ int __nedf2(double a, double b)
 	return dcmp(a,b);
 }
 
+int __unorddf2(double a, double b) {
+	return isnan(a) || isnan(b);
+}
+
 
 /* the following deal with IEEE single-precision numbers */
 

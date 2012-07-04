@@ -178,7 +178,7 @@ public:
 		const char* p;
 
 		// Process messages while there are strings left in the stream.
-		while (p = stream.getNext())
+		while ((p = stream.getNext()))
 		{
 			if (0 == strcmp(p, "NativeUI"))
 			{
