@@ -765,6 +765,8 @@ bool GdbStubInt::readRegister() {
 	byte reg = getDataTypeFromInput<byte>();
 	if(reg < mNregs) {
 		appendDataTypeToOutput<int>(mCore->regs[reg]);
+	} else if(reg == mNregs) {
+		appendDataTypeToOutput<int>(Core::GetIp(mCore));
 	} else {
 		appendOut("E00");
 	}
