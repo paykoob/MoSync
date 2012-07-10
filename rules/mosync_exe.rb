@@ -346,19 +346,12 @@ class MoSyncArmExeWork < ExeWork
 	end
 end
 
-class PipeExeWork
+if(USE_ARM)
+	PipeExeWorkBase = MoSyncArmExeWork
+else
+	PipeExeWorkBase = OriginalPipeExeWork
+end
+
+class PipeExeWork < PipeExeWorkBase
 	include MoSyncMemorySettings
-	def invoke
-		Targets.setup
-		if(USE_ARM)
-			w = MoSyncArmExeWork.new
-		else
-			w = OriginalPipeExeWork.new
-		end
-		self.instance_variables.each do |iv|
-			next if(USE_ARM && iv == "@EXTRA_LINKFLAGS")
-			w.instance_variable_set(iv, self.instance_variable_get(iv))
-		end
-		w.invoke
-	end
 end

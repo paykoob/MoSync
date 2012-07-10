@@ -186,7 +186,8 @@ class GccWork < BuildWork
 		sExt = '.S' if(USE_ARM)
 		sExt = '.s' if(USE_GNU_BINUTILS)
 		if(sExt)
-			@CFLAGS_MAP[sExt] = @CFLAGS + host_flags
+			@CFLAGS_MAP[sExt] = @CFLAGS + host_flags if(USE_ARM)
+			@CFLAGS_MAP[sExt] = ' -Wa,--gstabs' if(USE_GNU_BINUTILS)
 			sfiles = collect_files(sExt)
 			cfiles += sfiles
 		end

@@ -55,14 +55,14 @@ class String
 	end
 
 	def getExt
-	doti = rindex('.')
-	slashi = rindex('/')
-	if(doti)
-		return nil if(slashi && slashi > doti)
-		return self[doti..self.length]
+		doti = rindex('.')
+		slashi = rindex('/')
+		if(doti)
+			return nil if(slashi && slashi > doti)
+			return self[doti..self.length]
+		end
+		return nil
 	end
-  return nil
- end
 
 	def noExt
 		doti = rindex('.')
@@ -94,9 +94,9 @@ def sh(cmd)
 			while !io.eof?
 				line = io.gets
 				puts line
-	    end
-	    # Check the return code
-	    exitCode = Process::waitpid2(io.pid)[1].exitstatus
+			end
+			# Check the return code
+			exitCode = Process::waitpid2(io.pid)[1].exitstatus
 			if(exitCode != 0)
 				error "Command failed, code #{exitCode}"
 			end
