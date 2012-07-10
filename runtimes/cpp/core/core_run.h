@@ -165,7 +165,7 @@ VMLOOP_LABEL
 		OPC(PUSH)	FETCH_RD_RS
 		{
 			byte r = rd;
-			byte n = rs - rd;
+			byte n = (rs - rd) + 1;
 			if(rd < 2 || int(rd) + n > 32 || n == 0) {
 				DUMPINT(rd);
 				DUMPINT(n);
@@ -185,7 +185,7 @@ VMLOOP_LABEL
 		OPC(POP) FETCH_RD_RS
 		{
 			byte r = rs;
-			byte n = rs - rd;
+			byte n = (rs - rd) + 1;
 			if(rd > 31 || int(rs) - n < 1 || n == 0) {
 				DUMPINT(rd);
 				DUMPINT(rs);
@@ -194,11 +194,11 @@ VMLOOP_LABEL
 			}
 
 			do {
-				r--;
 				REG(r) = MEM(int32_t, REG(REG_sp), READ);
 				//REG(REG_sp) += 4;
 				ARITH(REG_sp, regs[REG_sp], +, 4);
 				LOGC("\t%i 0x%x", r, REG(r));
+				r--;
 			} while(--n);
 		}
 		EOP;
