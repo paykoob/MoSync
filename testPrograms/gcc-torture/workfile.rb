@@ -37,7 +37,7 @@ end
 pattern = SETTINGS[:source_path] + '/*.c'
 pattern.gsub!("\\", '/')
 puts pattern
-files = Dir.glob(pattern)
+files = Dir.glob(pattern).sort
 puts "#{files.count} files to test:"
 
 files.each do |filename|
@@ -60,15 +60,26 @@ files.each do |filename|
 	sldFile = ofn.ext('.sld' + suffix)
 	force_rebuild = SETTINGS[:rebuild_failed] && File.exists?(failFile)
 
-	# compile
-	FileUtils.rm_f(ofn) if(force_rebuild)
-	FileUtils.rm_f(winFile) if(force_rebuild)
+	if(force_rebuild)
+		FileUtils.rm_f(ofn)
+		FileUtils.rm_f(winFile)
+		work.invoke
+	end
 
-	if(work.run)
+	winTask = FileTask.new(work, winFile)
+	winTask.prerequisites << FileTask.new(work, ofn)
+	if(!winTask.needed?)
+		puts "#{bn} won"
+		next
+	end
+
+	begin
+		work.run
 		FileUtils.touch(winFile)
 		FileUtils.rm_f(failFile)
-	else
+	rescue
 		FileUtils.touch(failFile)
 		FileUtils.rm_f(winFile)
+		raise
 	end
 end
