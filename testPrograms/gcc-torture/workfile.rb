@@ -5,6 +5,30 @@ require 'fileutils'
 require 'settings.rb'
 require 'skipped.rb'
 
+NEEDS_HEAP = [
+'20000914-1.c',
+'20020406-1.c',
+'20000914-1.c',
+'20001203-2.c',
+'20020406-1.c',
+'20051113-1.c',
+'20071018-1.c',
+'20071120-1.c',
+'920810-1.c',
+'941014-2.c',
+'960521-1.c',
+'990628-1.c',
+'comp-goto-1.c',
+'pr15262-1.c',
+'pr36765.c',
+'pr41395-1.c',
+'pr41395-2.c',
+'pr41463.c',
+'pr42614.c',
+'pr43008.c',
+'va-arg-21.c',
+]
+
 class TTWork < PipeExeWork
 	def initialize(name)
 		super()
@@ -13,6 +37,7 @@ class TTWork < PipeExeWork
 			"#{SETTINGS[:source_path]}/#{name}",
 			'helpers/helpers.c',
 		]
+		@EXTRA_SOURCEFILES << 'helpers/override_heap.c' unless(NEEDS_HEAP.include?(name))
 		@SPECIFIC_CFLAGS = {
 			# avoid testing long longs, as they are not yet properly supported by MoSync.
 			'conversion.c' => ' -U __GNUC__',
@@ -43,10 +68,10 @@ puts "#{files.count} files to test:"
 files.each do |filename|
 	bn = File.basename(filename)
 	if(SKIPPED.include?(bn))
-		puts "Skipped #{bn}"
+		#puts "Skipped #{bn}"
 		next
 	end
-	puts bn
+	#puts bn
 
 	work = TTWork.new(bn)
 	work.invoke
@@ -67,13 +92,15 @@ files.each do |filename|
 	end
 
 	winTask = FileTask.new(work, winFile)
-	winTask.prerequisites << FileTask.new(work, ofn)
+	winTask.prerequisites << FileTask.new(work, pfn)
 	if(!winTask.needed?)
-		puts "#{bn} won"
+		#puts "#{bn} won"
 		next
 	end
 
 	begin
+		FileUtils.rm_f(winFile)
+		FileUtils.rm_f(failFile)
 		work.run
 		FileUtils.touch(winFile)
 		FileUtils.rm_f(failFile)

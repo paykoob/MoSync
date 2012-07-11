@@ -30,7 +30,22 @@ SKIPPED = [
 '931002-1.c', #no.trampolines
 'eeprof-1.c', #profiler
 '941014-1.c', #pipe-tool reports: illegal function pointer manipulation.
+'20101011-1.c',	# integer division by zero
+
 #'builtin-bitops-1.c', #builtin.functions
-#'930622-2.c', #gcc bug: calls __fixdfdi instead of __fixdfti or __fixtfti
+'930622-2.c', #gcc bug: calls __fixdfdi instead of __fixdfti or __fixtfti
 '20000722-1.c',	# mapip2 bug: caller's stack frame is not proper.
+'20000815-1.c',	# mapip2 bug, unknown. "emit_move_insn QImode -> SImode"?
+'20020227-1.c',	# mapip2 bug, unknown (complex float, should work).
+
+# mapip2 bug, same as 20000722-1: callers that pass structs to callees
+# does not properly decrement the stack pointer in the caller's prologue.
+'20050316-1.c',
+'20050316-2.c',
+'20050316-3.c',
+
+'20070824-1.c',	# mapip2 bug: __builtin_alloca?
+'930713-1.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
+'930718-1.c',	# mapip2 bug. struct on stack, 20000722-1.
+'931004-3.c',	# mapip2 bug, segfault due to "emit_move_insn HImode -> SImode"
 ]

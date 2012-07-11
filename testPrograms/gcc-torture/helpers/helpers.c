@@ -16,10 +16,6 @@ int __main(void)
 	return 0;
 }
 
-void override_heap_init_crt0(void* start, int size)
-{
-}
-
 int resource_selector()
 {
 	return 0;
