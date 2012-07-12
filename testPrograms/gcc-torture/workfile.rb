@@ -65,6 +65,8 @@ puts pattern
 files = Dir.glob(pattern).sort
 puts "#{files.count} files to test:"
 
+builddir = nil
+
 files.each do |filename|
 	bn = File.basename(filename)
 	if(SKIPPED.include?(bn))
@@ -73,10 +75,13 @@ files.each do |filename|
 	end
 	#puts bn
 
-	work = TTWork.new(bn)
-	work.invoke
+	if(!builddir)
+		work = TTWork.new(bn)
+		work.invoke
+		builddir = work.builddir
+	end
 
-	ofn = work.builddir + bn.ext('.o')
+	ofn = builddir + bn.ext('.o')
 	suffix = ''
 	pfn = ofn.ext('.moo' + suffix)
 	winFile = ofn.ext('.win' + suffix)
@@ -85,22 +90,26 @@ files.each do |filename|
 	sldFile = ofn.ext('.sld' + suffix)
 	force_rebuild = SETTINGS[:rebuild_failed] && File.exists?(failFile)
 
+	winTask = FileTask.new(work, winFile)
+	winTask.prerequisites << FileTask.new(work, pfn)
+	if(!winTask.needed?(false))
+		#puts "#{bn} won"
+		next
+	end
+
+	if(!work)
+		work = TTWork.new(bn)
+	end
+
 	if(force_rebuild)
 		FileUtils.rm_f(ofn)
 		FileUtils.rm_f(winFile)
-		work.invoke
-	end
-
-	winTask = FileTask.new(work, winFile)
-	winTask.prerequisites << FileTask.new(work, pfn)
-	if(!winTask.needed?)
-		#puts "#{bn} won"
-		next
 	end
 
 	begin
 		FileUtils.rm_f(winFile)
 		FileUtils.rm_f(failFile)
+		work.invoke
 		work.run
 		FileUtils.touch(winFile)
 		FileUtils.rm_f(failFile)

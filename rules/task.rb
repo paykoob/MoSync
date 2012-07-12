@@ -257,7 +257,7 @@ class FileTask < Task
 	# Prints the reason the task is needed, if <tt>log</tt>.
 	def needed?(log = true)
 		if(!File.exist?(@NAME))
-			puts 'In '+FileUtils.pwd if(log)
+			puts 'In '+FileUtils.pwd if(log && PRINT_WORKING_DIRECTORY)
 			puts "Because file does not exist:" if(log)
 			return true
 		end
