@@ -75,14 +75,14 @@ unsigned long __fixunsdfdi(double a) {
 
 float __floatunsisf (unsigned int i) {
 	if(i > INT_MAX)
-		return __floatsisf(i >> 1)*2;
+		return __floatsisf(i >> 1)*2 + (i&1);
 	else
 		return __floatsisf(i);
 }
 
 double __floatunsidf (unsigned int i) {
 	if(i > INT_MAX)
-		return __floatsidf(i >> 1)*2;
+		return __floatsidf(i >> 1)*2 + (i&1);
 	else
 		return __floatsidf(i);
 }
