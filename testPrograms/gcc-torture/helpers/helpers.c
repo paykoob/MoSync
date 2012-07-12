@@ -21,8 +21,8 @@ int resource_selector()
 	return 0;
 }
 
-int main(void);
+int main(int argc, char** argv);
 
 int MAMain(void) {
-	return main();
+	return main(0, 0);
 }

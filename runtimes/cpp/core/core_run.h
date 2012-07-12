@@ -223,7 +223,7 @@ VMLOOP_LABEL
 		{
 			FETCH_RD_RS_CONST
 			WRITE_REG(rd, MEM(int32_t, RS + IMM, READ));
-			LOGC("\t%i", RD);
+			LOGC("\t[0x%x] %i", RS + IMM, RD);
 		}
 		EOP;
 

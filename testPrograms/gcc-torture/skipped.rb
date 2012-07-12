@@ -51,4 +51,7 @@ SKIPPED = [
 '931004-3.c',	# mapip2 bug, segfault due to "emit_move_insn HImode -> SImode"
 '931004-7.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 '931005-1.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
+'frame-address.c',	# mapip2 bug, __builtin_alloca?
+'pr15296.c',	# mapip2 bug, ridiculously complicated
+'pr17377.c',	# mapip2 bug, unknown
 ]

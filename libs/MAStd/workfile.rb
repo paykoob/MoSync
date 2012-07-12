@@ -81,7 +81,7 @@ mod.class_eval do
 
 		@native_specific_cflags = {
 			"madmath.c" => " -Wno-missing-declarations",
-			"mavsprintf.c" => " -Wno-float-equal",
+			"mavsprintf.c" => " -Wno-float-equal -Wno-missing-format-attribute",
 			"mawvsprintf.c" => " -Wno-float-equal",
 			}.merge(native_specflags, &HashMergeAdd)
 
