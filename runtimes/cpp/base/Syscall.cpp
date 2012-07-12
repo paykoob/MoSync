@@ -625,6 +625,9 @@ namespace Base {
 	SYSCALL(double, __floatsidf(int a)) {
 		return (double)a;
 	}
+	SYSCALL(double, __floatunsidf(uint a)) {
+		return (double)a;
+	}
 	SYSCALL(double, __extendsfdf2(float f)) {
 		return (double)f;
 	}
@@ -672,6 +675,9 @@ namespace Base {
 		return (int)a;
 	}
 	SYSCALL(float, __floatsisf(int a)) {
+		return (float)a;
+	}
+	SYSCALL(float, __floatunsisf(uint a)) {
 		return (float)a;
 	}
 	SYSCALL(float, __truncdfsf2(double a)) {

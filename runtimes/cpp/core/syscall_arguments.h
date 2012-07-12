@@ -102,6 +102,12 @@ SAFUNC int _SYSCALL_CONVERT_int(int i) {
 SAFUNC int _SYSCALL_CONVERTRES_int(int i) { return i; }
 #define _SYSCALL_HANDLERES_int _SYSCALL_HANDLERES_DEFAULT(int)
 
+SAFUNC void debug_uint(uint SCDEBUG_ARG(i)) { LOGSC("(%u)", i); }
+SAFUNC uint _SYSCALL_CONVERT_uint(int i) {
+	_debug_hex(i);
+	debug_uint(i);
+	return i;
+}
 SAFUNC int _SYSCALL_CONVERTRES_uint(uint i) { return i; }
 #define _SYSCALL_HANDLERES_uint _SYSCALL_HANDLERES_DEFAULT(uint)
 

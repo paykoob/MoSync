@@ -73,6 +73,7 @@ unsigned long __fixunsdfdi(double a) {
 }
 #endif
 
+#if 0	// 0x80000081
 float __floatunsisf (unsigned int i) {
 	if(i > INT_MAX)
 		return __floatsisf(i >> 1)*2 + (i&1);
@@ -86,6 +87,7 @@ double __floatunsidf (unsigned int i) {
 	else
 		return __floatsidf(i);
 }
+#endif
 
 #if 0
 /*

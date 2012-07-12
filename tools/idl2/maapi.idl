@@ -215,6 +215,10 @@ interface MAAPI {
 	/**
 	* Returns the double representation of \a a.
 	*/
+	double __floatunsidf(in uint a);
+	/**
+	* Returns the double representation of \a a.
+	*/
 	double __extendsfdf2(in float a);
 	/**
 	* Returns \>0 if \a a \> \a b, 0 if \a a == \a b and \<0 if \a a \< \a b.
@@ -256,6 +260,10 @@ interface MAAPI {
 	* Returns the float representation of \a a.
 	*/
 	float __floatsisf(in int a);
+	/**
+	* Returns the float representation of \a a.
+	*/
+	float __floatunsisf(in uint a);
 	/**
 	* Returns the float representation of \a a.
 	*/
