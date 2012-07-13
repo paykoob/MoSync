@@ -58,6 +58,7 @@ class TTWork < PipeExeWork
 		include_dirs = @EXTRA_INCLUDES
 		include_flags = include_dirs.collect {|dir| " -I \""+File.expand_path_fix(dir)+'"'}.join
 		flags = ' -g -w'
+		flags << ' -O2 -fomit-frame-pointer' if(CONFIG == "")
 		flags << include_flags
 		@CFLAGS = flags
 		@CPPFLAGS = flags

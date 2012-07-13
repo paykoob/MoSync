@@ -99,7 +99,9 @@ end
 if(CONFIG == "debug") then
 	config_flags = " -g -O0"
 elsif(CONFIG == "")
-	config_flags =  " -O2"
+	config_flags = ''
+	config_flags << ' -g' if(isPipeWork)
+	config_flags << " -O2"
 else
 	error "wrong configuration: " + CONFIG
 end
