@@ -113,6 +113,10 @@ int __unorddf2(double a, double b) {
 	return isnan(a) || isnan(b);
 }
 
+int __unordsf2(float a, float b) {
+	return isnan(a) || isnan(b);
+}
+
 
 /* the following deal with IEEE single-precision numbers */
 

@@ -87,7 +87,7 @@ mod.class_eval do
 
 		@pipe_specific_cflags = @native_specific_cflags.merge({
 			"intrinsics.c" => " -Wno-missing-prototypes -Wno-missing-declarations",
-			"madmath.c" => " -Wno-missing-prototypes -Wno-missing-declarations",
+			"madmath.c" => " -Wno-missing-prototypes -Wno-missing-declarations -fno-builtin-isnan",
 			"maint64.c" => " -fno-strict-aliasing -Wno-missing-prototypes -Wno-missing-declarations",
 			"libgcc2.c" => " -Wno-unreachable-code",
 			"strtod.c" => " -Wno-float-equal" + @GCC_WNO_UNUSED_BUT_SET_VARIABLE,

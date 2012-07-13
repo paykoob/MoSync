@@ -27,7 +27,11 @@ NEEDS_HEAP = [
 'pr41463.c',
 'pr42614.c',
 'pr43008.c',
+'printf-1.c',
+'printf-chk-1.c',
 'va-arg-21.c',
+'vprintf-1.c',
+'vprintf-chk-1.c',
 ]
 
 class TTWork < PipeExeWork
@@ -42,6 +46,9 @@ class TTWork < PipeExeWork
 		@SPECIFIC_CFLAGS = {
 			# avoid testing long longs, as they are not yet properly supported by MoSync.
 			'conversion.c' => ' -U __GNUC__',
+			'fprintf-chk-1.c' => ' -ffreestanding',
+			'vfprintf-chk-1.c' => ' -ffreestanding',
+			'pr42833.c' => ' -D__INT_LEAST8_TYPE__=char -D__UINT_LEAST32_TYPE__=unsigned',
 		}
 		@EXTRA_EMUFLAGS = ' -noscreen'
 		@NAME = name

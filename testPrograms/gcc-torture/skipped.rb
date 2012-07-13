@@ -33,25 +33,32 @@ SKIPPED = [
 '20101011-1.c',	# integer division by zero
 'align-3.c',	# illegal alignment
 
+#bugs below
+
 'builtin-bitops-1.c', #builtin.functions. todo: implement them.
 '930622-2.c', #gcc bug: calls __fixdfdi instead of __fixdfti or __fixtfti
-'20000722-1.c',	# mapip2 bug: caller's stack frame is not proper.
+#'20000722-1.c',	# mapip2 bug: caller's stack frame is not proper.
 '20000815-1.c',	# mapip2 bug, unknown. "emit_move_insn QImode -> SImode"?
-'20020227-1.c',	# mapip2 bug, unknown (complex float, should work).
+#'20020227-1.c',	# mapip2 bug, unknown (complex float, should work).
 
 # mapip2 bug, same as 20000722-1: callers that pass structs to callees
 # does not properly decrement the stack pointer in the caller's prologue.
-'20050316-1.c',
-'20050316-2.c',
-'20050316-3.c',
+#'20050316-1.c',
+#'20050316-2.c',
+#'20050316-3.c',
 
-'20070824-1.c',	# mapip2 bug: __builtin_alloca?
+#'20070824-1.c',	# mapip2 bug: __builtin_alloca?
 '930713-1.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
-'930718-1.c',	# mapip2 bug. struct on stack, 20000722-1.
+#'930718-1.c',	# mapip2 bug. struct on stack, 20000722-1.
 '931004-3.c',	# mapip2 bug, segfault due to "emit_move_insn HImode -> SImode"
 '931004-7.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 '931005-1.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
-'frame-address.c',	# mapip2 bug, __builtin_alloca?
-'pr15296.c',	# mapip2 bug, ridiculously complicated
-'pr17377.c',	# mapip2 bug, unknown
+#'frame-address.c',	# mapip2 bug, __builtin_alloca?
+#'pr15296.c',	# mapip2 bug, ridiculously complicated
+'pr17377.c',	# mapip2 bug, __builtin_return_address
+'pr42154.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 ]
+
+if(!USE_NEWLIB)
+	SKIPPED << 'pr34456.c'	# qsort
+end
