@@ -62,3 +62,7 @@ SKIPPED = [
 if(!USE_NEWLIB)
 	SKIPPED << 'pr34456.c'	# qsort
 end
+
+if(CONFIG == "")
+	SKIPPED << 'fprintf-chk-1.c'	#fails.on.purpose
+end
