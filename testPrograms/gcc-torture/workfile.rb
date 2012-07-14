@@ -44,11 +44,14 @@ class TTWork < PipeExeWork
 		]
 		@EXTRA_SOURCEFILES << 'helpers/override_heap.c' unless(NEEDS_HEAP.include?(name))
 		@SPECIFIC_CFLAGS = {
-			# avoid testing long longs, as they are not yet properly supported by MoSync.
+			# longlong to float conversion is not yet supported.
 			'conversion.c' => ' -U __GNUC__',
+
 			'fprintf-chk-1.c' => ' -ffreestanding',
 			'vfprintf-chk-1.c' => ' -ffreestanding',
 			'pr42833.c' => ' -D__INT_LEAST8_TYPE__=char -D__UINT_LEAST32_TYPE__=unsigned',
+			'pr22493-1.c' => ' -fwrapv',
+			'pr23047.c' => ' -fwrapv',
 		}
 		@EXTRA_EMUFLAGS = ' -noscreen'
 		@NAME = name

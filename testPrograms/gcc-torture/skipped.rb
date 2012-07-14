@@ -55,7 +55,6 @@ SKIPPED = [
 '931005-1.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 #'frame-address.c',	# mapip2 bug, __builtin_alloca?
 #'pr15296.c',	# mapip2 bug, ridiculously complicated
-'pr17377.c',	# mapip2 bug, __builtin_return_address
 'pr42154.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 ]
 
@@ -65,4 +64,9 @@ end
 
 if(CONFIG == "")
 	SKIPPED << 'fprintf-chk-1.c'	#fails.on.purpose
+	SKIPPED << 'vfprintf-chk-1.c'	#fails.on.purpose
+	#SKIPPED << 'nest-stdar-1.c'	# mapip2 bug, incorrect vararg stack pointer offset in inner function.
+	#SKIPPED << 'pr41239.c'	# mapip2 bug, incorrect vararg stack pointer offset in normal function.
+else
+	SKIPPED << 'pr17377.c'	# mapip2 bug, __builtin_return_address
 end
