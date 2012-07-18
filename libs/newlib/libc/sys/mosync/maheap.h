@@ -142,7 +142,7 @@ realloc_hook set_realloc_hook(realloc_hook hook);
 block_size_hook set_block_size_hook(block_size_hook hook);
 
 /**
-* This function is not implemented. You may implement it. If you do,
+* This function is weak. You may redefine it. If you do,
 * it will be called at the beginning of execution, instead of the standard
 * heap initialization function, before C++ static constructors and MAMain.
 *
@@ -150,13 +150,16 @@ block_size_hook set_block_size_hook(block_size_hook hook);
 * or the heap will be broken and malloc() will not work.
 * You must also call set_realloc_hook(), if your program uses realloc().
 *
-* This function will only be called on the MAPIP GCC target, because the
-* optional call to this function relies on a special feature of pipe-tool.
-*
 * \param start The address of the start of the heap.
 * \param length The length of the heap, in bytes.
 */
-void override_heap_init_crt0(char* start, int length);
+void override_heap_init_crt0(char* start, int length) __attribute((weak));
+
+/**
+* The default heap initialization function.
+* \see override_heap_init_crt0()
+*/
+void ansi_heap_init_crt0(char *start, int length);
 
 #ifdef __cplusplus
 }	//extern "C"

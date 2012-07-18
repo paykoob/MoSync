@@ -16,6 +16,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 */
 
 #include "ma.h"
+#include "madmath.h"
 
 #ifdef MAPIP
 
@@ -106,6 +107,14 @@ int __eqdf2(double a, double b)
 int __nedf2(double a, double b)
 {
 	return dcmp(a,b);
+}
+
+int __unorddf2(double a, double b) {
+	return isnan(a) || isnan(b);
+}
+
+int __unordsf2(float a, float b) {
+	return isnan(a) || isnan(b);
 }
 
 // these should not be needed, as long == int.

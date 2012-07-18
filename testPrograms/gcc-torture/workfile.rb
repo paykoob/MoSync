@@ -37,7 +37,7 @@ NEEDS_HEAP = [
 class TTWork < PipeExeWork
 	def initialize(name)
 		super()
-		@EXTRA_INCLUDES = ['.']
+		@EXTRA_INCLUDES = ['.'] if(!USE_NEWLIB)
 		@EXTRA_SOURCEFILES = [
 			"#{SETTINGS[:source_path]}/#{name}",
 			'helpers/helpers.c',
@@ -102,6 +102,13 @@ files.each do |filename|
 	sldFile = ofn.ext('.sld' + suffix)
 	force_rebuild = SETTINGS[:rebuild_failed] && File.exists?(failFile)
 
+	if(SETTINGS[:strict_prerequisites])
+		if(!work)
+			work = TTWork.new(bn)
+		end
+		work.invoke
+	end
+
 	winTask = FileTask.new(work, winFile)
 	winTask.prerequisites << FileTask.new(work, pfn)
 	if(!winTask.needed?(false))
@@ -128,6 +135,6 @@ files.each do |filename|
 	rescue
 		FileUtils.touch(failFile)
 		FileUtils.rm_f(winFile)
-		raise
+		raise if(SETTINGS[:stop_on_fail])
 	end
 end

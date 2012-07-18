@@ -163,9 +163,6 @@ block_size_hook set_block_size_hook(block_size_hook hook);
 * or the heap will be broken and malloc() will not work.
 * You must also call set_realloc_hook(), if your program uses realloc().
 *
-* This function will only be called on the MAPIP GCC target, because the
-* optional call to this function relies on a special feature of pipe-tool.
-*
 * \param start The address of the start of the heap.
 * \param length The length of the heap, in bytes.
 */

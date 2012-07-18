@@ -23,8 +23,6 @@
 # SDL_SOUND, boolean. True if SDL_Sound is available.
 # BLUETOOTH, boolean. True if Bluez is available.
 
-require "#{File.dirname(__FILE__)}/error.rb"
-
 begin
 	UNAME = open("|uname").readline().strip()
 rescue SystemCallError
@@ -48,7 +46,7 @@ elsif(UNAME == "CYGWIN_NT-6.1-WOW64")
 elsif(UNAME == "Darwin")
 	HOST = :darwin
 else
-	error("Unknown platform: #{UNAME}")
+	raise "Unknown platform: #{UNAME}"
 end
 
 if(HOST == :linux)

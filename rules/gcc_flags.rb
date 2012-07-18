@@ -101,7 +101,8 @@ if(CONFIG == "debug") then
 elsif(CONFIG == "")
 	config_flags = ''
 	config_flags << ' -g' if(isPipeWork)
-	config_flags << " -O2"
+	config_flags << ' -O2'
+	config_flags << ' -fomit-frame-pointer' if(isPipeWork && @GCC_IS_V4)
 else
 	error "wrong configuration: " + CONFIG
 end

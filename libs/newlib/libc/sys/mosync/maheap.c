@@ -83,11 +83,11 @@ block_size_hook set_block_size_hook(block_size_hook new) {
 #define MASTD_HEAP_LOG(...)
 #endif
 
-void ansi_heap_init_crt0(char *start, int length);
-
 //****************************************
 //				NewPtr
 //****************************************
+
+void override_heap_init_crt0(char* start, int length) __attribute__ ((weak, alias ("ansi_heap_init_crt0")));
 
 void ansi_heap_init_crt0(char *start, int length)
 {
@@ -108,7 +108,7 @@ void ansi_heap_init_crt0(char *start, int length)
 	set_free_hook(tlsf_free);
 	set_realloc_hook((realloc_hook)tlsf_realloc);
 	set_block_size_hook((block_size_hook)tlsf_block_size);
-		
+
 	MASTD_HEAP_LOG("TLSF initialized!");
 }
 
@@ -182,15 +182,15 @@ void free(void *mem)
 	int wasMemoryProtected = maGetMemoryProtection();
 	maSetMemoryProtection(FALSE);
 	if(gBlockSizeHook)
-		maProtectMemory(mem, gBlockSizeHook(mem));	
+		maProtectMemory(mem, gBlockSizeHook(mem));
 #endif
 
 	gFreeHook(mem);
-	
+
 #ifdef MEMORY_PROTECTION
 	maSetMemoryProtection(wasMemoryProtected);
 #endif
-	
+
 }
 
 //****************************************
