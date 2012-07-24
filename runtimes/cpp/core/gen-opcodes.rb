@@ -16,13 +16,17 @@ OPCODES = [
 	o(:nop, 'nop', []),	# NOP must be the first one, number 0.
 	o(:break, 'break', []),	# debugger breakpoint.
 	o(:ldr, 'ld', [:rd, :rs]),
+	o(:lddr, 'ld.d', [:rd, :rs]),
+	o(:lddi, 'ld.d', [:rd, :fimmd]),
 	o(:ldi, 'ld', [:rd, :imm]),
 	o(:ldw, 'ld', [:rd, :adaddr]),
 	o(:ldb, 'ld.b', [:rd, :adaddr]),
 	o(:ldh, 'ld.h', [:rd, :adaddr]),
+	o(:ldd, 'ld.d', [:rd, :adaddr]),
 	o(:stw, 'ld', [:adaddr, :rs]),
 	o(:stb, 'ld.b', [:adaddr, :rs]),
 	o(:sth, 'ld.h', [:adaddr, :rs]),
+	o(:std, 'ld.d', [:adaddr, :rs]),
 	o(:jpr, 'jp', [:rd]),
 	o(:jpi, 'jp', [:aiaddr]),
 	o(:callr, 'call', [:rd]),
@@ -37,16 +41,16 @@ OPCODES = [
 	o(:xb, 'xb', [:rd, :rs]),
 
 	# floating-point
-	o(:fldis, 'ld.s', [:frd, :fimms]),	# float load immediate single (32 bits)
+	o(:fldis, 'ld', [:frd, :fimms]),	# float load immediate single (32 bits)
 	o(:fldid, 'ld.d', [:frd, :fimmd]),	# float load immediate double (64 bits)
-	o(:fsts, 'ld.s', [:adaddr, :frs]),	# float store single
+	o(:fsts, 'ld', [:adaddr, :frs]),	# float store single
 	o(:fstd, 'ld.d', [:adaddr, :frs]),	# float store double
-	o(:flds, 'ld.s', [:frd, :adaddr]),	# float load single
+	o(:flds, 'ld', [:frd, :adaddr]),	# float load single
 	o(:fldd, 'ld.d', [:frd, :adaddr]),	# float load double
 	o(:fldr, 'ld.d', [:frd, :frs]),	# float load register
-	o(:fldrs, 'ld.s', [:frd, :rs]),	# float load integer register single (32 bits, direct copy without conversion)
+	o(:fldrs, 'ld', [:frd, :rs]),	# float load integer register single (32 bits, direct copy without conversion)
 	o(:fldrd, 'ld.d', [:frd, :rs]),	# float load integer register double (rs & rs+1)
-	o(:fstrs, 'ld.s', [:rd, :frs]),	# float store integer register single
+	o(:fstrs, 'ld', [:rd, :frs]),	# float store integer register single
 	o(:fstrd, 'ld.d', [:rd, :frs]),	# float store integer register double
 	o(:floats, 'float.s', [:frd, :rs]),	# float convert from 32-bit int
 	o(:floatd, 'float.d', [:frd, :rs]),	# float convert from 64-bit int (rs & rs+1)
