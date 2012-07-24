@@ -35,6 +35,41 @@ OPCODES = [
 	o(:neg, 'neg', [:rd, :rs]),
 	o(:xh, 'xh', [:rd, :rs]),
 	o(:xb, 'xb', [:rd, :rs]),
+
+	# floating-point
+	o(:fldis, 'ld.s', [:frd, :fimms]),	# float load immediate single (32 bits)
+	o(:fldid, 'ld.d', [:frd, :fimmd]),	# float load immediate double (64 bits)
+	o(:fsts, 'ld.s', [:adaddr, :frs]),	# float store single
+	o(:fstd, 'ld.d', [:adaddr, :frs]),	# float store double
+	o(:flds, 'ld.s', [:frd, :adaddr]),	# float load single
+	o(:fldd, 'ld.d', [:frd, :adaddr]),	# float load double
+	o(:fldr, 'ld.d', [:frd, :frs]),	# float load register
+	o(:fldrs, 'ld.s', [:frd, :rs]),	# float load integer register single (32 bits, direct copy without conversion)
+	o(:fldrd, 'ld.d', [:frd, :rs]),	# float load integer register double (rs & rs+1)
+	o(:fstrs, 'ld.s', [:rd, :frs]),	# float store integer register single
+	o(:fstrd, 'ld.d', [:rd, :frs]),	# float store integer register double
+	o(:floats, 'float.s', [:frd, :rs]),	# float convert from 32-bit int
+	o(:floatd, 'float.d', [:frd, :rs]),	# float convert from 64-bit int (rs & rs+1)
+	o(:floatuns, 'floatun.s', [:frd, :rs]),	# float convert from 32-bit unsigned
+	o(:floatund, 'floatun.d', [:frd, :rs]),	# float convert from 64-bit unsigned (rs & rs+1)
+	o(:fix_truncs, 'fix_trunc.s', [:rd, :frs]),	# float convert to 32-bit int
+	o(:fix_truncd, 'fix_trunc.d', [:rd, :frs]),	# float convert to 64-bit int (rd & rd+1)
+	o(:fixun_truncs, 'fixun_trunc.s', [:rd, :frs]),	# float convert to 32-bit unsigned
+	o(:fixun_truncd, 'fixun_trunc.d', [:rd, :frs]),	# float convert to 64-bit unsigned (rd & rd+1)
+]
+
+FLOAT_ARITH_OPCODES = [
+	:fadd,
+	:fsub,
+	:fmul,
+	:fdiv,
+	:fsqrt,
+	:fsin,
+	:fcos,
+	:fexp,
+	:flog,
+	:fpow,
+	:fatan2,
 ]
 
 JC_OPCODES = [
@@ -44,14 +79,25 @@ JC_OPCODES = [
 	:gt,
 	:le,
 	:lt,
+]
+JCU_OPCODES = [
 	:ltu,
 	:geu,
 	:gtu,
 	:leu,
 ]
 
-JC_OPCODES.each do |op|
+def intjc(op)
 	OPCODES << o(('jc_' + op.to_s).to_sym, 'jc '+op.to_s, [:rd, :rs, :riaddr])
+end
+
+JC_OPCODES.each do |op|
+	intjc(op)
+	OPCODES << o(('fjc_' + op.to_s).to_sym, 'jc '+op.to_s, [:frd, :frs, :riaddr])
+end
+
+JCU_OPCODES.each do |op|
+	intjc(op)
 end
 
 ARITH_OPCODES = [
@@ -83,6 +129,10 @@ SHIFT_OPCODES.each do |op|
 	OPCODES << o(i.to_sym, op.to_s, [:rd, :imm8])
 end
 
+FLOAT_ARITH_OPCODES.each do |op|
+	OPCODES << o(op, op.to_s, [:frd, :frs])
+end
+
 puts "Count: #{OPCODES.size} opcodes"
 
 
@@ -94,6 +144,8 @@ REGISTERS = [
 :g8,:g9,:g10,:g11,:g12,:g13,
 :r0,:r1,
 ]
+
+FREG_COUNT = 16
 
 
 mode = ARGV[0]
@@ -213,6 +265,12 @@ elsif(mode == 'binutils/desc')
 		file.puts 'const char* const mapip2_register_names[] = {'
 		REGISTERS.each do |r|
 			file.puts "\t\"#{r}\","
+		end
+		file.puts '};'
+		file.puts
+		file.puts 'const char* const mapip2_float_register_names[] = {'
+		(0..FREG_COUNT-1).each do |i|
+			file.puts "\t\"f#{i}\","
 		end
 		file.puts '};'
 	end
