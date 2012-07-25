@@ -18,6 +18,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "ImageGenerators.h"
 
 #include <conprint.h>
+#include <madmath.h>
 
 namespace MAUI {
 
@@ -80,7 +81,7 @@ namespace MAUI {
 		} else if(alphaMode == AM_NOALPHA) {
 
 		}
-		
+
 		maSetDrawTarget(lastDrawTarget);
 	}
 
@@ -92,7 +93,7 @@ namespace MAUI {
 		int imgWidth = EXTENT_X(size);
 		int imgHeight = EXTENT_Y(size);
 
-		int gradVecX, gradVecY, 
+		int gradVecX, gradVecY,
 			gradOrthoVecX, gradOrthoVecY;
 
 		gradVecX = end.x - start.x;
@@ -127,7 +128,7 @@ namespace MAUI {
 		for(int j = 0; j < imgHeight; j++) {
 			for(int i = 0; i < imgWidth; i++) {
 
-				int u = (((i - start.x)*gradOrthoVecX + 
+				int u = (((i - start.x)*gradOrthoVecX +
 					(j - start.y)*gradOrthoVecY)<<16) / sqrLen;
 
 				int projectedPointX = ((u*gradOrthoVecX)>>16);
@@ -135,7 +136,7 @@ namespace MAUI {
 
 				//lprintfln("we come here! %d\n", i + j*imgWidth);
 
-				double distToStart = 
+				double distToStart =
 					(sqrt((double)
 					(((start.x+projectedPointX)-i)*((start.x+projectedPointX)-i) +
 					((start.y+projectedPointY)-j)*((start.y+projectedPointY)-j))
@@ -144,7 +145,7 @@ namespace MAUI {
 				double distToEnd = (sqrt((double)
 					(((end.x+projectedPointX)-i)*((end.x+projectedPointX)-i) +
 					((end.y+projectedPointY)-j)*((end.y+projectedPointY)-j))
-					)); 
+					));
 				//double distToStart = 0.0;
 				//double distToEnd = 0.0;
 
@@ -170,7 +171,7 @@ namespace MAUI {
 
 					*dst++ = (a<<24)|(r<<16)|(g<<8)|(b);
 				}
-			} 
+			}
 		}
 
 		if(alphaMode == AM_WRITEALPHA) {

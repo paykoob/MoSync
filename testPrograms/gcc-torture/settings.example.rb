@@ -4,4 +4,5 @@ SETTINGS = {
 	:rebuild_failed => true,
 	:retry_failed => true,
 	:test_dce => true,
+	:strict_prerequisites => true,
 }

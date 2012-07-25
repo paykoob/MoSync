@@ -25,8 +25,11 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 //#define LOG_STATE_CHANGE	//TEMP HACK
 //#define DEBUG_DISASM
-//#define CORE_DEBUGGING_MODE
+#define CORE_DEBUGGING_MODE
 //#define SYSCALL_DEBUGGING_MODE
+
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 #include <config_platform.h>
 #include <Platform.h>
@@ -36,8 +39,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <base/FileStream.h>
 
 #include "helpers/TranslateSyscall.h"
-//#undef LOGC
-//#define LOGC(...) do { if(InstCount > 8200000) LOG(__VA_ARGS__); } while(0)
+#undef LOGC
+#define LOGC(...) do { if(InstCount < 10000) LOG(__VA_ARGS__); } while(0)
 
 #ifdef GDB_DEBUG
 #define UPDATE_IP
@@ -1099,6 +1102,9 @@ public:
 #define	RDU	(((uint32_t*)regs)[rd])
 #define	RSU	(((uint32_t*)regs)[rs])
 
+#define FRD freg[rd]
+#define FRS freg[rs]
+
 #ifdef STACK_POINTER_VERIFICATION
 void WRITE_REG(int reg, int value) {
 	if(reg == REG_sp) {
@@ -1149,6 +1155,10 @@ void WRITE_REG(int reg, int value) {
 
 #define FETCH_RD	rd = IB; LOGC(" rd%i(0x%08x)", rd, RD);
 #define FETCH_RS	rs = IB; LOGC(" rs%i(0x%08x)", rs, RS);
+
+#define FETCH_FRD	rd = IB; LOGC(" frd%i(0x%" PRIx64 ", %g)", rd, FRD.ll, FRD.d);
+#define FETCH_FRS	rs = IB; LOGC(" frs%i(0x%" PRIx64 ", %g)", rs, FRS.ll, FRS.d);
+
 #if 0//def USE_VAR_INT
 #define FETCH_CONST	imm32 = IB; if(imm32>127) {imm32=((imm32&127)<<8)+IB;}\
 	LOGC(" c[%i]", imm32); imm32=mem_cp[imm32]; LOGC("(%i)", imm32);
@@ -1173,6 +1183,10 @@ void WRITE_REG(int reg, int value) {
 #define FETCH_RD_RS_ADDR16	FETCH_RD FETCH_RS FETCH_IMM16
 #define FETCH_RD_RS_ADDR24	FETCH_RD FETCH_RS FETCH_IMM24
 #define FETCH_RD_IMM8		FETCH_RD FETCH_IMM8
+
+#define FETCH_FRD_FRS		FETCH_FRD FETCH_FRS
+#define FETCH_FRD_FRS_CONST	FETCH_FRD FETCH_FRS FETCH_CONST
+#define FETCH_RD_FRS_CONST	FETCH_RD FETCH_FRS FETCH_CONST
 
 #define LOG_ARITH(...)
 

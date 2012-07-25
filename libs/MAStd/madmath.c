@@ -24,6 +24,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 // See http://gcc.gnu.org/onlinedocs/gccint/Soft-float-library-routines.html
 // for documentation
 
+#if 0	// hardware float support
+
 // ** if a greater than b
 
 int __gtsf2(float a, float b)
@@ -108,6 +110,7 @@ int __nedf2(double a, double b)
 {
 	return dcmp(a,b);
 }
+#endif	//0
 
 int __unorddf2(double a, double b) {
 	return isnan(a) || isnan(b);

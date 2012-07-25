@@ -15,7 +15,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.
 */
 
-/** 
+/**
 * \file ImageGenerators.cpp
 * \brief Utility class that generates linear and circular gradients.
 * \author Patrick Broman and Niklas Nummelin
@@ -24,6 +24,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "ImageGenerators.h"
 
 #include <conprint.h>
+#include <madmath.h>
 
 namespace MAUI {
 
@@ -31,19 +32,19 @@ namespace MAUI {
 #define EPSILON 1
 
 	void ImageGenerators::circularGradient(
-		MAHandle image, 
-		Point origo, 
-		int radius, 
-		int origoColor, 
-		int circleColor, 
-		ImageGenerators::AlphaMode alphaMode) 
+		MAHandle image,
+		Point origo,
+		int radius,
+		int origoColor,
+		int circleColor,
+		ImageGenerators::AlphaMode alphaMode)
 	{
 		MAExtent size = maGetImageSize(image);
 		int imgWidth = EXTENT_X(size);
 		int imgHeight = EXTENT_Y(size);
 		int *tempSurface = new int[imgWidth*imgHeight];
 		if(!tempSurface) {
-			maPanic(0, 
+			maPanic(0,
 				"ImageGenerators::circularGradient, NO MEMORY!");
 		}
 
@@ -68,13 +69,13 @@ namespace MAUI {
 				double len = sqrt(
 					(double)(origo.x-i)*(origo.x-i)+(origo.y-j)*(origo.y-j));
 				if(len < radius) {
-					int r = (int)(((len*(double)endRed) 
+					int r = (int)(((len*(double)endRed)
 						+ ((radius-len)*(double)startRed))*radiusRecip);
-					int g = (int)(((len*(double)endGreen) 
+					int g = (int)(((len*(double)endGreen)
 						+ ((radius-len)*(double)startGreen))*radiusRecip);
-					int b = (int)(((len*(double)endBlue) 
+					int b = (int)(((len*(double)endBlue)
 						+ ((radius-len)*(double)startBlue))*radiusRecip);
-					int a = (int)(((len*(double)endAlpha) 
+					int a = (int)(((len*(double)endAlpha)
 						+ ((radius-len)*(double)startAlpha))*radiusRecip);
 					if(r<0)		r = 0;
 					if(r>255)	r = 255;
@@ -85,7 +86,7 @@ namespace MAUI {
 					if(a<0)		a = 0;
 					if(a>255)	a = 255;
 					*dst++ = (a<<24)|(r<<16)|(g<<8)|(b);
-				} 
+				}
 				else {
 					*dst++ = circleColor;
 				}
@@ -97,23 +98,23 @@ namespace MAUI {
 			MARect srcRect = {0, 0, imgWidth, imgHeight};
 
 			maDrawRGB(&dstPoint, tempSurface, &srcRect, imgWidth);
-		} 
+		}
 		else if(alphaMode == AM_USEALPHA) {
 			// TODO: Implement missing code.
-		} 
+		}
 		else if(alphaMode == AM_NOALPHA) {
 			// TODO: Implement missing code.
 		}
-		
+
 		maSetDrawTarget(lastDrawTarget);
 	}
 
 	void ImageGenerators::linearGradient(
-		MAHandle image, 
-		Point start, 
-		Point end, 
+		MAHandle image,
+		Point start,
+		Point end,
 		int startColor,
-		int endColor, 
+		int endColor,
 		ImageGenerators::AlphaMode alphaMode)
 	{
 		MAExtent size = maGetImageSize(image);
@@ -157,7 +158,7 @@ namespace MAUI {
 		for(int j = 0; j < imgHeight; j++) {
 			for(int i = 0; i < imgWidth; i++) {
 
-				int u = (((i - start.x)*gradOrthoVecX + 
+				int u = (((i - start.x)*gradOrthoVecX +
 					(j - start.y)*gradOrthoVecY)<<16) / sqrLen;
 
 				int projectedPointX = ((u*gradOrthoVecX)>>16);
@@ -165,7 +166,7 @@ namespace MAUI {
 
 				//lprintfln("we come here! %d\n", i + j*imgWidth);
 
-				double distToStart = 
+				double distToStart =
 					(sqrt((double)
 						(((start.x+projectedPointX)-i)*((start.x+projectedPointX)-i) +
 						((start.y+projectedPointY)-j)*((start.y+projectedPointY)-j))
@@ -174,7 +175,7 @@ namespace MAUI {
 				double distToEnd = (sqrt((double)
 					(((end.x+projectedPointX)-i)*((end.x+projectedPointX)-i) +
 					((end.y+projectedPointY)-j)*((end.y+projectedPointY)-j))
-					)); 
+					));
 				//double distToStart = 0.0;
 				//double distToEnd = 0.0;
 
@@ -182,18 +183,18 @@ namespace MAUI {
 
 				if(distToEnd >= sqrtLen) {
 					*dst++  = startColor;
-				} 
+				}
 				else if(distToStart >= sqrtLen) {
 					*dst++ = endColor;
-				} 
+				}
 				else {
-					int r = (int)(((distToStart*(double)endRed) 
+					int r = (int)(((distToStart*(double)endRed)
 						+ (distToEnd*(double)startRed))*sqrtLenRecip);
-					int g = (int)(((distToStart*(double)endGreen) 
+					int g = (int)(((distToStart*(double)endGreen)
 						+ (distToEnd*(double)startGreen))*sqrtLenRecip);
-					int b = (int)(((distToStart*(double)endBlue) 
+					int b = (int)(((distToStart*(double)endBlue)
 						+ (distToEnd*(double)startBlue))*sqrtLenRecip);
-					int a = (int)(((distToStart*(double)endAlpha) 
+					int a = (int)(((distToStart*(double)endAlpha)
 						+ (distToEnd*(double)startAlpha))*sqrtLenRecip);
 					if(r<0)		r = 0;
 					if(r>255)	r = 255;
@@ -206,7 +207,7 @@ namespace MAUI {
 
 					*dst++ = (a<<24)|(r<<16)|(g<<8)|(b);
 				}
-			} 
+			}
 		}
 
 		if(alphaMode == AM_WRITEALPHA) {
@@ -214,10 +215,10 @@ namespace MAUI {
 			MARect srcRect = {0, 0, imgWidth, imgHeight};
 			maDrawRGB(&dstPoint, tempSurface, &srcRect, imgWidth);
 			maSetDrawTarget(lastDrawTarget);
-		} 
+		}
 		else if(alphaMode == AM_USEALPHA) {
 			// TODO: Implement missing code.
-		} 
+		}
 		else if(alphaMode == AM_NOALPHA) {
 			// TODO: Implement missing code.
 		}

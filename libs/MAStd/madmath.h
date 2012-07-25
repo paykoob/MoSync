@@ -28,7 +28,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 //
 // History:
 // 06/07/2006	first beta version
-// 
+//
 //********************************************************************************
 
 #ifndef MADMATH_H
@@ -118,6 +118,10 @@ double log(double x);
 */
 double pow(double x, double y);
 
+double sqrt(double x);
+double sin(double x);
+double cos(double x);
+
 /**
 * Returns the arctangent of \a x.
 */
@@ -125,7 +129,7 @@ double atan(double x);
 
 /**
 * Returns \a x rounded toward -inf to integral value.
-*/ 
+*/
 double ceil(double x);
 
 /**
@@ -134,13 +138,13 @@ double ceil(double x);
 double floor(double x);
 
 /**
-* for non-zero x 
+* for non-zero x
 *	x = frexp(arg,&exp);
 * return a double fp quantity x such that 0.5 <= |x| <1.0
 * and the corresponding binary exponent "exp". That is
 *	arg = x*2^exp.
-* If arg is inf, 0.0, or NaN, then frexp(arg,&exp) returns arg 
-* with *exp=0. 
+* If arg is inf, 0.0, or NaN, then frexp(arg,&exp) returns arg
+* with *exp=0.
 */
 double frexp(double x, int *eptr);
 

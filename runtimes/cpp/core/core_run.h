@@ -255,18 +255,75 @@ VMLOOP_LABEL
 		OPC(LDDR) FETCH_RD_RS WRITE_REG(rd, RS); WRITE_REG(rd+1, REG(rs+1)); EOP;
 		OPC(LDDI) FETCH_RD_CONST WRITE_REG(rd, IMM); FETCH_CONST; WRITE_REG(rd+1, IMM); EOP;
 
-		OPC(FLOATS) FETCH_RD_RS freg[rd].d = (double)RS; EOP;
-		OPC(FLOATUNS) FETCH_RD_RS freg[rd].d = (double)(unsigned)RS; EOP;
+		OPC(FLOATS) FETCH_RD_RS FRD.d = (double)RS; EOP;
+		OPC(FLOATUNS) FETCH_RD_RS FRD.d = (double)(unsigned)RS; EOP;
 
 		OPC(FSTRS) {
 			FETCH_RD_RS MA_FV fv;
-			fv.f = (float)freg[rs].d;
+			fv.f = (float)FRS.d;
 			WRITE_REG(rd, fv.i);
 		} EOP;
-		OPC(FSTRD) FETCH_RD_RS WRITE_REG(rd, freg[rs].i[0]); WRITE_REG(rd+1, freg[rs].i[1]); EOP;
+		OPC(FSTRD) FETCH_RD_RS WRITE_REG(rd, FRS.i[0]); WRITE_REG(rd+1, FRS.i[1]); EOP;
 
-		OPC(FLDRS) FETCH_RD_RS MA_FV fv; fv.i = RS; freg[rd].d = (double)fv.f; EOP;
-		OPC(FLDRD) FETCH_RD_RS freg[rd].i[0] = RS; freg[rd].i[1] = REG(rs+1); EOP;
+		OPC(FLDRS) FETCH_RD_RS { MA_FV fv; fv.i = RS; FRD.d = (double)fv.f; } EOP;
+		OPC(FLDRD) FETCH_RD_RS FRD.i[0] = RS; FRD.i[1] = REG(rs+1); EOP;
+
+		OPC(FLDIS) FETCH_RD_CONST { MA_FV fv; fv.i = IMM; FRD.d = (double)fv.f; } EOP;
+		OPC(FLDID) FETCH_RD_CONST FRD.i[0] = IMM; FETCH_CONST; FRD.i[1] = IMM; EOP;
+
+		OPC(FSTS)
+		{
+			FETCH_RD_FRS_CONST
+			MA_FV fv;
+			fv.f = (float)FRS.d;
+			MEM(unsigned int, RD + IMM, WRITE) = fv.i;
+			LOGC("\t[0x%x] = 0x%08x", RD + IMM, fv.i);
+		} EOP;
+
+		OPC(FSTD)
+		{
+			FETCH_RD_FRS_CONST
+			MEM(unsigned int, RD + IMM, WRITE) = FRS.i[0];
+			MEM(unsigned int, RD + IMM + 4, WRITE) = FRS.i[1];
+			LOGC("\t[0x%x] = 0x%08x%08x", RD + IMM, FRS.i[0], FRS.i[1]);
+		} EOP;
+
+		OPC(FLDS)
+		{
+			FETCH_RD_RS_CONST
+			MA_FV fv;
+			fv.i = MEM(int32_t, RS + IMM, READ);
+			FRD.d = (double)fv.f;
+			LOGC("\t[0x%x] 0x%08x (%g)", RS + IMM, fv.i, FRD.d);
+		} EOP;
+
+		OPC(FLDD)
+		{
+			FETCH_RD_RS_CONST
+			FRD.i[0] = MEM(int32_t, RS + IMM, READ);
+			FRD.i[1] = MEM(int32_t, RS + IMM + 4, READ);
+			LOGC("\t[0x%x] 0x%08x%08x (%g)", RS + IMM, FRD.i[0], FRD.i[1], FRD.d);
+		} EOP;
+
+		OPC(FADD) FETCH_FRD_FRS FRD.d += FRS.d; EOP;
+		OPC(FSUB) FETCH_FRD_FRS FRD.d -= FRS.d; EOP;
+		OPC(FMUL) FETCH_FRD_FRS FRD.d *= FRS.d; EOP;
+		OPC(FDIV)
+		{
+			FETCH_FRD_FRS;
+#ifndef ALLOW_FLOAT_DIVISION_BY_ZERO
+			if(FRS.d == 0.0
+#ifdef EMULATOR
+				&& !gSyscall->mAllowDivZero
+#endif	//EMULATOR
+				)
+			{
+				BIG_PHAT_ERROR(ERR_DIVISION_BY_ZERO);
+			}
+#endif	//ALLOW_FLOAT_DIVISION_BY_ZERO
+			FRD.d /= FRS.d;
+		}
+		EOP;
 
 		OPC(LDD)
 		{
@@ -308,6 +365,13 @@ VMLOOP_LABEL
 		OPC(JC_GT)	FETCH_RD_RS_CONST	if (RD >  RS)	{ JMP_IMM; }	EOP;
 		OPC(JC_LE)	FETCH_RD_RS_CONST	if (RD <= RS)	{ JMP_IMM; }	EOP;
 		OPC(JC_LT)	FETCH_RD_RS_CONST	if (RD <  RS)	{ JMP_IMM; }	EOP;
+
+		OPC(FJC_EQ) 	FETCH_FRD_FRS_CONST	if (FRD.d == FRS.d)	{ JMP_IMM; } 	EOP;
+		OPC(FJC_NE)	FETCH_FRD_FRS_CONST	if (FRD.d != FRS.d)	{ JMP_IMM; }	EOP;
+		OPC(FJC_GE)	FETCH_FRD_FRS_CONST	if (FRD.d >= FRS.d)	{ JMP_IMM; }	EOP;
+		OPC(FJC_GT)	FETCH_FRD_FRS_CONST	if (FRD.d >  FRS.d)	{ JMP_IMM; }	EOP;
+		OPC(FJC_LE)	FETCH_FRD_FRS_CONST	if (FRD.d <= FRS.d)	{ JMP_IMM; }	EOP;
+		OPC(FJC_LT)	FETCH_FRD_FRS_CONST	if (FRD.d <  FRS.d)	{ JMP_IMM; }	EOP;
 
 		OPC(JC_LTU)	FETCH_RD_RS_CONST	if (RDU <  RSU)	{ JMP_IMM; }	EOP;
 		OPC(JC_GEU)	FETCH_RD_RS_CONST	if (RDU >= RSU)	{ JMP_IMM; }	EOP;

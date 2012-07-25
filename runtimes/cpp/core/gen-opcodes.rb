@@ -97,7 +97,7 @@ end
 
 JC_OPCODES.each do |op|
 	intjc(op)
-	OPCODES << o(('fjc_' + op.to_s).to_sym, 'jc '+op.to_s, [:frd, :frs, :riaddr])
+	OPCODES << o(('fjc_' + op.to_s).to_sym, 'fjc '+op.to_s, [:frd, :frs, :riaddr])
 end
 
 JCU_OPCODES.each do |op|
@@ -201,7 +201,7 @@ elsif(mode == 'ccore')
 		file.puts '#define GEN_OPCODES_H'
 		file.puts
 		OPCODES.each do |op|
-			file.puts "#define OP_#{op.name.to_s.upcase} #{i}"
+			file.puts "#define OP_#{op.name.to_s.upcase} #{sprintf('0x%x', i)}"
 			i += 1
 		end
 		file.puts
