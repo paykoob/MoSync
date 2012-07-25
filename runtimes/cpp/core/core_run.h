@@ -252,6 +252,40 @@ VMLOOP_LABEL
 		OPC(LDI)	FETCH_RD_CONST	WRITE_REG(rd, IMM);	EOP;
 		OPC(LDR)	FETCH_RD_RS	WRITE_REG(rd, RS);	EOP;
 
+		OPC(LDDR) FETCH_RD_RS WRITE_REG(rd, RS); WRITE_REG(rd+1, REG(rs+1)); EOP;
+		OPC(LDDI) FETCH_RD_CONST WRITE_REG(rd, IMM); FETCH_CONST; WRITE_REG(rd+1, IMM); EOP;
+
+		OPC(FLOATS) FETCH_RD_RS freg[rd].d = (double)RS; EOP;
+		OPC(FLOATUNS) FETCH_RD_RS freg[rd].d = (double)(unsigned)RS; EOP;
+
+		OPC(FSTRS) {
+			FETCH_RD_RS MA_FV fv;
+			fv.f = (float)freg[rs].d;
+			WRITE_REG(rd, fv.i);
+		} EOP;
+		OPC(FSTRD) FETCH_RD_RS WRITE_REG(rd, freg[rs].i[0]); WRITE_REG(rd+1, freg[rs].i[1]); EOP;
+
+		OPC(FLDRS) FETCH_RD_RS MA_FV fv; fv.i = RS; freg[rd].d = (double)fv.f; EOP;
+		OPC(FLDRD) FETCH_RD_RS freg[rd].i[0] = RS; freg[rd].i[1] = REG(rs+1); EOP;
+
+		OPC(LDD)
+		{
+			FETCH_RD_RS_CONST
+			WRITE_REG(rd, MEM(int32_t, RS + IMM, READ));
+			WRITE_REG(rd+1, MEM(int32_t, RS + IMM + 4, READ));
+			LOGC("\t[0x%x] 0x%08x%08x", RS + IMM, RD, regs[rd+1]);
+		}
+		EOP;
+
+		OPC(STD)
+		{
+			FETCH_RD_RS_CONST
+			MEM(unsigned int, RD + IMM, WRITE) = RS;
+			MEM(unsigned int, RD + IMM + 4, WRITE) = regs[rs+1];
+			LOGC("\t[0x%x] = 0x%08x%08x", RD + IMM, RS, regs[rs+1]);
+		}
+		EOP;
+
 		OPC(RET)
 			fakePop();
 			JMP_GENERIC(REG(REG_ra));

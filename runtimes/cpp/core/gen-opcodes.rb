@@ -43,11 +43,11 @@ OPCODES = [
 	# floating-point
 	o(:fldis, 'ld', [:frd, :fimms]),	# float load immediate single (32 bits)
 	o(:fldid, 'ld.d', [:frd, :fimmd]),	# float load immediate double (64 bits)
-	o(:fsts, 'ld', [:adaddr, :frs]),	# float store single
+	o(:fsts, 'ld.s', [:adaddr, :frs]),	# float store single
 	o(:fstd, 'ld.d', [:adaddr, :frs]),	# float store double
-	o(:flds, 'ld', [:frd, :adaddr]),	# float load single
+	o(:flds, 'ld.s', [:frd, :adaddr]),	# float load single
 	o(:fldd, 'ld.d', [:frd, :adaddr]),	# float load double
-	o(:fldr, 'ld.d', [:frd, :frs]),	# float load register
+	o(:fldr, 'ld', [:frd, :frs]),	# float load register
 	o(:fldrs, 'ld', [:frd, :rs]),	# float load integer register single (32 bits, direct copy without conversion)
 	o(:fldrd, 'ld.d', [:frd, :rs]),	# float load integer register double (rs & rs+1)
 	o(:fstrs, 'ld', [:rd, :frs]),	# float store integer register single

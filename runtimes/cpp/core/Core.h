@@ -125,6 +125,12 @@ namespace Core {
 		int currentSyscallId;
 #endif
 		int regs[128];
+		union FREG {
+			double d;
+			long long ll;
+			int i[2];
+		};
+		FREG freg[16];
 
 #ifdef GDB_DEBUG
 		GdbStub *mGdbStub;
