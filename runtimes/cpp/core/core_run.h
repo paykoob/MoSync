@@ -281,6 +281,16 @@ VMLOOP_LABEL
 			WRITE_REG(rd+1, temp.i[1]);
 		} EOP;
 
+		OPC(FIXUN_TRUNCS) FETCH_RD_FRS WRITE_REG(rd, (unsigned int)FRS.d); EOP;
+		OPC(FIXUN_TRUNCD)
+		{
+			FETCH_RD_FRS;
+			FREG temp;
+			temp.ll = (unsigned long long)FRS.d;
+			WRITE_REG(rd, temp.i[0]);
+			WRITE_REG(rd+1, temp.i[1]);
+		} EOP;
+
 		OPC(FSTS)
 		{
 			FETCH_RD_FRS_CONST
@@ -336,6 +346,14 @@ VMLOOP_LABEL
 			FRD.d /= FRS.d;
 		}
 		EOP;
+
+		OPC(FSQRT) FETCH_FRD_FRS FRD.d = sqrt(FRS.d); EOP;
+		OPC(FSIN) FETCH_FRD_FRS FRD.d = sin(FRS.d); EOP;
+		OPC(FCOS) FETCH_FRD_FRS FRD.d = cos(FRS.d); EOP;
+		OPC(FEXP) FETCH_FRD_FRS FRD.d = exp(FRS.d); EOP;
+		OPC(FLOG) FETCH_FRD_FRS FRD.d = log(FRS.d); EOP;
+		OPC(FPOW) FETCH_FRD_FRS FRD.d = pow(FRD.d, FRS.d); EOP;
+		OPC(FATAN2) FETCH_FRD_FRS FRD.d = atan2(FRD.d, FRS.d); EOP;
 
 		OPC(LDD)
 		{

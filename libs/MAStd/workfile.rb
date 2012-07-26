@@ -43,6 +43,9 @@ mod.class_eval do
 
 		if(USE_GNU_BINUTILS)
 			@IGNORED_FILES << 'crt0.s'
+			@IGNORED_FILES << 'e_pow.c'
+			@IGNORED_FILES << 'e_log.c'
+			@IGNORED_FILES << 'e_atan2.c'
 		else
 			@EXTRA_OBJECTS = [FileTask.new(self, "crtlib.s"), FileTask.new(self, "mastack.s")]
 		end

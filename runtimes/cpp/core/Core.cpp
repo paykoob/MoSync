@@ -31,6 +31,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+#include <math.h>
+
 #include <config_platform.h>
 #include <Platform.h>
 #include <helpers/helpers.h>
