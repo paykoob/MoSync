@@ -255,8 +255,26 @@ VMLOOP_LABEL
 		OPC(LDDR) FETCH_RD_RS WRITE_REG(rd, RS); WRITE_REG(rd+1, REG(rs+1)); EOP;
 		OPC(LDDI) FETCH_RD_CONST WRITE_REG(rd, IMM); FETCH_CONST; WRITE_REG(rd+1, IMM); EOP;
 
-		OPC(FLOATS) FETCH_RD_RS FRD.d = (double)RS; EOP;
+		OPC(FLOATS) FETCH_RD_RS FRD.d = (double)(signed)RS; EOP;
 		OPC(FLOATUNS) FETCH_RD_RS FRD.d = (double)(unsigned)RS; EOP;
+
+		OPC(FLOATD)
+		{
+			FETCH_RD_RS;
+			FREG temp;
+			temp.i[0] = RS;
+			temp.i[1] = REG(rs+1);
+			FRD.d = (double)(signed long long)temp.ll;
+		} EOP;
+
+		OPC(FLOATUND)
+		{
+			FETCH_RD_RS;
+			FREG temp;
+			temp.i[0] = RS;
+			temp.i[1] = REG(rs+1);
+			FRD.d = (double)(unsigned long long)temp.ll;
+		} EOP;
 
 		OPC(FSTRS) {
 			FETCH_RD_RS MA_FV fv;
@@ -267,6 +285,8 @@ VMLOOP_LABEL
 
 		OPC(FLDRS) FETCH_RD_RS { MA_FV fv; fv.i = RS; FRD.d = (double)fv.f; } EOP;
 		OPC(FLDRD) FETCH_RD_RS FRD.i[0] = RS; FRD.i[1] = REG(rs+1); EOP;
+
+		OPC(FLDR) FETCH_FRD_FRS FRD.d = FRS.d; EOP;
 
 		OPC(FLDIS) FETCH_RD_CONST { MA_FV fv; fv.i = IMM; FRD.d = (double)fv.f; } EOP;
 		OPC(FLDID) FETCH_RD_CONST FRD.i[0] = IMM; FETCH_CONST; FRD.i[1] = IMM; EOP;

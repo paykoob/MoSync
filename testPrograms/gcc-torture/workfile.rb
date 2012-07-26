@@ -34,6 +34,22 @@ NEEDS_HEAP = [
 'vprintf-chk-1.c',
 ]
 
+NEWLIB_NEEDS_HEAP = [
+'920501-8.c',
+'930513-1.c',
+'fprintf-1.c',
+'fprintf-chk-1.c',
+'struct-ret-1.c',
+'vfprintf-1.c',
+'vfprintf-chk-1.c',
+]
+
+if(USE_NEWLIB)
+	NEWLIB_NEEDS_HEAP.each do |n|
+		NEEDS_HEAP << n
+	end
+end
+
 class TTWork < PipeExeWork
 	def initialize(name)
 		super()

@@ -28,6 +28,7 @@ MA 02110-1301, USA.
 #include <ma.h>
 #include <mastdlib.h>
 #include <conprint.h>
+#include <madmath.h>
 
 #include "MAHeaders.h"
 

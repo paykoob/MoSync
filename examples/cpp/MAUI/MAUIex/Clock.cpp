@@ -20,6 +20,7 @@ MA 02110-1301, USA.
 #include <matime.h>
 #include <mavsprintf.h>
 #include <mastdlib.h>
+#include <madmath.h>
 #include <MAUtil/Graphics.h>
 
 #define PI 3.14159265

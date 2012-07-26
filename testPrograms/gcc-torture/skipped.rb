@@ -32,13 +32,14 @@ SKIPPED = [
 '941014-1.c', #pipe-tool reports: illegal function pointer manipulation.
 '20101011-1.c',	# integer division by zero
 'align-3.c',	# illegal alignment
+'pr47237.c',	# __builtin_apply() not supported yet.
 
 #bugs below
 
 'builtin-bitops-1.c', #builtin.functions. todo: implement them.
-'930622-2.c', #gcc bug: calls __fixdfdi instead of __fixdfti or __fixtfti
+#'930622-2.c', #gcc bug: calls __fixdfdi instead of __fixdfti or __fixtfti
 #'20000722-1.c',	# mapip2 bug: caller's stack frame is not proper.
-'20000815-1.c',	# mapip2 bug, unknown. "emit_move_insn QImode -> SImode"?
+#'20000815-1.c',	# mapip2 bug, unknown. "emit_move_insn QImode -> SImode"?
 #'20020227-1.c',	# mapip2 bug, unknown (complex float, should work).
 
 # mapip2 bug, same as 20000722-1: callers that pass structs to callees

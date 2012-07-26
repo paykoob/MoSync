@@ -27,6 +27,7 @@ MA 02110-1301, USA.
 #define __COMMON_H__
 
 #include <ma.h>
+#include <madmath.h>
 
 #ifndef NULL
 #define NULL 0

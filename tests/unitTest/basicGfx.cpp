@@ -17,6 +17,7 @@ MA 02110-1301, USA.
 */
 
 #include <mavsprintf.h>
+#include <madmath.h>
 #include "common.h"
 #include "MAHeaders.h"
 
@@ -190,7 +191,7 @@ int drawTriangles() {
 			points[index].x = x;
 			points[index].y = y;
 
-			maSetColor(0x444444+i*0x220022);			
+			maSetColor(0x444444+i*0x220022);
 			maFillTriangleStrip(points, index+1);
 
 			index = 0;

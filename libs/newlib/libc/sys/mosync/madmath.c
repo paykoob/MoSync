@@ -18,7 +18,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "ma.h"
 #include "madmath.h"
 
-#ifdef MAPIP
+#if 0//def MAPIP
 
 // Functions are intrinsic no prototypes needed
 // See http://gcc.gnu.org/onlinedocs/gccint/Soft-float-library-routines.html
@@ -109,6 +109,8 @@ int __nedf2(double a, double b)
 	return dcmp(a,b);
 }
 
+#endif	//MAPIP
+
 int __unorddf2(double a, double b) {
 	return isnan(a) || isnan(b);
 }
@@ -116,6 +118,8 @@ int __unorddf2(double a, double b) {
 int __unordsf2(float a, float b) {
 	return isnan(a) || isnan(b);
 }
+
+#if 0
 
 // these should not be needed, as long == int.
 long __fixsfdi(float a)

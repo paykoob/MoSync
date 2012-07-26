@@ -17,6 +17,7 @@ MA 02110-1301, USA.
 */
 
 #include "OpenGLHelpers.h"
+#include <madmath.h>
 
 static int createOpenGLScreen(int& openglView)
 {
@@ -43,8 +44,6 @@ void
 gluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar)
 {
 	GLfloat xmin, xmax, ymin, ymax;
-
-	const float M_PI = 3.14159;
 
    ymax = zNear * tan(fovy * M_PI / 360.0);
    ymin = -ymax;

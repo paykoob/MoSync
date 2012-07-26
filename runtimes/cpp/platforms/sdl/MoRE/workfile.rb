@@ -20,9 +20,9 @@ work.instance_eval do
 		"#{BD}/intlibs/helpers/intutil.cpp",
 		]
 	@EXTRA_INCLUDES += ["../../.."]
-	@SPECIFIC_CFLAGS = { "Core.cpp" => " -DHAVE_IOCTL_ELLIPSIS" }
+	@SPECIFIC_CFLAGS = { "Core.cpp" => " -DHAVE_IOCTL_ELLIPSIS -Wno-float-equal" }
 	if(!@GCC_IS_V4 && CONFIG=="debug")
-		@SPECIFIC_CFLAGS["Core.cpp"] += " -Wno-unreachable-code -Wno-float-equal"
+		@SPECIFIC_CFLAGS["Core.cpp"] << " -Wno-unreachable-code"
 		@SPECIFIC_CFLAGS["sld.cpp"] = " -Wno-unreachable-code"
 	end
 	if(HOST == :win32)

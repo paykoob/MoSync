@@ -104,6 +104,35 @@ public:
 		assert("testing sqrt()", numFailed==0);
 	}
 
+	static double __adddf3(double a, double b) {
+		return a+b;
+	}
+
+	static double __subdf3(double a, double b) {
+		return a-b;
+	}
+
+	static double __muldf3(double a, double b) {
+		return a*b;
+	}
+
+	static double __divdf3(double a, double b) {
+		return a/b;
+	}
+
+	static double __negdf2(double a) {
+		return -a;
+	}
+
+	static int dcmp(double a, double b) {
+		if(a > b)
+			return 1;
+		if(a < b)
+			return -1;
+		else
+			return 0;
+	}
+
 	void doubleTest() {
 		double a, b;
 
