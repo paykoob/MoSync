@@ -271,6 +271,16 @@ VMLOOP_LABEL
 		OPC(FLDIS) FETCH_RD_CONST { MA_FV fv; fv.i = IMM; FRD.d = (double)fv.f; } EOP;
 		OPC(FLDID) FETCH_RD_CONST FRD.i[0] = IMM; FETCH_CONST; FRD.i[1] = IMM; EOP;
 
+		OPC(FIX_TRUNCS) FETCH_RD_FRS WRITE_REG(rd, (int)FRS.d); EOP;
+		OPC(FIX_TRUNCD)
+		{
+			FETCH_RD_FRS;
+			FREG temp;
+			temp.ll = (long long)FRS.d;
+			WRITE_REG(rd, temp.i[0]);
+			WRITE_REG(rd+1, temp.i[1]);
+		} EOP;
+
 		OPC(FSTS)
 		{
 			FETCH_RD_FRS_CONST
@@ -283,9 +293,10 @@ VMLOOP_LABEL
 		OPC(FSTD)
 		{
 			FETCH_RD_FRS_CONST
-			MEM(unsigned int, RD + IMM, WRITE) = FRS.i[0];
-			MEM(unsigned int, RD + IMM + 4, WRITE) = FRS.i[1];
-			LOGC("\t[0x%x] = 0x%08x%08x", RD + IMM, FRS.i[0], FRS.i[1]);
+			int addr = RD + IMM;
+			MEM(unsigned int, addr, WRITE) = FRS.i[0];
+			MEM(unsigned int, addr + 4, WRITE) = FRS.i[1];
+			LOGC("\t[0x%x] = 0x%08x%08x", addr, FRS.i[0], FRS.i[1]);
 		} EOP;
 
 		OPC(FLDS)
@@ -300,9 +311,10 @@ VMLOOP_LABEL
 		OPC(FLDD)
 		{
 			FETCH_RD_RS_CONST
-			FRD.i[0] = MEM(int32_t, RS + IMM, READ);
-			FRD.i[1] = MEM(int32_t, RS + IMM + 4, READ);
-			LOGC("\t[0x%x] 0x%08x%08x (%g)", RS + IMM, FRD.i[0], FRD.i[1], FRD.d);
+			int addr = RS + IMM;
+			FRD.i[0] = MEM(int32_t, addr, READ);
+			FRD.i[1] = MEM(int32_t, addr + 4, READ);
+			LOGC("\t[0x%x] 0x%08x%08x (%g)", addr, FRD.i[0], FRD.i[1], FRD.d);
 		} EOP;
 
 		OPC(FADD) FETCH_FRD_FRS FRD.d += FRS.d; EOP;
@@ -328,18 +340,20 @@ VMLOOP_LABEL
 		OPC(LDD)
 		{
 			FETCH_RD_RS_CONST
-			WRITE_REG(rd, MEM(int32_t, RS + IMM, READ));
-			WRITE_REG(rd+1, MEM(int32_t, RS + IMM + 4, READ));
-			LOGC("\t[0x%x] 0x%08x%08x", RS + IMM, RD, regs[rd+1]);
+			int addr = RS + IMM;
+			WRITE_REG(rd, MEM(int32_t, addr, READ));
+			WRITE_REG(rd+1, MEM(int32_t, addr + 4, READ));
+			LOGC("\t[0x%x] 0x%08x%08x", addr, RD, regs[rd+1]);
 		}
 		EOP;
 
 		OPC(STD)
 		{
 			FETCH_RD_RS_CONST
-			MEM(unsigned int, RD + IMM, WRITE) = RS;
-			MEM(unsigned int, RD + IMM + 4, WRITE) = regs[rs+1];
-			LOGC("\t[0x%x] = 0x%08x%08x", RD + IMM, RS, regs[rs+1]);
+			int addr = RD + IMM;
+			MEM(unsigned int, addr, WRITE) = RS;
+			MEM(unsigned int, addr + 4, WRITE) = regs[rs+1];
+			LOGC("\t[0x%x] = 0x%08x%08x", addr, RS, regs[rs+1]);
 		}
 		EOP;
 
