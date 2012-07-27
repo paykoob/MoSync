@@ -61,6 +61,7 @@ SKIPPED = [
 
 if(!USE_NEWLIB)
 	SKIPPED << 'pr34456.c'	# qsort
+	SKIPPED << '20010226-1.c'	# float.h
 end
 
 if(CONFIG == "")

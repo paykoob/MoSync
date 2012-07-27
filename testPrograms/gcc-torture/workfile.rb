@@ -5,6 +5,18 @@ require 'fileutils'
 require 'settings.rb'
 require 'skipped.rb'
 
+BASE = SETTINGS[:base_path]
+
+SP = Struct.new('SourcePath', :base, :path)
+
+SETTINGS[:source_paths] = [
+	#SP.new('c-c++-common', BASE + 'c-c++-common/'),
+	SP.new('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
+	SP.new('compat/', BASE + 'gcc.c-torture/compat'),
+	SP.new('', BASE + 'gcc.c-torture/execute'),
+]
+
+
 NEEDS_HEAP = [
 '20000914-1.c',
 '20020406-1.c',
@@ -51,11 +63,13 @@ if(USE_NEWLIB)
 end
 
 class TTWork < PipeExeWork
-	def initialize(name)
+	def initialize(f, name)
 		super()
+		@sourcefile = f
+		@BUILDDIR_PREFIX = String.new(f.base)
 		@EXTRA_INCLUDES = ['.'] if(!USE_NEWLIB)
 		@EXTRA_SOURCEFILES = [
-			"#{SETTINGS[:source_path]}/#{name}",
+			"#{f.path}/#{name}",
 			'helpers/helpers.c',
 		]
 		@EXTRA_SOURCEFILES << 'helpers/override_heap.c' unless(NEEDS_HEAP.include?(name))
@@ -69,7 +83,7 @@ class TTWork < PipeExeWork
 			'pr22493-1.c' => ' -fwrapv',
 			'pr23047.c' => ' -fwrapv',
 		}
-		@EXTRA_EMUFLAGS = ' -noscreen'
+		@EXTRA_EMUFLAGS = ' -noscreen -allowdivzero'
 		@NAME = name
 	end
 	def define_cflags
@@ -78,6 +92,7 @@ class TTWork < PipeExeWork
 		include_flags = include_dirs.collect {|dir| " -I \""+File.expand_path_fix(dir)+'"'}.join
 		flags = ' -g -w'
 		flags << ' -O2 -fomit-frame-pointer' if(CONFIG == "")
+		flags << ' -ffloat-store -fno-inline' if(@sourcefile.base == 'ieee/')
 		flags << include_flags
 		@CFLAGS = flags
 		@CPPFLAGS = flags
@@ -87,15 +102,24 @@ class TTWork < PipeExeWork
 	def builddir; @BUILDDIR; end
 end
 
-pattern = SETTINGS[:source_path] + '/*.c'
-pattern.gsub!("\\", '/')
-puts pattern
-files = Dir.glob(pattern).sort
+SourceFile = Struct.new('SourceFile', :base, :path, :filename)
+
+files = []
+SETTINGS[:source_paths].each do |sp|
+	pattern = sp.path + '/*.c'
+	pattern.gsub!("\\", '/')
+	puts pattern
+	Dir.glob(pattern).sort.collect do |fn|
+		files << SourceFile.new(sp.base, sp.path, fn)
+	end
+end
 puts "#{files.count} files to test:"
 
 builddir = nil
+oldBase = nil
 
-files.each do |filename|
+files.each do |f|
+	filename = f.filename
 	bn = File.basename(filename)
 	if(SKIPPED.include?(bn))
 		#puts "Skipped #{bn}"
@@ -103,8 +127,10 @@ files.each do |filename|
 	end
 	#puts bn
 
+	builddir = nil if(f.base != oldBase)
+
 	if(!builddir)
-		work = TTWork.new(bn)
+		work = TTWork.new(f, bn)
 		work.invoke
 		builddir = work.builddir
 	end
@@ -120,7 +146,7 @@ files.each do |filename|
 
 	if(SETTINGS[:strict_prerequisites])
 		if(!work)
-			work = TTWork.new(bn)
+			work = TTWork.new(f, bn)
 		end
 		work.invoke
 	end
@@ -133,7 +159,7 @@ files.each do |filename|
 	end
 
 	if(!work)
-		work = TTWork.new(bn)
+		work = TTWork.new(f, bn)
 	end
 
 	if(force_rebuild)
