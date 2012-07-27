@@ -7,6 +7,7 @@
 #include "helpers/array.h"
 #include "build/stabdefs.h"
 #include <vector>
+#include <set>
 
 #define Log printf
 #define DUMP_STABS 0
@@ -30,7 +31,8 @@ struct SLD {
 
 struct Function {
 	const char* name;
-	unsigned start, end;
+	unsigned start;
+	bool operator<(const Function& o) const { return start < o.start; }
 };
 
 struct Variable {
@@ -91,7 +93,7 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 
 	// declare data for later passes
 	vector<SLD> slds;
-	vector<Function> functions;
+	set<Function> functions;
 	vector<Variable> variables;
 
 	// file list
@@ -148,14 +150,21 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 				unsigned address = s.n_value;
 				//printf("%s 0x%02x 0x%x\n", name, s.n_desc, address);
 
-				// finish previous function
-				if(f.name != NULL) {
-					f.end = address - 1;
-					functions.push_back(f);
-				}
-				// set up this one
+				// insert function into ordered set
+				// we can have duplicate function stabs (inlines or templates).
+				// gotta get rid of them.
 				f.name = name;
 				f.start = address;
+				functions.insert(f);
+#if 0
+				pair<set<Function>::iterator, bool> res = functions.insert(f);
+				if(!res.second) {	// duplicate
+					if(strcmp(res.first->name, f.name) != 0) {
+						printf("Duplicate address 0x%x. Names: %s, %s\n", address, res.first->name, name);
+						MoSyncErrorExit(1);
+					}
+				}
+#endif
 			}
 			// variable
 #if 0
@@ -173,12 +182,6 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 		strOffset += strTabFragSize;
 	}
 
-	// finish the last function
-	if(f.name != NULL) {
-		f.end = data.textSectionEndAddress;
-		functions.push_back(f);
-	}
-
 	// output SLD
 	fputs("SLD\n", file);
 	for(size_t i=0; i<slds.size(); i++) {
@@ -189,10 +192,17 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 
 	// output FUNCTIONS
 	fputs("FUNCTIONS\n", file);
-	for(size_t i=0; i<functions.size(); i++) {
-		const Function& fi(functions[i]);
+	{
+		set<Function>::const_iterator i=functions.begin();
+		f = *i;
+		for(++i; i!=functions.end(); ++i) {
+			const Function& fi(*i);
+			fprintf(file, "%s %x,%x\n",
+				f.name, f.start, fi.start - 1);
+			f = fi;
+		}
 		fprintf(file, "%s %x,%x\n",
-			fi.name, fi.start, fi.end);
+			f.name, f.start, data.textSectionEndAddress);
 	}
 
 	// output VARIABLES
