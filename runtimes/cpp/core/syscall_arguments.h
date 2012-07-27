@@ -126,8 +126,7 @@ SAFUNC float _convert_float(int* ptr) {
 	debug_float(*((float*)ptr));
 	return *((float*)ptr);
 }
-SAFUNC int _SYSCALL_CONVERTRES_float(float f) { return MAKE(int, f); }
-#define _SYSCALL_HANDLERES_float _SYSCALL_HANDLERES_DEFAULT(float)
+#define _SYSCALL_HANDLERES_float freg[8].d = res; LOGSC(");\n");
 
 SAFUNC void debug_short(short SCDEBUG_ARG(i)) { LOGSC("(%i)", i); }
 SAFUNC short _SYSCALL_CONVERT_short(short i) {
@@ -184,8 +183,8 @@ SAFUNC double _convert_double(int* ptr) {
 	DV_debug(dv);
 	return dv.d;
 }
-#define _SYSCALL_HANDLERES_double { MA_DV dv; dv.d = res;\
-	REG(REG_r0) = dv.MA_DV_HI; REG(REG_r1) = dv.MA_DV_LO; LOGSC(" = "); DV_debug(dv); LOGSC(");\n"); }
+#define _SYSCALL_HANDLERES_double { MA_DV dv; freg[8].d = dv.d = res;\
+	LOGSC(" = "); DV_debug(dv); LOGSC(");\n"); }
 
 #define _SYSCALL_HANDLERES_longlong { MA_DV dv; dv.ll = res;\
 	REG(REG_r0) = dv.MA_LL_HI; REG(REG_r1) = dv.MA_LL_LO; LOGSC(");\n"); }

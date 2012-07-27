@@ -1106,6 +1106,7 @@ public:
 
 #define FRD freg[rd]
 #define FRS freg[rs]
+#define FREGD(i) freg[i].d
 
 #ifdef STACK_POINTER_VERIFICATION
 void WRITE_REG(int reg, int value) {

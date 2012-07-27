@@ -177,9 +177,9 @@ string jType(const Interface& inf, const string& type) {
 	if(type == "MAWString")
 		return "MAWString";
 	if(type == "float")
-		return "int";
+		return "float";
 	if(type == "double")
-		return "long";
+		return "double";
 	if(type == "longlong")
 		return "long";
 	if(isPointerType(inf, type))

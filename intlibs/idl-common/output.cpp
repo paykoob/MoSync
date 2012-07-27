@@ -964,6 +964,7 @@ void streamInvokeSyscall(ostream& stream, const Interface& maapi, bool java, int
 		"\tLOGSC(\"\\t" << f.name << "(\");\n";
 		int ireg = argOffset;
 		int stack_ireg = 0;
+		int freg = 0;
 		for(size_t j=0; j<f.args.size(); j++) {
 			const Argument& a(f.args[j]);
 			if(j != 0)
@@ -980,15 +981,36 @@ void streamInvokeSyscall(ostream& stream, const Interface& maapi, bool java, int
 				convType = a.type;
 			}
 
+			bool isFloat = (argType == "double" || argType == "float");
+
 			int sizeOfArgType = 1;
 			if(argType == "double" || argType == "long")
 				sizeOfArgType = 2;
 
-			stream << "\t" << argType << " " << a.name << " = _SYSCALL_CONVERT_" << convType;
+			stream << "\t" << argType << " " << a.name << " = ";
+
+			if(isFloat) {
+				if(freg < 8) {	// float register
+					stream << "FREGD(" << (8 + freg) << ");\n";
+					stream << "\tLOGSC(\"%g\", " << a.name << ");\n";
+					freg++;
+				} else {	// stack
+					stream << "_SYSCALL_CONVERT_" << convType <<
+						"(RINT(REG(REG_sp)+" << (stack_ireg<<2) << ")";
+					if(argType == "double") {
+						stream << ", RINT(REG(REG_sp)+" << ((stack_ireg+1)<<2) << ")";
+					}
+					stream << ")";
+					stack_ireg += sizeOfArgType;
+				}
+				continue;
+			}
+
+			stream << "_SYSCALL_CONVERT_" << convType;
 			if(ireg+sizeOfArgType>4) {
 				if(java) {
 					stream << "(RINT(REG(REG_sp)+" << (stack_ireg<<2) << ")";
-					if(argType == "double" || argType == "long") {
+					if(argType == "long") {
 						stream << ", RINT(REG(REG_sp)+" << ((stack_ireg+1)<<2) << ")";
 					}
 					stream << ")";
@@ -1000,7 +1022,7 @@ void streamInvokeSyscall(ostream& stream, const Interface& maapi, bool java, int
 				stack_ireg += sizeOfArgType;
 				continue;
 			}
-			else if((argType == "double" || argType == "long") && java) {
+			else if((argType == "long") && java) {
 				stream << "(REG(REG_p" << ireg << "), REG(REG_p" << ireg << "+1));\n";
 			} else {
 				stream << "(REG(REG_p" << ireg << "));\n";
