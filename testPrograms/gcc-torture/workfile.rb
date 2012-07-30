@@ -123,6 +123,13 @@ class TTWork < PipeExeWork
 		setup if(!@CFLAGS)
 		makeGccTask(FileTask.new(self, @sourcepath), '.o').invoke
 	end
+	def invoke
+		if(@sourcefile.sourcePath.compileOnly)
+			compile
+		else
+			super
+		end
+	end
 end
 
 SourceFile = Struct.new('SourceFile', :sourcePath, :filename)
@@ -188,7 +195,7 @@ files.each do |f|
 	end
 
 	winTask = FileTask.new(work, winFile)
-	winTask.prerequisites << FileTask.new(work, pfn)
+	winTask.prerequisites << FileTask.new(work, sp.compileOnly ? ofn : pfn)
 	if(!winTask.needed?(false))
 		#puts "#{bn} won"
 		next
