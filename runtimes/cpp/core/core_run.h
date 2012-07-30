@@ -203,6 +203,47 @@ VMLOOP_LABEL
 		}
 		EOP;
 
+		OPC(FPUSH) FETCH_FRD_FRS
+		{
+			byte r = rd;
+			byte n = (rs - rd) + 1;
+			if(int(rd) + n > 15 || n == 0) {
+				DUMPINT(rd);
+				DUMPINT(n);
+				BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION_FORM); //raise hell
+			}
+
+			do {
+				ARITH(REG_sp, regs[REG_sp], -, 8);
+				MEM(int32_t, REG(REG_sp), WRITE) = freg[r].i[0];
+				MEM(int32_t, REG(REG_sp) + 4, WRITE) = freg[r].i[1];
+				LOGC("\t%i", r);
+				r++;
+			} while(--n);
+		}
+		EOP;
+
+		OPC(FPOP) FETCH_FRD_FRS
+		{
+			byte r = rs;
+			byte n = (rs - rd) + 1;
+			if(rd > 15 || n <= 0) {
+				DUMPINT(rd);
+				DUMPINT(rs);
+				DUMPINT(n);
+				BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION_FORM); //raise hell
+			}
+
+			do {
+				freg[r].i[0] = MEM(int32_t, REG(REG_sp), READ);
+				freg[r].i[1] = MEM(int32_t, REG(REG_sp) + 4, READ);
+				ARITH(REG_sp, regs[REG_sp], +, 8);
+				LOGC("\t%i", r);
+				r--;
+			} while(--n);
+		}
+		EOP;
+
 		OPC(LDB)
 		{
 			FETCH_RD_RS_CONST
@@ -326,7 +367,7 @@ VMLOOP_LABEL
 			int addr = RD + IMM;
 			MEM(unsigned int, addr, WRITE) = FRS.i[0];
 			MEM(unsigned int, addr + 4, WRITE) = FRS.i[1];
-			LOGC("\t[0x%x] = 0x%08x%08x", addr, FRS.i[0], FRS.i[1]);
+			LOGC("\t[0x%x] = 0x%08x%08x", addr, FRS.i[1], FRS.i[0]);
 		} EOP;
 
 		OPC(FLDS)
@@ -344,7 +385,7 @@ VMLOOP_LABEL
 			int addr = RS + IMM;
 			FRD.i[0] = MEM(int32_t, addr, READ);
 			FRD.i[1] = MEM(int32_t, addr + 4, READ);
-			LOGC("\t[0x%x] 0x%08x%08x (%g)", addr, FRD.i[0], FRD.i[1], FRD.d);
+			LOGC("\t[0x%x] 0x%08x%08x (%g)", addr, FRD.i[1], FRD.i[0], FRD.d);
 		} EOP;
 
 		OPC(FADD) FETCH_FRD_FRS FRD.d += FRS.d; EOP;
@@ -381,7 +422,7 @@ VMLOOP_LABEL
 			int addr = RS + IMM;
 			WRITE_REG(rd, MEM(int32_t, addr, READ));
 			WRITE_REG(rd+1, MEM(int32_t, addr + 4, READ));
-			LOGC("\t[0x%x] 0x%08x%08x", addr, RD, regs[rd+1]);
+			LOGC("\t[0x%x] 0x%08x%08x", addr, regs[rd+1], RD);
 		}
 		EOP;
 
@@ -391,7 +432,7 @@ VMLOOP_LABEL
 			int addr = RD + IMM;
 			MEM(unsigned int, addr, WRITE) = RS;
 			MEM(unsigned int, addr + 4, WRITE) = regs[rs+1];
-			LOGC("\t[0x%x] = 0x%08x%08x", addr, RS, regs[rs+1]);
+			LOGC("\t[0x%x] = 0x%08x%08x", addr, regs[rs+1], RS);
 		}
 		EOP;
 

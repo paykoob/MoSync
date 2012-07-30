@@ -41,6 +41,8 @@ OPCODES = [
 	o(:xb, 'xb', [:rd, :rs]),
 
 	# floating-point
+	o(:fpush, 'push', [:frd, :frs]),
+	o(:fpop, 'pop', [:frd, :frs]),
 	o(:fldis, 'ld', [:frd, :fimms]),	# float load immediate single (32 bits)
 	o(:fldid, 'ld.d', [:frd, :fimmd]),	# float load immediate double (64 bits)
 	o(:fsts, 'ld.s', [:adaddr, :frs]),	# float store single
