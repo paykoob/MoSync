@@ -8,13 +8,13 @@ SKIPPED = [
 '20020720-1.c', #fails.on.purpose
 '20030125-1.c', #fails.on.purpose
 '20050121-1.c', #complex.type
-'960512-1.c', #complex.type
-'complex-1.c', #complex.type
-'complex-2.c', #complex.type
-'complex-3.c', #complex.type
-'complex-4.c', #complex.type
+#'960512-1.c', #complex.type
+#'complex-1.c', #complex.type
+#'complex-2.c', #complex.type
+#'complex-3.c', #complex.type
+#'complex-4.c', #complex.type
 'complex-5.c', #complex.type
-'complex-6.c', #complex.type
+#'complex-6.c', #complex.type
 'ffs-1.c', #builtin.function
 'ffs-2.c', #builtin.function
 'nestfunc-1.c', #no.trampolines
@@ -64,6 +64,10 @@ SKIPPED = [
 #'c-c++-common/pr33193.c',	# fails on purpose
 #'c-c++-common/pr43690.c',	# fails on purpose
 #'c-c++-common/pr51768.c',	# fails on purpose
+'c-c++-common/torture/complex-alias-1.c',	# complex builtins
+'c-c++-common/torture/complex-sign-mul-minus-one.c',	# complex builtins
+'c-c++-common/torture/complex-sign-mul-one.c',	# complex builtins
+'c-c++-common/torture/complex-sign-mul.c',	# complex builtins
 
 #bugs below
 

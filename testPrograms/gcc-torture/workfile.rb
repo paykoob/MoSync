@@ -20,9 +20,19 @@ BASE = SETTINGS[:base_path]
 
 SP = Struct.new('SourcePath', :base, :path, :mode)
 
+def dg(name)
+	return SP.new(name + '/', BASE + name, :dejaGnu)
+end
+
 # allowed modes: nil (run), compile, dejaGnu (parse the source file to find compile or run.
 SETTINGS[:source_paths] = [
-	SP.new('c-c++-common/', BASE + 'c-c++-common', :dejaGnu),
+# todo: subdirectories
+	#dg('gcc.dg'),
+	#dg('g++.dg'),
+	#dg('g++.old-deja'),
+	#dg('c-c++-common/dfp'),	# decimal floating point is not supported.
+	dg('c-c++-common/torture'),
+	dg('c-c++-common'),
 	SP.new('compile/', BASE + 'gcc.c-torture/compile', :compile),
 	SP.new('unsorted/', BASE + 'gcc.c-torture/unsorted', :compile),
 	SP.new('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
