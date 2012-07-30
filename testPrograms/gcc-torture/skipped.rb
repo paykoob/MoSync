@@ -33,6 +33,10 @@ SKIPPED = [
 '20101011-1.c',	# integer division by zero
 'align-3.c',	# illegal alignment
 'pr47237.c',	# __builtin_apply() not supported yet.
+'compile/20010226-1.c',	# trampolines
+'compile/20040323-1.c',	# alias
+'compile/20050122-1.c',	# trampolines
+'compile/20050122-2.c',	# trampolines
 
 #bugs below
 
@@ -61,7 +65,6 @@ SKIPPED = [
 
 if(!USE_NEWLIB)
 	SKIPPED << 'pr34456.c'	# qsort
-	SKIPPED << '20010226-1.c'	# float.h
 end
 
 if(CONFIG == "")

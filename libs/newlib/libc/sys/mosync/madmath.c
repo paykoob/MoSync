@@ -119,6 +119,10 @@ int __unordsf2(float a, float b) {
 	return isnan(a) || isnan(b);
 }
 
+float __floatundisf(unsigned long long a) {
+	return (float)(double)a;
+}
+
 #if 0
 
 // these should not be needed, as long == int.

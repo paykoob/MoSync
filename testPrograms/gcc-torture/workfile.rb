@@ -7,10 +7,12 @@ require 'skipped.rb'
 
 BASE = SETTINGS[:base_path]
 
-SP = Struct.new('SourcePath', :base, :path)
+SP = Struct.new('SourcePath', :base, :path, :compileOnly)
 
 SETTINGS[:source_paths] = [
 	#SP.new('c-c++-common', BASE + 'c-c++-common/'),
+	SP.new('compile/', BASE + 'gcc.c-torture/compile', true),
+	SP.new('unsorted/', BASE + 'gcc.c-torture/unsorted', true),
 	SP.new('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
 	SP.new('compat/', BASE + 'gcc.c-torture/compat'),
 	SP.new('', BASE + 'gcc.c-torture/execute'),
@@ -65,11 +67,12 @@ end
 class TTWork < PipeExeWork
 	def initialize(f, name)
 		super()
+		@sourcepath = "#{f.sourcePath.path}/#{name}"
 		@sourcefile = f
-		@BUILDDIR_PREFIX = String.new(f.base)
+		@BUILDDIR_PREFIX = String.new(f.sourcePath.base)
 		@EXTRA_INCLUDES = ['.'] if(!USE_NEWLIB)
 		@EXTRA_SOURCEFILES = [
-			"#{f.path}/#{name}",
+			@sourcepath,
 			'helpers/helpers.c',
 		]
 		@EXTRA_SOURCEFILES << 'helpers/override_heap.c' unless(NEEDS_HEAP.include?(name))
@@ -82,6 +85,10 @@ class TTWork < PipeExeWork
 			'pr42833.c' => ' -D__INT_LEAST8_TYPE__=char -D__UINT_LEAST32_TYPE__=unsigned',
 			'pr22493-1.c' => ' -fwrapv',
 			'pr23047.c' => ' -fwrapv',
+			'fp-cmp-1.c' => ' -DSIGNAL_SUPPRESS',
+			'fp-cmp-2.c' => ' -DSIGNAL_SUPPRESS',
+			'fp-cmp-3.c' => ' -DSIGNAL_SUPPRESS',
+			'rbug.c' => ' -D__SPU__',
 		}
 		@EXTRA_EMUFLAGS = ' -noscreen -allowdivzero'
 		@NAME = name
@@ -92,7 +99,7 @@ class TTWork < PipeExeWork
 		include_flags = include_dirs.collect {|dir| " -I \""+File.expand_path_fix(dir)+'"'}.join
 		flags = ' -g -w'
 		flags << ' -O2 -fomit-frame-pointer' if(CONFIG == "")
-		flags << ' -ffloat-store -fno-inline' if(@sourcefile.base == 'ieee/')
+		flags << ' -ffloat-store -fno-inline' if(@sourcefile.sourcePath.base == 'ieee/')
 		flags << include_flags
 		@CFLAGS = flags
 		@CPPFLAGS = flags
@@ -100,9 +107,13 @@ class TTWork < PipeExeWork
 		@TARGET_PATH = @BUILDDIR + @NAME.ext('.moo')
 	end
 	def builddir; @BUILDDIR; end
+	def compile
+		setup
+		makeGccTask(FileTask.new(self, @sourcepath), '.o').invoke
+	end
 end
 
-SourceFile = Struct.new('SourceFile', :base, :path, :filename)
+SourceFile = Struct.new('SourceFile', :sourcePath, :filename)
 
 files = []
 SETTINGS[:source_paths].each do |sp|
@@ -110,7 +121,7 @@ SETTINGS[:source_paths].each do |sp|
 	pattern.gsub!("\\", '/')
 	puts pattern
 	Dir.glob(pattern).sort.collect do |fn|
-		files << SourceFile.new(sp.base, sp.path, fn)
+		files << SourceFile.new(sp, fn)
 	end
 end
 puts "#{files.count} files to test:"
@@ -119,20 +130,22 @@ builddir = nil
 oldBase = nil
 
 files.each do |f|
+	sp = f.sourcePath
 	filename = f.filename
 	bn = File.basename(filename)
-	if(SKIPPED.include?(bn))
+	if(SKIPPED.include?(sp.base + bn))
 		#puts "Skipped #{bn}"
 		next
 	end
 	#puts bn
 
-	builddir = nil if(f.base != oldBase)
+	builddir = nil if(sp.base != oldBase)
 
 	if(!builddir)
 		work = TTWork.new(f, bn)
 		work.invoke
 		builddir = work.builddir
+		oldBase = sp.base
 	end
 
 	ofn = builddir + bn.ext('.o')
@@ -151,6 +164,12 @@ files.each do |f|
 		work.invoke
 	end
 
+	if(force_rebuild)
+		FileUtils.rm_f(ofn)
+		FileUtils.rm_f(pfn)
+		FileUtils.rm_f(winFile)
+	end
+
 	winTask = FileTask.new(work, winFile)
 	winTask.prerequisites << FileTask.new(work, pfn)
 	if(!winTask.needed?(false))
@@ -162,16 +181,15 @@ files.each do |f|
 		work = TTWork.new(f, bn)
 	end
 
-	if(force_rebuild)
-		FileUtils.rm_f(ofn)
-		FileUtils.rm_f(winFile)
-	end
-
 	begin
 		FileUtils.rm_f(winFile)
-		FileUtils.rm_f(failFile)
-		work.invoke
-		work.run
+		FileUtils.touch(failFile)
+		if(sp.compileOnly)
+			work.compile
+		else
+			work.invoke
+			work.run
+		end
 		FileUtils.touch(winFile)
 		FileUtils.rm_f(failFile)
 	rescue

@@ -41,8 +41,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <base/FileStream.h>
 
 #include "helpers/TranslateSyscall.h"
-//#undef LOGC
-//#define LOGC(...) do { if(InstCount < 10000) LOG(__VA_ARGS__); } while(0)
+#ifdef CORE_DEBUGGING_MODE
+#undef LOGC
+#define LOGC(...) do { if(InstCount < 10000) LOG(__VA_ARGS__); } while(0)
+#endif
 
 #ifdef GDB_DEBUG
 #define UPDATE_IP
