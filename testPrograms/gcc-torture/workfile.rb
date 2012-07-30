@@ -18,12 +18,13 @@ end
 
 BASE = SETTINGS[:base_path]
 
-SP = Struct.new('SourcePath', :base, :path, :compileOnly)
+SP = Struct.new('SourcePath', :base, :path, :mode)
 
+# allowed modes: nil (run), compile, dejaGnu (parse the source file to find compile or run.
 SETTINGS[:source_paths] = [
-	#SP.new('c-c++-common', BASE + 'c-c++-common/'),
-	SP.new('compile/', BASE + 'gcc.c-torture/compile', true),
-	SP.new('unsorted/', BASE + 'gcc.c-torture/unsorted', true),
+	SP.new('c-c++-common/', BASE + 'c-c++-common', :dejaGnu),
+	SP.new('compile/', BASE + 'gcc.c-torture/compile', :compile),
+	SP.new('unsorted/', BASE + 'gcc.c-torture/unsorted', :compile),
 	SP.new('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
 	SP.new('compat/', BASE + 'gcc.c-torture/compat'),
 	SP.new('', BASE + 'gcc.c-torture/execute'),
@@ -101,6 +102,8 @@ class TTWork < PipeExeWork
 			'fp-cmp-3.c' => ' -DSIGNAL_SUPPRESS',
 			'rbug.c' => ' -D__SPU__',
 			'pr47141.c' => ' -D__UINTPTR_TYPE__=unsigned',
+			#'raw-string-1.c' => ' -std=gnu99 -trigraphs',
+			#'raw-string-10.c' => ' -std=gnu99 -trigraphs',
 		}
 		@EXTRA_EMUFLAGS = ' -noscreen -allowdivzero'
 		@NAME = name
@@ -113,6 +116,7 @@ class TTWork < PipeExeWork
 		flags << ' -O2 -fomit-frame-pointer' if(CONFIG == "")
 		flags << ' -ffloat-store -fno-inline' if(@sourcefile.sourcePath.base == 'ieee/')
 		flags << include_flags
+		flags << @EXTRA_CFLAGS
 		@CFLAGS = flags
 		@CPPFLAGS = flags
 
@@ -121,14 +125,80 @@ class TTWork < PipeExeWork
 	def builddir; @BUILDDIR; end
 	def compile
 		setup if(!@CFLAGS)
+		FileUtils.mkdir_p(@BUILDDIR)
 		makeGccTask(FileTask.new(self, @sourcepath), '.o').invoke
 	end
 	def invoke
-		if(@sourcefile.sourcePath.compileOnly)
+		if(@sourcefile.sourcePath.mode == :dejaGnu)
+			@mode = :run	# default
+			parseMode
+			#puts "Mode #{@mode} for #{@NAME}"
+			if(@mode == :run || @mode == :link)
+				super
+			elsif(@mode == :compile)
+				compile
+			elsif(@mode == :skip)
+				return
+			else
+				raise "Unknown mode: #{@mode.inspect}"
+#				puts "Unknown mode: #{@mode.inspect}"
+#				@mode = :compile
+#				compile
+			end
+		elsif(@sourcefile.sourcePath.mode == :compileOnly)
 			compile
 		else
 			super
 		end
+	end
+	# scans a C file for { dg-do [compile|run] }
+	def parseMode
+		open(@sourcepath) do |file|
+			file.each do |line|
+				dgdo = '{ dg-do '
+				i = line.index(dgdo)
+				if(i)
+					e = line.index(' }', i)
+					raise "Bad dg-do line!" if(!e)
+					@mode = line.slice(i+dgdo.length, e-(i+dgdo.length)).to_sym
+					next
+				end
+
+				dgop = '{ dg-options "'
+				i = line.index(dgop)
+				if(i)
+					i += dgop.length
+					e = line.index('"', i)
+					raise "Bad dg-options line!" if(!e)
+					ts = '{ target '
+					ti = line.index(ts, e)
+					#raise "Bad dg-options line in #{@sourcepath}: #{line}" if(!ti)
+					if(ti)
+						ti += ts.length
+						te = line.index(' }', ti)
+						raise "Bad dg-options line!" if(!te)
+						target = line.slice(ti, te-ti)
+						options = line.slice(i, e-i)
+						#puts "Found options \"#{options}\" for target #{target}"
+						if(target == 'c')
+							@EXTRA_CFLAGS = ' ' + options
+						end
+					end
+					next
+				end
+
+				if(line.index('{ dg-error ') || line.index('{ dg-bogus '))
+					@mode = :skip
+				end
+			end
+		end
+		return nil
+	end
+	def mode
+		return @mode if(@mode)
+		m = @sourcefile.sourcePath.mode
+		m = :run if(!m)
+		return m
 	end
 end
 
@@ -195,7 +265,7 @@ files.each do |f|
 	end
 
 	winTask = FileTask.new(work, winFile)
-	winTask.prerequisites << FileTask.new(work, sp.compileOnly ? ofn : pfn)
+	#winTask.prerequisites << FileTask.new(work, ofn)
 	if(!winTask.needed?(false))
 		#puts "#{bn} won"
 		next
@@ -208,11 +278,11 @@ files.each do |f|
 	begin
 		FileUtils.rm_f(winFile)
 		FileUtils.touch(failFile)
-		if(sp.compileOnly)
+		if(work.mode == :compile)
 			work.compile
 		else
 			work.invoke
-			work.run
+			work.run if(work.mode == :run)
 		end
 		FileUtils.touch(winFile)
 		FileUtils.rm_f(failFile)

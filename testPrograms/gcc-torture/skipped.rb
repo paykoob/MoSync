@@ -55,6 +55,15 @@ SKIPPED = [
 'compile/pr42956.c',	# weird. not valid C, as far as I can tell.
 'compile/pr44197.c',	# alias
 'unsorted/dump-noaddr.c',	# .x file, too complicated.
+#'c-c++-common/asmgoto-2.c',	# fails on purpose
+#'c-c++-common/builtin-offsetof.c',	# fails on purpose
+#'c-c++-common/fmax-errors.c',	# fails on purpose
+'c-c++-common/int128-1.c',	# __int128
+'c-c++-common/int128-2.c',	# __int128
+'c-c++-common/int128-types-1.c',	# __int128
+#'c-c++-common/pr33193.c',	# fails on purpose
+#'c-c++-common/pr43690.c',	# fails on purpose
+#'c-c++-common/pr51768.c',	# fails on purpose
 
 #bugs below
 
@@ -98,4 +107,6 @@ if(CONFIG == "")
 	SKIPPED << 'compile/pr21840.c'	# illegal call
 else
 	SKIPPED << 'pr17377.c'	# mapip2 bug, __builtin_return_address
+	SKIPPED << 'c-c++-common/Wunused-var-8.c'	# mapip2 bug, find_valid_class(DI, SI)
+	SKIPPED << 'c-c++-common/restrict-1.c'	# fails on purpose
 end
