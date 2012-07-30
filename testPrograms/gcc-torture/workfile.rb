@@ -1,9 +1,20 @@
 #!/usr/bin/ruby
 
+target = nil
+if(ARGV.size > 0 && ARGV[0].end_with?('.c'))
+	target = ARGV[0]
+	ARGV.delete_at(0)
+end
+
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 require 'fileutils'
 require 'settings.rb'
 require 'skipped.rb'
+
+if(target)
+	puts "Target: #{target}"
+	SETTINGS[:strict_prerequisites] = true
+end
 
 BASE = SETTINGS[:base_path]
 
@@ -129,6 +140,7 @@ puts "#{files.count} files to test:"
 
 builddir = nil
 oldBase = nil
+targetFound = false
 
 files.each do |f|
 	sp = f.sourcePath
@@ -137,6 +149,10 @@ files.each do |f|
 	if(SKIPPED.include?(sp.base + bn))
 		#puts "Skipped #{bn}"
 		next
+	end
+	if(target)
+		next if(target != (sp.base + bn))
+		targetFound = true
 	end
 	#puts bn
 
@@ -198,4 +214,9 @@ files.each do |f|
 		FileUtils.rm_f(winFile)
 		raise if(SETTINGS[:stop_on_fail])
 	end
+end
+
+if(target && !targetFound)
+	puts "Error: target not found!"
+	exit(1)
 end

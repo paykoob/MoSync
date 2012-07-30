@@ -80,7 +80,7 @@ SKIPPED = [
 #'pr15296.c',	# mapip2 bug, ridiculously complicated
 'pr42154.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 'compile/930503-2.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"	MINIMAL TESTCASE!
-'compile/limits-exprparen.c',	# gcc bug, unknown segfault
+'compile/limits-exprparen.c',	# gcc bug, segfault due to 27796 stack frames.
 'compile/pr44687.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 'compile/structs.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 ]
