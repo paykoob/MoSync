@@ -89,6 +89,7 @@ class TTWork < PipeExeWork
 			'fp-cmp-2.c' => ' -DSIGNAL_SUPPRESS',
 			'fp-cmp-3.c' => ' -DSIGNAL_SUPPRESS',
 			'rbug.c' => ' -D__SPU__',
+			'pr47141.c' => ' -D__UINTPTR_TYPE__=unsigned',
 		}
 		@EXTRA_EMUFLAGS = ' -noscreen -allowdivzero'
 		@NAME = name
@@ -108,7 +109,7 @@ class TTWork < PipeExeWork
 	end
 	def builddir; @BUILDDIR; end
 	def compile
-		setup
+		setup if(!@CFLAGS)
 		makeGccTask(FileTask.new(self, @sourcepath), '.o').invoke
 	end
 end

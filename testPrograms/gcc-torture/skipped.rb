@@ -37,6 +37,24 @@ SKIPPED = [
 'compile/20040323-1.c',	# alias
 'compile/20050122-1.c',	# trampolines
 'compile/20050122-2.c',	# trampolines
+'compile/920520-1.c',	# broken inline assembly
+'compile/920521-1.c',	# broken inline assembly
+'compile/930506-2.c',	# trampolines
+'compile/930623-1.c',	# __builtin_apply
+'compile/calls.c',	# broken calls to immediate non-function addresses
+'compile/dll.c',	# DLL
+'compile/mipscop-1.c',	# MIPS
+'compile/mipscop-2.c',	# MIPS
+'compile/mipscop-3.c',	# MIPS
+'compile/mipscop-4.c',	# MIPS
+'compile/nested-1.c',	# trampolines
+'compile/nested-2.c',	# trampolines
+'compile/pr23237.c',	# section attributes are not supported for this target
+'compile/pr27889.c',	# trampolines
+'compile/pr30311.c',	# x86
+'compile/pr42956.c',	# weird. not valid C, as far as I can tell.
+'compile/pr44197.c',	# alias
+'unsorted/dump-noaddr.c',	# .x file, too complicated.
 
 #bugs below
 
@@ -61,6 +79,10 @@ SKIPPED = [
 #'frame-address.c',	# mapip2 bug, __builtin_alloca?
 #'pr15296.c',	# mapip2 bug, ridiculously complicated
 'pr42154.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
+'compile/930503-2.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"	MINIMAL TESTCASE!
+'compile/limits-exprparen.c',	# gcc bug, unknown segfault
+'compile/pr44687.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
+'compile/structs.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 ]
 
 if(!USE_NEWLIB)
@@ -72,6 +94,8 @@ if(CONFIG == "")
 	SKIPPED << 'vfprintf-chk-1.c'	#fails.on.purpose
 	#SKIPPED << 'nest-stdar-1.c'	# mapip2 bug, incorrect vararg stack pointer offset in inner function.
 	#SKIPPED << 'pr41239.c'	# mapip2 bug, incorrect vararg stack pointer offset in normal function.
+	SKIPPED << 'compile/limits-structnest.c'	# gcc bug, eats 2+ GB RAM in a few seconds. todo: test on Windows.
+	SKIPPED << 'compile/pr21840.c'	# illegal call
 else
 	SKIPPED << 'pr17377.c'	# mapip2 bug, __builtin_return_address
 end

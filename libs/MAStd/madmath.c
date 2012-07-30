@@ -120,6 +120,10 @@ int __unordsf2(float a, float b) {
 	return isnan(a) || isnan(b);
 }
 
+float __floatundisf(unsigned long long a) {
+	return (float)(double)a;
+}
+
 
 /* the following deal with IEEE single-precision numbers */
 
