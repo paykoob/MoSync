@@ -68,6 +68,11 @@ SKIPPED = [
 'c-c++-common/torture/complex-sign-mul-minus-one.c',	# complex builtins
 'c-c++-common/torture/complex-sign-mul-one.c',	# complex builtins
 'c-c++-common/torture/complex-sign-mul.c',	# complex builtins
+'g++.old-deja/g++.abi/cxa_vec.C',	# setjmp
+'g++.old-deja/g++.abi/ptrflags.C',	# typeinfo
+'g++.old-deja/g++.abi/vmihint.C',	# typeinfo
+'g++.old-deja/g++.benjamin/15071.C',	# iostream
+'g++.old-deja/g++.benjamin/typeid01.C',	# typeinfo
 
 #bugs below
 
@@ -96,6 +101,18 @@ SKIPPED = [
 'compile/limits-exprparen.c',	# gcc bug, segfault due to 27796 stack frames.
 'compile/pr44687.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 'compile/structs.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
+]
+
+SKIPPED_REGEXP = [
+%r{g\+\+.old-deja/g\+\+.abi/vtable3..C},	# typeinfo
+]
+
+# if a dejaGnu test includes any of these lines, it is skipped.
+SKIP_LINES = [
+'#include <iostream>',
+'#include <typeinfo>',
+'#include <complex>',
+'#include <string>',
 ]
 
 if(!USE_NEWLIB)

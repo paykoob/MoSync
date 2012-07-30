@@ -24,20 +24,40 @@ def dg(name)
 	return SP.new(name + '/', BASE + name, :dejaGnu)
 end
 
-# allowed modes: nil (run), compile, dejaGnu (parse the source file to find compile or run.
-SETTINGS[:source_paths] = [
-# todo: subdirectories
-	#dg('gcc.dg'),
-	#dg('g++.dg'),
-	#dg('g++.old-deja'),
+def dgSub(name)
+	#p Dir.methods.sort
+	#p File.methods.sort
+	array = []
+	#puts "Scanning #{BASE + name}..."
+	Dir.foreach(BASE + name).each do |file|
+		path = BASE + name + '/' + file
+		if(File.directory?(path) && !file.start_with?('.'))
+			array << path
+		end
+	end
+	return array.sort.collect do |dir|
+		sp(dir.slice(BASE.length..-1)+'/', dir, :dejaGnu)
+	end
+end
+
+def sp(base, path, mode = :run)
+	return SP.new(base, path, mode)
+end
+
+# allowed modes: run, compile, dejaGnu (parse the source file to find compile or run).
+SETTINGS[:source_paths] =
+	#dgSub('gcc.dg')+
+	#dgSub('g++.dg')+
+	dgSub('g++.old-deja')+
+[
 	#dg('c-c++-common/dfp'),	# decimal floating point is not supported.
 	dg('c-c++-common/torture'),
 	dg('c-c++-common'),
-	SP.new('compile/', BASE + 'gcc.c-torture/compile', :compile),
-	SP.new('unsorted/', BASE + 'gcc.c-torture/unsorted', :compile),
-	SP.new('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
-	SP.new('compat/', BASE + 'gcc.c-torture/compat'),
-	SP.new('', BASE + 'gcc.c-torture/execute'),
+	sp('compile/', BASE + 'gcc.c-torture/compile', :compile),
+	sp('unsorted/', BASE + 'gcc.c-torture/unsorted', :compile),
+	sp('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
+	sp('compat/', BASE + 'gcc.c-torture/compat'),
+	sp('', BASE + 'gcc.c-torture/execute'),
 ]
 
 
@@ -68,6 +88,8 @@ NEEDS_HEAP = [
 'va-arg-21.c',
 'vprintf-1.c',
 'vprintf-chk-1.c',
+'arraynew.C',
+'vbase1.C',
 ]
 
 NEWLIB_NEEDS_HEAP = [
@@ -95,9 +117,15 @@ class TTWork < PipeExeWork
 		@EXTRA_INCLUDES = ['.'] if(!USE_NEWLIB)
 		@EXTRA_SOURCEFILES = [
 			@sourcepath,
-			'helpers/helpers.c',
+			#'helpers/helpers.c',
 		]
-		@EXTRA_SOURCEFILES << 'helpers/override_heap.c' unless(NEEDS_HEAP.include?(name))
+		#@EXTRA_SOURCEFILES << 'helpers/override_heap.c' unless(NEEDS_HEAP.include?(name))
+		@EXTRA_OBJECTS = [
+			FileTask.new(self, 'build/helpers.o'),
+		]
+		unless(NEEDS_HEAP.include?(name) || name.end_with?('.C'))
+			@EXTRA_OBJECTS << FileTask.new(self, 'build/override_heap.o')
+		end
 		@SPECIFIC_CFLAGS = {
 			# longlong to float conversion is not yet supported.
 			'conversion.c' => ' -U __GNUC__',
@@ -126,9 +154,8 @@ class TTWork < PipeExeWork
 		flags << ' -O2 -fomit-frame-pointer' if(CONFIG == "")
 		flags << ' -ffloat-store -fno-inline' if(@sourcefile.sourcePath.base == 'ieee/')
 		flags << include_flags
-		flags << @EXTRA_CFLAGS
-		@CFLAGS = flags
-		@CPPFLAGS = flags
+		@CFLAGS = flags + @EXTRA_CFLAGS
+		@CPPFLAGS = flags + @EXTRA_CPPFLAGS
 
 		@TARGET_PATH = @BUILDDIR + @NAME.ext('.moo')
 	end
@@ -150,7 +177,7 @@ class TTWork < PipeExeWork
 			elsif(@mode == :skip)
 				return
 			else
-				raise "Unknown mode: #{@mode.inspect}"
+				raise "Unknown mode in #{@sourcepath}: #{@mode.inspect}"
 #				puts "Unknown mode: #{@mode.inspect}"
 #				@mode = :compile
 #				compile
@@ -165,12 +192,34 @@ class TTWork < PipeExeWork
 	def parseMode
 		open(@sourcepath) do |file|
 			file.each do |line|
+				lineStrip = line.strip
+				SKIP_LINES.each do |sl|
+					if(lineStrip == sl)
+						@mode = :skip
+						return
+					end
+				end
+
 				dgdo = '{ dg-do '
+				ts = '{ target '
+				xfails = '{ xfail {'
 				i = line.index(dgdo)
 				if(i)
-					e = line.index(' }', i)
+					ti = line.index(ts)
+					if(ti)
+						# no tests are targeted at mapip2.
+						@mode = :skip
+						return
+					end
+					xi = line.index(xfails)
+					if(xi)
+						e = xi-1
+					else
+						e = line.index(' }', i)
+					end
 					raise "Bad dg-do line!" if(!e)
-					@mode = line.slice(i+dgdo.length, e-(i+dgdo.length)).to_sym
+					@mode = line.slice(i+dgdo.length, e-(i+dgdo.length)).strip.to_sym
+					@mode = :compile if(@mode == :assemble)
 					next
 				end
 
@@ -180,7 +229,7 @@ class TTWork < PipeExeWork
 					i += dgop.length
 					e = line.index('"', i)
 					raise "Bad dg-options line!" if(!e)
-					ts = '{ target '
+					options = ' ' + line.slice(i, e-i)
 					ti = line.index(ts, e)
 					#raise "Bad dg-options line in #{@sourcepath}: #{line}" if(!ti)
 					if(ti)
@@ -188,17 +237,23 @@ class TTWork < PipeExeWork
 						te = line.index(' }', ti)
 						raise "Bad dg-options line!" if(!te)
 						target = line.slice(ti, te-ti)
-						options = line.slice(i, e-i)
 						#puts "Found options \"#{options}\" for target #{target}"
 						if(target == 'c')
-							@EXTRA_CFLAGS = ' ' + options
+							@EXTRA_CFLAGS = options
 						end
+						if(target == 'c++')
+							@EXTRA_CPPFLAGS = options
+						end
+					else
+						@EXTRA_CFLAGS = options
+						@EXTRA_CPPFLAGS = options
 					end
 					next
 				end
 
 				if(line.index('{ dg-error ') || line.index('{ dg-bogus '))
 					@mode = :skip
+					return
 				end
 			end
 		end
@@ -216,9 +271,9 @@ SourceFile = Struct.new('SourceFile', :sourcePath, :filename)
 
 files = []
 SETTINGS[:source_paths].each do |sp|
-	pattern = sp.path + '/*.c'
+	pattern = sp.path + '/*.[cC]'
 	pattern.gsub!("\\", '/')
-	puts pattern
+	#puts pattern
 	Dir.glob(pattern).sort.collect do |fn|
 		files << SourceFile.new(sp, fn)
 	end
@@ -229,16 +284,25 @@ builddir = nil
 oldBase = nil
 targetFound = false
 
+def matchRegexp(tName)
+	SKIPPED_REGEXP.each do |r|
+		return true if(r.match(tName))
+	end
+	return false
+end
+
 files.each do |f|
 	sp = f.sourcePath
 	filename = f.filename
 	bn = File.basename(filename)
-	if(SKIPPED.include?(sp.base + bn))
+	#p sp, bn
+	tName = sp.base + bn
+	if(SKIPPED.include?(tName) || matchRegexp(tName))
 		#puts "Skipped #{bn}"
 		next
 	end
 	if(target)
-		next if(target != (sp.base + bn))
+		next if(target != (tName))
 		targetFound = true
 	end
 	#puts bn
@@ -251,6 +315,8 @@ files.each do |f|
 		builddir = work.builddir
 		oldBase = sp.base
 	end
+
+	next if(!builddir)
 
 	ofn = builddir + bn.ext('.o')
 	suffix = ''
@@ -269,8 +335,8 @@ files.each do |f|
 	end
 
 	if(force_rebuild)
-		FileUtils.rm_f(ofn)
-		FileUtils.rm_f(pfn)
+		#FileUtils.rm_f(ofn)
+		#FileUtils.rm_f(pfn)
 		FileUtils.rm_f(winFile)
 	end
 
