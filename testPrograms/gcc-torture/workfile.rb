@@ -335,8 +335,8 @@ files.each do |f|
 	end
 
 	if(force_rebuild)
-		#FileUtils.rm_f(ofn)
-		#FileUtils.rm_f(pfn)
+		FileUtils.rm_f(ofn)
+		FileUtils.rm_f(pfn)
 		FileUtils.rm_f(winFile)
 	end
 
