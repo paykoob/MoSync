@@ -20,24 +20,30 @@ __memtop:
 __stacktop:
 	.long	0
 
+	.globl	___CTOR_LIST__
+___CTOR_LIST__:
+	.long	0
+
 //****************************************
 //			Start up code
 //****************************************
 
 	.text
-	.align 4
 	.global crt0_startup
 
 	// sp: top of stack
 	// p0: memory size
 	// p1: stack size
 	// p2: heap size
+	// p3: ctor chain
 crt0_startup:
+
+	ld [&___CTOR_LIST__],p3	// save ctor chain
 
 	ld	[&__memtop],p0		// Save top of memory
 
 	sub sp, #16			// move stack down memory 16 bytes
-	ld	[&__stacktop],sp	// Save top of memory
+	ld	[&__stacktop],sp	// Save top of stack
 	ld	p0,sp
 
 	sub p0,p1			// make p0 into heap_top
@@ -48,17 +54,14 @@ crt0_startup:
 
 	call &_resource_selector
 
-//	ld	p0,__global_ctor_chain 		//constructor chain
-//	call &_crt_tor_chain
+	call &_crt_ctor_chain
 
 	call &_MAMain
 
 crt_exit:
 	ld	[sp,0], r0		// save return value
 
-//	ld	p0,__global_dtor_chain			// destructor chain
-//	call &_crt_tor_chain
+	call &_crt_dtor_chain
 
-	ld	p0, [sp,0]
+	ld	p0, [sp,0]	// restore return value
 	call &_maExit
-	ret

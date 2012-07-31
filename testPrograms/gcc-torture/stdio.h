@@ -1,4 +1,5 @@
 #include <mavsprintf.h>
+#include <conprint.h>
 
 #define stdout 1
 #define stderr 2

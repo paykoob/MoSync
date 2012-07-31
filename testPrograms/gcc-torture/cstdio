@@ -1,0 +1,5 @@
+#include <stdio.h>
+
+namespace std {
+	int printf(const char*, ...);
+};

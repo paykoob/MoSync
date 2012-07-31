@@ -1,7 +1,3 @@
 #include <stdlib.h>
 #include <maheap.h>
 #include <mastdlib.h>
-
-namespace std {
-	class bad_alloc {};
-};

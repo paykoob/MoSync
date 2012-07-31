@@ -212,6 +212,39 @@ size_t heapFreeMemory(void) {
 }
 
 //****************************************
+// _crt_tor_chain
+//****************************************
+typedef void (*VoidFunc)(void);
+
+extern VoidFunc* __CTOR_LIST__;
+
+void crt_ctor_chain(void);
+void crt_ctor_chain(void) {
+	VoidFunc* ctor = __CTOR_LIST__;
+	if(!ctor)
+		return;
+	// run all ctors.
+	while(*ctor) {
+		(*ctor)();
+		ctor++;
+	}
+	// store the dtor list.
+	__CTOR_LIST__ = ctor + 1;
+}
+
+void crt_dtor_chain(void);
+void crt_dtor_chain(void) {
+	VoidFunc* dtor = __CTOR_LIST__;
+	if(!dtor)
+		return;
+	// run all dtors.
+	while(*dtor) {
+		(*dtor)();
+		dtor++;
+	}
+}
+
+//****************************************
 //				malloc
 //****************************************
 

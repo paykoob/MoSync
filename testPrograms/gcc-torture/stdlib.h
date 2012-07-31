@@ -1,5 +1,7 @@
 #include <mastdlib.h>
 #include <conprint.h>
+#include <maheap.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {

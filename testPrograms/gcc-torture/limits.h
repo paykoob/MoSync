@@ -15,3 +15,5 @@
 #define SCHAR_MIN -128
 #define UCHAR_MIN 0
 #define CHAR_BIT 8
+#define CHAR_MAX SCHAR_MAX
+#define CHAR_MIN SCHAR_MIN

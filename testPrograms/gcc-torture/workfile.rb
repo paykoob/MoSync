@@ -26,13 +26,14 @@ def dg(name)
 end
 
 def dgSub(name)
-	#p Dir.methods.sort
-	#p File.methods.sort
 	array = []
 	#puts "Scanning #{BASE + name}..."
 	Dir.foreach(BASE + name).each do |file|
-		path = BASE + name + '/' + file
-		if(File.directory?(path) && !file.start_with?('.'))
+		subPath = name + '/' + file
+		path = BASE + subPath
+		if(File.directory?(path) &&
+			!file.start_with?('.') &&
+			!SKIPPED_DIRS.include?(subPath))
 			array << path
 		end
 	end
@@ -250,7 +251,7 @@ class TTWork < PipeExeWork
 
 				dgdo = '{ dg-do '
 				ts = '{ target '
-				xfails = '{ xfail {'
+				xfails = '{ xfail '
 				i = line.index(dgdo)
 				if(i)
 					ti = line.index(ts)

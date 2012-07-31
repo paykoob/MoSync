@@ -9,6 +9,11 @@ void abort(void) {
 void exit(int code) {
 	maExit(code);
 }
+
+void _exit(int code);
+void _exit(int code) {
+	maExit(code);
+}
 #endif
 
 int __main(void);
@@ -27,4 +32,9 @@ int main(int argc, char** argv);
 
 int MAMain(void) {
 	return main(0, 0);
+}
+
+const char* getenv(const char* key);
+const char* getenv(const char* key) {
+	return NULL;
 }

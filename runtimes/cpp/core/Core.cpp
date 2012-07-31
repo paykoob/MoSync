@@ -781,9 +781,13 @@ public:
 		// p0: memory size
 		// p1: stack size
 		// p2: heap size
+		// p3: ctor chain
 		regs[REG_p0] = DATA_SEGMENT_SIZE;
 		regs[REG_p1] = 64*1024;
 		regs[REG_p2] = (1024*1024);
+
+		// some programs have no ctor section.
+		regs[REG_p3] = 0;
 
 #ifdef INSTRUCTION_PROFILING
 			SAFE_DELETE(instruction_count);
@@ -892,6 +896,8 @@ public:
 				//strcmp(&strings[shdr.sh_name], ".bss") == 0)
 				//memset(m.getp_translated(shdr.sh_addr, shdr.sh_size), 0, shdr.sh_size);
 				//no need to zero bss, memeory's already zeroed.
+				if(shdr.sh_name != 0) if(strcmp(&strings[shdr.sh_name], ".ctors") == 0)
+					regs[REG_p3] = shdr.sh_addr;
 			}
 		}
 

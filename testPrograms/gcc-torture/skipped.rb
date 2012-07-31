@@ -73,6 +73,19 @@ SKIPPED = [
 'g++.old-deja/g++.abi/vmihint.C',	# typeinfo
 'g++.old-deja/g++.benjamin/15071.C',	# iostream
 'g++.old-deja/g++.benjamin/typeid01.C',	# typeinfo
+'g++.old-deja/g++.brendan/eh1.C',	# exceptions
+'g++.old-deja/g++.jason/conversion10.C',	# old, unfixed gcc bug
+'g++.old-deja/g++.jason/dcast2.C',	# dynamic_cast
+'g++.old-deja/g++.jason/dcast3.C',	# dynamic_cast
+'g++.old-deja/g++.jason/thunk3.C',	# variadric thunk
+'g++.old-deja/g++.law/pr25000.C',	# exceptions
+'g++.old-deja/g++.law/profile1.C',	# profile mode not supported
+'g++.old-deja/g++.martin/new1.C',	# exceptions
+'g++.old-deja/g++.mike/dyncast3.C',	# dynamic_cast
+'g++.old-deja/g++.mike/dyncast9.C',	# dynamic_cast
+'g++.old-deja/g++.mike/p16146.C',	# dynamic_cast
+'g++.old-deja/g++.mike/p7912.C',	# exceptions
+'g++.old-deja/g++.mike/p9706.C',	# exceptions
 
 #bugs below
 
@@ -101,10 +114,17 @@ SKIPPED = [
 'compile/limits-exprparen.c',	# gcc bug, segfault due to 27796 stack frames.
 'compile/pr44687.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
 'compile/structs.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
+'g++.old-deja/g++.gb/scope12.C',	# emit_move_insn QImode -> SImode
+'g++.old-deja/g++.law/ctors18.C',	# emit_move_insn SImode -> QImode. This one's different.
+'g++.old-deja/g++.law/cvt3.C',	# emit_move_insn SImode -> QImode.
+'g++.old-deja/g++.law/operators11.C',	# emit_move_insn QImode -> SImode
+'g++.old-deja/g++.mike/init2.C',	# emit_move_insn QImode -> SImode
+'g++.old-deja/g++.mike/mangle2.C',	# emit_move_insn QImode -> SImode
 ]
 
 SKIPPED_REGEXP = [
 %r{g\+\+.old-deja/g\+\+.abi/vtable3..C},	# typeinfo
+%r{g\+\+.old-deja/g\+\+.mike/eh.+.C},	# typeinfo
 ]
 
 # if a dejaGnu test includes any of these lines, it is skipped.
@@ -113,10 +133,19 @@ SKIP_LINES = [
 '#include <typeinfo>',
 '#include <complex>',
 '#include <string>',
+'#include <fstream>',
+'#include <iomanip>',
+]
+
+SKIPPED_DIRS = [
+'g++.old-deja/g++.eh',
 ]
 
 if(!USE_NEWLIB)
 	SKIPPED << 'pr34456.c'	# qsort
+	SKIPPED << 'g++.old-deja/g++.jason/template44.C'	# qsort
+	SKIPPED << 'g++.old-deja/g++.martin/bitset1.C'	# bitset
+	SKIPPED << 'g++.old-deja/g++.mike/ns15.C'	# qsort
 end
 
 if(CONFIG == "")
