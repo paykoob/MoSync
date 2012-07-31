@@ -21,6 +21,7 @@
 **
 **
 */
+#ifdef MAPIP
 #include <maheap.h>
 #include <mastdlib.h>
 #include <maapi.h>
@@ -28,7 +29,12 @@
 #include <conprint.h>
 #include <limits.h>
 #include <maassert.h>
-#include <benchdb/benchdb.h>
+//#include <benchdb/benchdb.h>
+#else
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#endif
 
 #define SP
 
@@ -62,16 +68,26 @@ static REAL ddot_ur  (int n,REAL *dx,int incx,REAL *dy,int incy);
 static void dscal_ur (int n,REAL da,REAL *dx,int incx);
 static int  idamax   (int n,REAL *dx,int incx);
 static REAL second   (void);
-static void print_matrix(float *mat, int i_dim, int j_dim);
+//static void print_matrix(float *mat, int i_dim, int j_dim);
 
 static void *mempool;
 
 int g_startTime;
+#ifdef MAPIP
 int MAMain ( void )
+#else
+static int maGetMilliSecondCount(void) {
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec * 1000 + (tv.tv_usec / 1000);
+}
+
+int main(void)
+#endif
 {
-    char    buf[80];
+    //char    buf[80];
     int     arsize;
-    long    arsize2d,memreq,nreps;
+    size_t    arsize2d,memreq,nreps;
     size_t  malloc_arg;
 
     g_startTime = maGetMilliSecondCount( );
@@ -118,7 +134,8 @@ int MAMain ( void )
         printf("Finished!\n");
         }
 
-        FREEZE;
+//        FREEZE;
+				return 0;
     }
 
 
@@ -175,9 +192,9 @@ static REAL linpack(long nreps,int arsize)
             nreps,totalt,100.*tdgefa/totalt,
             100.*tdgesl/totalt,100.*toverhead/totalt,
             kflops/1000.0);
-    if(totalt > 10.){ //publish the result in the benchmark database
-    	publish_linpack_result("http://modev.mine.nu:8070/benchmark/publish_result.php", "1337", "MoSync", "987123ab", "HTC%20Wildfire", "2", kflops/1000.0);
-    }
+		//if(totalt > 10.){ //publish the result in the benchmark database
+			//publish_linpack_result("http://modev.mine.nu:8070/benchmark/publish_result.php", "1337", "MoSync", "987123ab", "HTC%20Wildfire", "2", kflops/1000.0);
+		//}
     return(totalt);
     }
 
@@ -267,7 +284,7 @@ static void dgefa(REAL *a,int lda,int n,int *ipvt,int *info,int roll)
 
     {
     REAL t;
-    int idamax(),j,k,kp1,l,nm1;
+    int j,k,kp1,l,nm1;
 
     /* gaussian elimination with partial pivoting */
 
@@ -846,7 +863,7 @@ static int idamax(int n,REAL *dx,int incx)
 
     {
     REAL dmax;
-    int i, ix, itemp;
+    int i, ix, itemp=0;
 
     if (n < 1)
         return(-1);
@@ -887,6 +904,7 @@ static int idamax(int n,REAL *dx,int incx)
     return (itemp);
     }
 
+#if 0
 /*
  *
  * TODO added by me
@@ -898,6 +916,7 @@ static void print_matrix(float *a, int i_dim, int j_dim) {
 		printf("%f ", a[i]);
 	}
 }
+#endif
 
 static REAL second(void)
 {
