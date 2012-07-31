@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 void exit(int);
-void abort();
+void abort(void);
 #ifdef __cplusplus
 }
 #endif

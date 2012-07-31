@@ -7,6 +7,7 @@ if(ARGV.size > 0 && ARGV[0].end_with?('.c'))
 end
 
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
+require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_lib.rb')
 require 'fileutils'
 require 'settings.rb'
 require 'skipped.rb'
@@ -108,6 +109,46 @@ if(USE_NEWLIB)
 	end
 end
 
+class Libdir
+	def self.set(dir)
+		#p dir
+		@libdir = dir
+	end
+
+	def self.get()
+		#p @libdir
+		@libdir
+	end
+end
+
+mod = Module.new
+mod.class_eval do
+	def setup_pipe
+		@EXTRA_SOURCEFILES = [
+			'helpers/helpers.c',
+		]
+		@EXTRA_INCLUDES = ['.'] if(!USE_NEWLIB)
+		@NAME = 'helpers'
+		Libdir.set(@COMMON_BUILDDIR)
+	end
+	def mosync_libdir; 'build'; end
+	def copyHeaders; end
+end
+MoSyncLib.invoke(mod)
+
+mod = Module.new
+mod.class_eval do
+	def setup_pipe
+		@EXTRA_SOURCEFILES = [
+			'helpers/override_heap.c',
+		]
+		@NAME = 'override_heap'
+	end
+	def mosync_libdir; 'build'; end
+	def copyHeaders; end
+end
+MoSyncLib.invoke(mod)
+
 class TTWork < PipeExeWork
 	def initialize(f, name)
 		super()
@@ -117,15 +158,24 @@ class TTWork < PipeExeWork
 		@EXTRA_INCLUDES = ['.'] if(!USE_NEWLIB)
 		@EXTRA_SOURCEFILES = [
 			@sourcepath,
-			#'helpers/helpers.c',
 		]
-		#@EXTRA_SOURCEFILES << 'helpers/override_heap.c' unless(NEEDS_HEAP.include?(name))
-		@EXTRA_OBJECTS = [
-			FileTask.new(self, 'build/helpers.o'),
-		]
-		unless(NEEDS_HEAP.include?(name) || name.end_with?('.C'))
-			@EXTRA_OBJECTS << FileTask.new(self, 'build/override_heap.o')
+
+		if(false)
+			@EXTRA_OBJECTS = [
+				FileTask.new(self, 'build/helpers.o'),
+			]
+			unless(NEEDS_HEAP.include?(name) || name.end_with?('.C'))
+				@EXTRA_OBJECTS << FileTask.new(self, 'build/override_heap.o')
+			end
+		else
+			@EXTRA_OBJECTS = [
+				FileTask.new(self, Libdir.get()+'helpers.o'),
+			]
+			unless(NEEDS_HEAP.include?(name) || name.end_with?('.C'))
+				@EXTRA_OBJECTS << FileTask.new(self, Libdir.get()+'override_heap.o')
+			end
 		end
+
 		@SPECIFIC_CFLAGS = {
 			# longlong to float conversion is not yet supported.
 			'conversion.c' => ' -U __GNUC__',
@@ -140,8 +190,6 @@ class TTWork < PipeExeWork
 			'fp-cmp-3.c' => ' -DSIGNAL_SUPPRESS',
 			'rbug.c' => ' -D__SPU__',
 			'pr47141.c' => ' -D__UINTPTR_TYPE__=unsigned',
-			#'raw-string-1.c' => ' -std=gnu99 -trigraphs',
-			#'raw-string-10.c' => ' -std=gnu99 -trigraphs',
 		}
 		@EXTRA_EMUFLAGS = ' -noscreen -allowdivzero'
 		@NAME = name

@@ -11,12 +11,14 @@ void exit(int code) {
 }
 #endif
 
+int __main(void);
 int __main(void)
 {
 	return 0;
 }
 
-int resource_selector()
+int resource_selector(void);
+int resource_selector(void)
 {
 	return 0;
 }
