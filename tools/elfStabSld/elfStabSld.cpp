@@ -12,6 +12,8 @@
 #define Log printf
 #define DUMP_STABS 0
 
+#define HAVE_EMPTY_NFUN 1
+
 using namespace Base;
 using namespace std;
 
@@ -32,6 +34,9 @@ struct SLD {
 struct Function {
 	const char* name;
 	unsigned start;
+#if HAVE_EMPTY_NFUN
+	unsigned end;
+#endif
 	bool operator<(const Function& o) const { return start < o.start; }
 };
 
@@ -153,9 +158,21 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 				// insert function into ordered set
 				// we can have duplicate function stabs (inlines or templates).
 				// gotta get rid of them.
+#if HAVE_EMPTY_NFUN
+				if(*name) {
+					DEBUG_ASSERT(!f.name);
+					f.name = name;
+					f.start = address;
+				} else {
+					f.end = f.start + address - 1;
+					functions.insert(f);
+					f.name = NULL;
+				}
+#else
 				f.name = name;
 				f.start = address;
 				functions.insert(f);
+#endif
 #if 0
 				pair<set<Function>::iterator, bool> res = functions.insert(f);
 				if(!res.second) {	// duplicate
@@ -191,8 +208,17 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 	}
 
 	// output FUNCTIONS
+	DEBUG_ASSERT(!f.name);
 	fputs("FUNCTIONS\n", file);
 	{
+#if HAVE_EMPTY_NFUN	// empty N_FUNs marks the length of a function.
+		set<Function>::const_iterator i=functions.begin();
+		for(; i!=functions.end(); ++i) {
+			const Function& fi(*i);
+			fprintf(file, "%s %x,%x\n",
+				fi.name, fi.start, fi.end);
+		}
+#else
 		set<Function>::const_iterator i=functions.begin();
 		f = *i;
 		for(++i; i!=functions.end(); ++i) {
@@ -203,6 +229,7 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 		}
 		fprintf(file, "%s %x,%x\n",
 			f.name, f.start, data.textSectionEndAddress);
+#endif
 	}
 
 	// output VARIABLES
