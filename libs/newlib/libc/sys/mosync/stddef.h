@@ -27,15 +27,11 @@ typedef wchar wchar_t;
 #define NULL 0
 #endif
 
-#ifndef __cplusplus
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
-#else
-/* The cast to "char &" below avoids problems with user-defined
-   "operator &", which can appear in a POD type.  */
-#define offsetof(TYPE, MEMBER)					\
-  (__offsetof__ (reinterpret_cast <size_t>			\
-                 (&reinterpret_cast <const volatile char &>	\
-                  (static_cast<TYPE *> (0)->MEMBER))))
-#endif /* C++ */
+#define offsetof(type, member) __builtin_offsetof(type, member)
+
+#ifdef __cplusplus
+extern "C"
+#endif
+void exit(int);
 
 #endif	//STDDEF_H

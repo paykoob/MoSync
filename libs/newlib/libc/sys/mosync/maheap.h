@@ -30,8 +30,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 extern "C" {
 #endif
 
-#include <stddef.h>
-#include <ma.h>
+#include "ma.h"
 
 #ifndef MAPIP
 #ifndef _CRT_SECURE_NO_WARNINGS
@@ -84,11 +83,25 @@ void free(void *mem);
 * If successful, returns a pointer to the resized memory block.
 * The pointer may be identical to the \a old, or different.
 * Returns NULL on failure, leaving the old memory block untouched.
+* If \a old is NULL, a new block is allocated.
+* If \a size is 0, the block is freed, and NULL is returned.
 *
 * \param old The old block of memory.
 * \param size The requested size.
 */
 void* realloc(void* old, size_t size);
+
+
+/**
+* Returns the total size of the heap, in bytes.
+*/
+size_t heapTotalMemory(void);
+
+/**
+* Returns the amount of available memory on the heap, in bytes.
+* \note Due to overhead, you will not be able to allocate exactly this amount.
+*/
+size_t heapFreeMemory(void);
 
 #endif	//MAPIP
 
@@ -143,8 +156,8 @@ block_size_hook set_block_size_hook(block_size_hook hook);
 
 /**
 * This function is weak. You may redefine it. If you do,
-* it will be called at the beginning of execution, instead of the standard
-* heap initialization function, before C++ static constructors and MAMain.
+* it will be called at the beginning of execution, instead of ansi_heap_init_crt0(),
+* before C++ static constructors and MAMain.
 *
 * You must call set_malloc_hook() and set_free_hook() from this function,
 * or the heap will be broken and malloc() will not work.
@@ -160,6 +173,14 @@ void override_heap_init_crt0(char* start, int length) __attribute((weak));
 * \see override_heap_init_crt0()
 */
 void ansi_heap_init_crt0(char *start, int length);
+
+/**
+* Starts a system for dumping information about every call to malloc() or free().
+* Only available in debug builds.
+* It is recommended to call this from override_heap_init_crt0(), in order to
+* catch malloc() calls from static constructors.
+*/
+void initStackDump(void);
 
 #ifdef __cplusplus
 }	//extern "C"

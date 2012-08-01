@@ -1,4 +1,4 @@
-/* Copyright (C) 2009 Mobile Sorcery AB
+/* Copyright (C) 2011 Mobile Sorcery AB
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License, version 2, as published by
@@ -15,46 +15,35 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.
 */
 
-/** \file ma.h
-* \brief Defines MoSync program entry point, size_t, NULL and BOOL
+/** \file mastack.h
+* \brief Call stack access
 */
 
-
-#ifndef MA_H
-#define MA_H
-
-#include "maapi.h"
-#include <stddef.h>
-
-#ifdef __cplusplus
-extern "C"
-#endif
-int MAMain(void);
-
-#ifdef MAPIP
-#define _ma_inline(string) __asm__(string "\n")	
-#else
-#define _ma_inline(string)	
-#endif
-
-typedef int BOOL;
-#define TRUE	1
-#define FALSE	0
-
-#ifndef NULL
-#define NULL 0
-#endif
+#ifndef MASTACK_H
+#define MASTACK_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-int MAMain(void);
-void exit(int);
 
-void ATTRIBUTE(noreturn, ErrorExit(const char * str, int v));
+#include "ma.h"
+
+/// A MoSync call stack frame.
+typedef struct MA_STACK_FRAME {
+	/// Don't use this value.
+	void* _nextFrame;
+	/// The return instruction address.
+	void* retAddr;
+} MA_STACK_FRAME;
+
+/// Returns the topmost call stack frame.
+struct MA_STACK_FRAME* getStackTop(void);
+
+/// Returns the next stack frame. Will return NULL if this is the last stack frame.
+struct MA_STACK_FRAME* nextFrame(struct MA_STACK_FRAME* frame);
 
 #ifdef __cplusplus
-}
+}	//extern "C"
 #endif
 
-#endif /* MA_H */
+#endif /* MASTACK_H */

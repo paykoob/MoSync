@@ -11,3 +11,5 @@ void abort(void);
 #ifdef __cplusplus
 }
 #endif
+
+#define EXIT_SUCCESS 0

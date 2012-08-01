@@ -5,15 +5,17 @@ void abort(void) {
 	maExit(420);
 }
 
-#ifdef MAPIP
-void exit(int code) {
-	maExit(code);
-}
-
+#ifndef USE_NEWLIB
 void _exit(int code);
 void _exit(int code) {
 	maExit(code);
 }
+
+char* getenv(const char* key);
+char* getenv(const char* key) {
+	return NULL;
+}
+
 #endif
 
 int __main(void);
@@ -32,9 +34,4 @@ int main(int argc, char** argv);
 
 int MAMain(void) {
 	return main(0, 0);
-}
-
-const char* getenv(const char* key);
-const char* getenv(const char* key) {
-	return NULL;
 }

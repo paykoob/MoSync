@@ -36,10 +36,3 @@ void crt_tor_chain(int* ptr) {
 		ptr++;
 	}
 }
-
-#ifdef MAPIP
-void atexit(void* arg);
-void atexit(void* arg)
-{
-}
-#endif

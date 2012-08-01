@@ -52,6 +52,7 @@ SKIPPED = [
 'compile/pr23237.c',	# section attributes are not supported for this target
 'compile/pr27889.c',	# trampolines
 'compile/pr30311.c',	# x86
+'compile/pr38789.c',	# broken inline assembly
 'compile/pr42956.c',	# weird. not valid C, as far as I can tell.
 'compile/pr44197.c',	# alias
 'unsorted/dump-noaddr.c',	# .x file, too complicated.
@@ -78,6 +79,7 @@ SKIPPED = [
 'g++.old-deja/g++.jason/dcast2.C',	# dynamic_cast
 'g++.old-deja/g++.jason/dcast3.C',	# dynamic_cast
 'g++.old-deja/g++.jason/thunk3.C',	# variadric thunk
+'g++.old-deja/g++.law/operators27.C',	# exceptions
 'g++.old-deja/g++.law/pr25000.C',	# exceptions
 'g++.old-deja/g++.law/profile1.C',	# profile mode not supported
 'g++.old-deja/g++.martin/new1.C',	# exceptions
@@ -86,45 +88,108 @@ SKIPPED = [
 'g++.old-deja/g++.mike/p16146.C',	# dynamic_cast
 'g++.old-deja/g++.mike/p7912.C',	# exceptions
 'g++.old-deja/g++.mike/p9706.C',	# exceptions
+'g++.old-deja/g++.oliva/delete3.C',	# exceptions
+'g++.old-deja/g++.oliva/new1.C',	# exceptions
+'g++.old-deja/g++.other/array1.C',	# exceptions
+'g++.old-deja/g++.other/crash15.C',	# exceptions
+'g++.old-deja/g++.other/dcast2.C',	# dynamic_cast
+'g++.old-deja/g++.other/delete3.C',	# exceptions
+'g++.old-deja/g++.other/eh3.C',	# exceptions
+'g++.old-deja/g++.other/eh5.C',	# exceptions
+'g++.old-deja/g++.other/init7.C',	# exceptions
+'g++.old-deja/g++.other/new7.C',	# exceptions
+'g++.old-deja/g++.other/singleton.C',	# exceptions
+'g++.old-deja/g++.other/syntax1.C',	# -fsyntax-only
+'g++.old-deja/g++.other/syntax2.C',	# -fsyntax-only
+'g++.old-deja/g++.other/vbase2.C',	# exceptions
+'g++.old-deja/g++.pt/const2.C',	# fails on purpose, though it shouldn't. very weird.
+'g++.old-deja/g++.pt/crash20.C',	# fails on purpose?
+'g++.old-deja/g++.pt/fntry1.C',	# exceptions
+'g++.old-deja/g++.pt/instantiate4.C',	# fails on purpose
+'g++.old-deja/g++.robertl/eb123.C',	# exceptions
+'g++.old-deja/g++.robertl/eb124.C',	# exceptions
+'g++.old-deja/g++.robertl/eb130.C',	# requires GNU stl
+'g++.old-deja/g++.robertl/eb17.C',	# dynamic_cast
+'g++.old-deja/g++.robertl/eb50.C',	# exceptions
+'g++.old-deja/g++.robertl/eb88.C',	# exceptions
 
 #bugs below
 
 'builtin-bitops-1.c', #builtin.functions. todo: implement them.
-#'930622-2.c', #gcc bug: calls __fixdfdi instead of __fixdfti or __fixtfti
-#'20000722-1.c',	# mapip2 bug: caller's stack frame is not proper.
-#'20000815-1.c',	# mapip2 bug, unknown. "emit_move_insn QImode -> SImode"?
-#'20020227-1.c',	# mapip2 bug, unknown (complex float, should work).
 
-# mapip2 bug, same as 20000722-1: callers that pass structs to callees
-# does not properly decrement the stack pointer in the caller's prologue.
-#'20050316-1.c',
-#'20050316-2.c',
-#'20050316-3.c',
-
-#'20070824-1.c',	# mapip2 bug: __builtin_alloca?
-'930713-1.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
-#'930718-1.c',	# mapip2 bug. struct on stack, 20000722-1.
-'931004-3.c',	# mapip2 bug, segfault due to "emit_move_insn HImode -> SImode"
-'931004-7.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
-'931005-1.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
-#'frame-address.c',	# mapip2 bug, __builtin_alloca?
-#'pr15296.c',	# mapip2 bug, ridiculously complicated
-'pr42154.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
-'compile/930503-2.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"	MINIMAL TESTCASE!
+# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
+'930713-1.c',
+'931004-3.c',
+'931004-7.c',
+'931005-1.c',
+'pr42154.c',
+'compile/930503-2.c',	# MINIMAL TESTCASE!
 'compile/limits-exprparen.c',	# gcc bug, segfault due to 27796 stack frames.
-'compile/pr44687.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
-'compile/structs.c',	# mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
-'g++.old-deja/g++.gb/scope12.C',	# emit_move_insn QImode -> SImode
+'compile/pr44687.c',
+'compile/structs.c',
+'g++.old-deja/g++.brendan/groff1.C',
+'g++.old-deja/g++.brendan/overload6.C',
+'g++.old-deja/g++.gb/scope12.C',
+'g++.old-deja/g++.jason/byval2.C',
+'g++.old-deja/g++.jason/friend.C',
+'g++.old-deja/g++.jason/template42.C',
 'g++.old-deja/g++.law/ctors18.C',	# emit_move_insn SImode -> QImode. This one's different.
 'g++.old-deja/g++.law/cvt3.C',	# emit_move_insn SImode -> QImode.
-'g++.old-deja/g++.law/operators11.C',	# emit_move_insn QImode -> SImode
-'g++.old-deja/g++.mike/init2.C',	# emit_move_insn QImode -> SImode
-'g++.old-deja/g++.mike/mangle2.C',	# emit_move_insn QImode -> SImode
+'g++.old-deja/g++.law/operators11.C',
+'g++.old-deja/g++.law/unsorted2.C',
+'g++.old-deja/g++.mike/init2.C',
+'g++.old-deja/g++.mike/mangle2.C',
+'g++.old-deja/g++.niklas/t122.C',
+'g++.old-deja/g++.niklas/t123.C',
+'g++.old-deja/g++.ns/koenig4.C',
+'g++.old-deja/g++.ns/koenig6.C',
+'g++.old-deja/g++.ns/koenig7.C',
+'g++.old-deja/g++.ns/template11.C',
+'g++.old-deja/g++.other/copy3.C',
+'g++.old-deja/g++.other/crash14.C',
+'g++.old-deja/g++.other/inline6.C',
+'g++.old-deja/g++.other/using6.C',
+'g++.old-deja/g++.pt/call1.C',
+'g++.old-deja/g++.pt/deduct2.C',
+'g++.old-deja/g++.pt/explicit11.C',
+'g++.old-deja/g++.pt/explicit25.C',
+'g++.old-deja/g++.pt/explicit37.C',
+'g++.old-deja/g++.pt/explicit78.C',
+'g++.old-deja/g++.pt/explicit82.C',
+'g++.old-deja/g++.pt/expr3.C',
+'g++.old-deja/g++.pt/expr7.C',
+'g++.old-deja/g++.pt/mangle1.C',
+'g++.old-deja/g++.pt/memclass17.C',
+'g++.old-deja/g++.pt/memtemp11.C',
+'g++.old-deja/g++.pt/memtemp14.C',
+'g++.old-deja/g++.pt/memtemp16.C',
+'g++.old-deja/g++.pt/memtemp17.C',
+'g++.old-deja/g++.pt/memtemp20.C',
+'g++.old-deja/g++.pt/memtemp3.C',
+'g++.old-deja/g++.pt/memtemp36.C',
+'g++.old-deja/g++.pt/memtemp5.C',
+'g++.old-deja/g++.pt/memtemp53.C',
+'g++.old-deja/g++.pt/memtemp58.C',
+'g++.old-deja/g++.pt/memtemp7.C',
+'g++.old-deja/g++.pt/nttp2.C',
+'g++.old-deja/g++.pt/overload1.C',
+'g++.old-deja/g++.pt/spec17.C',
+'g++.old-deja/g++.pt/ttp33.C',
+'g++.old-deja/g++.pt/ttp57.C',
+'g++.old-deja/g++.pt/ttp58.C',
+'g++.old-deja/g++.pt/ttp65.C',
+'g++.old-deja/g++.pt/typename1.C',
+'g++.old-deja/g++.pt/unify1.C',
+'g++.old-deja/g++.pt/unify2.C',
+'g++.old-deja/g++.robertl/eb13.C',
+'g++.old-deja/g++.robertl/eb14.C',
+'g++.old-deja/g++.robertl/eb37.C',
 ]
 
 SKIPPED_REGEXP = [
 %r{g\+\+.old-deja/g\+\+.abi/vtable3..C},	# typeinfo
-%r{g\+\+.old-deja/g\+\+.mike/eh.+.C},	# typeinfo
+%r{g\+\+.old-deja/g\+\+.mike/eh.+.C},	# exceptions
+%r{g\+\+.old-deja/g\+\+.other/dyncast..C},	# dynamic_cast
 ]
 
 # if a dejaGnu test includes any of these lines, it is skipped.
@@ -132,9 +197,10 @@ SKIP_LINES = [
 '#include <iostream>',
 '#include <typeinfo>',
 '#include <complex>',
-'#include <string>',
 '#include <fstream>',
 '#include <iomanip>',
+'#include <exception>',
+'#include <sstream>',
 ]
 
 SKIPPED_DIRS = [
@@ -142,10 +208,22 @@ SKIPPED_DIRS = [
 ]
 
 if(!USE_NEWLIB)
+	SKIP_LINES << '#include <string>'
+	SKIP_LINES << '#include <list>'
+	SKIP_LINES << '#include <map>'
+	SKIP_LINES << '#include <vector>'
+	SKIP_LINES << '#include <iterator>'
+	SKIP_LINES << '#include <utility>'
+	SKIP_LINES << '#include <algorithm>'
 	SKIPPED << 'pr34456.c'	# qsort
 	SKIPPED << 'g++.old-deja/g++.jason/template44.C'	# qsort
 	SKIPPED << 'g++.old-deja/g++.martin/bitset1.C'	# bitset
 	SKIPPED << 'g++.old-deja/g++.mike/ns15.C'	# qsort
+	SKIPPED << 'g++.old-deja/g++.ns/using6.C'	# vector
+	SKIPPED << 'g++.old-deja/g++.other/bitfld1.C'	# utility
+	SKIPPED << 'g++.old-deja/g++.other/init18.C'	# atexit
+	SKIPPED << 'g++.old-deja/g++.other/init19.C'	# atexit
+	SKIPPED << 'g++.old-deja/g++.other/init5.C'	# atexit
 end
 
 if(CONFIG == "")

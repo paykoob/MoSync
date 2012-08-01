@@ -48,16 +48,21 @@ typedef int BOOL;
 #endif
 
 #ifdef __cplusplus
-extern "C"
+extern "C" {
 #endif
 int MAMain(void);
+void exit(int);
 
 #ifdef MAPIP
-#define _ma_inline(string) __asm__(string "\n")	
+#define _ma_inline(string) __asm__(string "\n")
 #else
-#define _ma_inline(string)	
+#define _ma_inline(string)
 #endif
 
 void ATTRIBUTE(noreturn, ErrorExit(const char * str, int v));
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* MA_H */

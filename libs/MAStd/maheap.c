@@ -19,6 +19,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "maheap.h"
 #include "mavsprintf.h"
 #include "mastack.h"
+#include "maassert.h"
 
 #if defined(MOSYNCDEBUG) && !defined(__arm__)
 #define HAVE_STACK_DUMP 1
@@ -242,6 +243,14 @@ void crt_dtor_chain(void) {
 		(*dtor)();
 		dtor++;
 	}
+}
+
+void exit(int code) {
+	static int exiting = 0;
+	MAASSERT(!exiting);
+	exiting = 1;
+	crt_dtor_chain();
+	maExit(code);
 }
 
 //****************************************

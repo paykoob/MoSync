@@ -37,7 +37,8 @@ def dgSub(name)
 			array << path
 		end
 	end
-	return array.sort.collect do |dir|
+	return [dg(name)] +
+		array.sort.collect do |dir|
 		sp(dir.slice(BASE.length..-1)+'/', dir, :dejaGnu)
 	end
 end
@@ -157,6 +158,7 @@ class TTWork < PipeExeWork
 		@sourcefile = f
 		@BUILDDIR_PREFIX = String.new(f.sourcePath.base)
 		@EXTRA_INCLUDES = ['.'] if(!USE_NEWLIB)
+		@EXTRA_INCLUDES = [mosync_include + '/stlport'] if(USE_NEWLIB)
 		@EXTRA_SOURCEFILES = [
 			@sourcepath,
 		]
@@ -227,9 +229,6 @@ class TTWork < PipeExeWork
 				return
 			else
 				raise "Unknown mode in #{@sourcepath}: #{@mode.inspect}"
-#				puts "Unknown mode: #{@mode.inspect}"
-#				@mode = :compile
-#				compile
 			end
 		elsif(@sourcefile.sourcePath.mode == :compileOnly)
 			compile
@@ -278,7 +277,19 @@ class TTWork < PipeExeWork
 					i += dgop.length
 					e = line.index('"', i)
 					raise "Bad dg-options line!" if(!e)
-					options = ' ' + line.slice(i, e-i)
+					options = line.slice(i, e-i).split
+
+					# because we don't use collect2, -frepo will not work.
+					if(options.include?('-frepo'))
+						@mode = :skip
+						return
+					end
+
+					# fdump options are bugged for source files that are not in cwd.
+					options.delete_if do |o| o.start_with?('-fdump-') end
+
+					options = ' '+options.join(' ')
+
 					ti = line.index(ts, e)
 					#raise "Bad dg-options line in #{@sourcepath}: #{line}" if(!ti)
 					if(ti)
@@ -300,7 +311,21 @@ class TTWork < PipeExeWork
 					next
 				end
 
-				if(line.index('{ dg-error ') || line.index('{ dg-bogus '))
+				dgop = '{ dg-additional-sources "'
+				i = line.index(dgop)
+				if(i)
+					i += dgop.length
+					e = line.index('"', i)
+					raise "Bad dg-additional-sources line!" if(!e)
+					line.slice(i, e-i).split.each do |a|
+						@EXTRA_SOURCEFILES << File.dirname(@sourcepath)+'/'+a
+					end
+					next
+				end
+
+				if(line.index('{ dg-error ') || line.index('{ dg-bogus ') ||
+					line.index('throw ') ||
+					false)
 					@mode = :skip
 					return
 				end
