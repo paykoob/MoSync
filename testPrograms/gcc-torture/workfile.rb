@@ -19,13 +19,13 @@ end
 
 BASE = SETTINGS[:base_path]
 
-SP = Struct.new('SourcePath', :base, :path, :mode)
+SP = Struct.new('SourcePath', :base, :path, :mode, :defaultMode)
 
-def dg(name)
-	return SP.new(name + '/', BASE + name, :dejaGnu)
+def dg(name, defaultMode)
+	return SP.new(name + '/', BASE + name, :dejaGnu, defaultMode)
 end
 
-def dgSub(name)
+def dgSub(name, defaultMode)
 	array = []
 	#puts "Scanning #{BASE + name}..."
 	Dir.foreach(BASE + name).each do |file|
@@ -37,25 +37,25 @@ def dgSub(name)
 			array << path
 		end
 	end
-	return [dg(name)] +
+	return [dg(name, defaultMode)] +
 		array.sort.collect do |dir|
-		sp(dir.slice(BASE.length..-1)+'/', dir, :dejaGnu)
+		sp(dir.slice(BASE.length..-1)+'/', dir, :dejaGnu, defaultMode)
 	end
 end
 
-def sp(base, path, mode = :run)
+def sp(base, path, mode = :run, defaultMode = :run)
 	return SP.new(base, path, mode)
 end
 
 # allowed modes: run, compile, dejaGnu (parse the source file to find compile or run).
 SETTINGS[:source_paths] =
-	#dgSub('gcc.dg')+
-	#dgSub('g++.dg')+
-	dgSub('g++.old-deja')+
+	dgSub('gcc.dg', :compile)+
+	dgSub('g++.dg', :run)+
+	dgSub('g++.old-deja', :run)+
 [
 	#dg('c-c++-common/dfp'),	# decimal floating point is not supported.
-	dg('c-c++-common/torture'),
-	dg('c-c++-common'),
+	dg('c-c++-common/torture', :run),
+	dg('c-c++-common', :run),
 	sp('compile/', BASE + 'gcc.c-torture/compile', :compile),
 	sp('unsorted/', BASE + 'gcc.c-torture/unsorted', :compile),
 	sp('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
@@ -93,6 +93,8 @@ NEEDS_HEAP = [
 'vprintf-chk-1.c',
 'arraynew.C',
 'vbase1.C',
+'20050527-1.c',
+'alias-11.c',
 ]
 
 NEWLIB_NEEDS_HEAP = [
@@ -218,7 +220,7 @@ class TTWork < PipeExeWork
 	end
 	def invoke
 		if(@sourcefile.sourcePath.mode == :dejaGnu)
-			@mode = :run	# default
+			@mode = @sourcefile.sourcePath.defaultMode
 			parseMode
 			#puts "Mode #{@mode} for #{@NAME}"
 			if(@mode == :run || @mode == :link)
@@ -321,6 +323,21 @@ class TTWork < PipeExeWork
 						@EXTRA_SOURCEFILES << File.dirname(@sourcepath)+'/'+a
 					end
 					next
+				end
+
+				dgret = '{ dg-require-effective-target '
+				i = line.index(dgret)
+				if(i)
+					i += dgret.length
+					e = line.index(' }', i)
+					raise "Bad dg-require-effective-target line!" if(!e)
+					t = line.slice(i, e-i).strip
+					if(t == 'trampolines' ||
+						t == 'sync_char_short' ||
+						false)
+						@mode = :skip
+						return
+					end
 				end
 
 				if(line.index('{ dg-error ') || line.index('{ dg-bogus ') ||

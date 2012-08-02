@@ -112,78 +112,23 @@ SKIPPED = [
 'g++.old-deja/g++.robertl/eb17.C',	# dynamic_cast
 'g++.old-deja/g++.robertl/eb50.C',	# exceptions
 'g++.old-deja/g++.robertl/eb88.C',	# exceptions
+'gcc.dg/Walways-true-2.c',  # gas says: redefined symbol cannot be used on reloc
+'gcc.dg/alias-5.c',	# require-alias
+'gcc.dg/alias-6.c',	# require-alias
+'gcc.dg/alias-7.c',	# require-alias
+'gcc.dg/always_inline.c',	# fails on purpose
+'gcc.dg/always_inline2.c',	# fails on purpose
+'gcc.dg/always_inline3.c',	# fails on purpose
 
 #bugs below
 
 'builtin-bitops-1.c', #builtin.functions. todo: implement them.
 
 # mapip2 bug, segfault due to "emit_move_insn QImode -> SImode"
-'930713-1.c',
-'931004-3.c',
-'931004-7.c',
-'931005-1.c',
-'pr42154.c',
-'compile/930503-2.c',	# MINIMAL TESTCASE!
+#'compile/930503-2.c',	# MINIMAL TESTCASE!
 'compile/limits-exprparen.c',	# gcc bug, segfault due to 27796 stack frames.
-'compile/pr44687.c',
-'compile/structs.c',
-'g++.old-deja/g++.brendan/groff1.C',
-'g++.old-deja/g++.brendan/overload6.C',
-'g++.old-deja/g++.gb/scope12.C',
-'g++.old-deja/g++.jason/byval2.C',
-'g++.old-deja/g++.jason/friend.C',
-'g++.old-deja/g++.jason/template42.C',
-'g++.old-deja/g++.law/ctors18.C',	# emit_move_insn SImode -> QImode. This one's different.
-'g++.old-deja/g++.law/cvt3.C',	# emit_move_insn SImode -> QImode.
-'g++.old-deja/g++.law/operators11.C',
-'g++.old-deja/g++.law/unsorted2.C',
-'g++.old-deja/g++.mike/init2.C',
-'g++.old-deja/g++.mike/mangle2.C',
-'g++.old-deja/g++.niklas/t122.C',
-'g++.old-deja/g++.niklas/t123.C',
-'g++.old-deja/g++.ns/koenig4.C',
-'g++.old-deja/g++.ns/koenig6.C',
-'g++.old-deja/g++.ns/koenig7.C',
-'g++.old-deja/g++.ns/template11.C',
-'g++.old-deja/g++.other/copy3.C',
-'g++.old-deja/g++.other/crash14.C',
-'g++.old-deja/g++.other/inline6.C',
-'g++.old-deja/g++.other/using6.C',
-'g++.old-deja/g++.pt/call1.C',
-'g++.old-deja/g++.pt/deduct2.C',
-'g++.old-deja/g++.pt/explicit11.C',
-'g++.old-deja/g++.pt/explicit25.C',
-'g++.old-deja/g++.pt/explicit37.C',
-'g++.old-deja/g++.pt/explicit78.C',
-'g++.old-deja/g++.pt/explicit82.C',
-'g++.old-deja/g++.pt/expr3.C',
-'g++.old-deja/g++.pt/expr7.C',
-'g++.old-deja/g++.pt/mangle1.C',
-'g++.old-deja/g++.pt/memclass17.C',
-'g++.old-deja/g++.pt/memtemp11.C',
-'g++.old-deja/g++.pt/memtemp14.C',
-'g++.old-deja/g++.pt/memtemp16.C',
-'g++.old-deja/g++.pt/memtemp17.C',
-'g++.old-deja/g++.pt/memtemp20.C',
-'g++.old-deja/g++.pt/memtemp3.C',
-'g++.old-deja/g++.pt/memtemp36.C',
-'g++.old-deja/g++.pt/memtemp5.C',
-'g++.old-deja/g++.pt/memtemp53.C',
-'g++.old-deja/g++.pt/memtemp58.C',
-'g++.old-deja/g++.pt/memtemp7.C',
-'g++.old-deja/g++.pt/nttp2.C',
-'g++.old-deja/g++.pt/overload1.C',
-'g++.old-deja/g++.pt/spec17.C',
-'g++.old-deja/g++.pt/ttp33.C',
-'g++.old-deja/g++.pt/ttp57.C',
-'g++.old-deja/g++.pt/ttp58.C',
-'g++.old-deja/g++.pt/ttp65.C',
-'g++.old-deja/g++.pt/typename1.C',
-'g++.old-deja/g++.pt/unify1.C',
-'g++.old-deja/g++.pt/unify2.C',
-'g++.old-deja/g++.robertl/eb13.C',
-'g++.old-deja/g++.robertl/eb14.C',
-'g++.old-deja/g++.robertl/eb37.C',
+#'g++.old-deja/g++.law/ctors18.C',	# emit_move_insn SImode -> QImode. This one's different.
+#'g++.old-deja/g++.law/cvt3.C',	# emit_move_insn SImode -> QImode.
 ]
 
 SKIPPED_REGEXP = [
