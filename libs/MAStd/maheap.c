@@ -257,7 +257,7 @@ void exit(int code) {
 //				malloc
 //****************************************
 
-void * malloc(int size)
+void * malloc(size_t size)
 {
 	void *result;
 
@@ -303,9 +303,9 @@ void * malloc(int size)
 //				calloc
 //****************************************
 
-void * calloc(int num_elem, int size_elem)
+void * calloc(size_t num_elem, size_t size_elem)
 {
-	int size = num_elem * size_elem;
+	size_t size = num_elem * size_elem;
 	void *mem;
 
 	MASTD_HEAP_LOG("calloc(%i, %i)\n", num_elem, size_elem);
@@ -358,7 +358,7 @@ void free(void *mem)
 //****************************************
 //				nice realloc
 //****************************************
-void* realloc(void* old, int size) {
+void* realloc(void* old, size_t size) {
 	void* result;
 	MASTD_HEAP_LOG("realloc(0x%08X, %i)\n", (int)old, size);
 

@@ -185,8 +185,8 @@ class GccWork < BuildWork
 		cfiles = collect_files(".c")
 		cppfiles = collect_files(".cpp") + collect_files(".cc") + collect_files('.C')
 
-		sExt = '.S' if(USE_ARM)
-		sExt = '.s' if(USE_GNU_BINUTILS)
+		sExt = '.S' if(USE_ARM && @COLLECT_S_FILES)
+		sExt = '.s' if(USE_GNU_BINUTILS && @COLLECT_S_FILES)
 		if(sExt)
 			@CFLAGS_MAP[sExt] = @CFLAGS + host_flags if(USE_ARM)
 			@CFLAGS_MAP[sExt] = ' -Wa,--gstabs' if(USE_GNU_BINUTILS)

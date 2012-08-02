@@ -181,7 +181,7 @@
  *  Dave Thorup
  *
  */
- 
+
  /** \file stdint.h
 * \brief Standard integer scalar types
 * \author Paul Hsieh
@@ -197,6 +197,10 @@
 /* defined in stddef */
 #ifdef MAPIP
 typedef long ptrdiff_t;
+typedef unsigned long size_t;
+typedef unsigned short wchar_t;
+#define WINT_MIN 0
+#define WINT_MAX UINT_MAX
 #endif
 
 #ifndef _PSTDINT_H_INCLUDED
@@ -350,7 +354,7 @@ typedef long ptrdiff_t;
 
 #undef stdint_int64_defined
 #if (defined(__STDC__) && defined(__STDC_VERSION__)) || defined (S_SPLINT_S)
-# if (__STDC__ && __STDC_VERSION >= 199901L) || defined (S_SPLINT_S)
+# if (__STDC__ && __STDC_VERSION__ >= 199901L) || defined (S_SPLINT_S)
 #  define stdint_int64_defined
    typedef long long int64_t;
    typedef unsigned long long uint64_t;
@@ -540,7 +544,7 @@ typedef uint_least32_t uint_fast32_t;
 #define  INT_FAST16_MAX  INT_LEAST16_MAX
 #define UINT_FAST32_MAX UINT_LEAST32_MAX
 #define  INT_FAST32_MAX  INT_LEAST32_MAX
-#define   INT_FAST8_MIN   IN_LEASTT8_MIN
+#define   INT_FAST8_MIN   INT_LEAST8_MIN
 #define  INT_FAST16_MIN  INT_LEAST16_MIN
 #define  INT_FAST32_MIN  INT_LEAST32_MIN
 #ifdef stdint_int64_defined
@@ -590,7 +594,7 @@ typedef uint_least32_t uint_fast32_t;
 #  else
 #    define stdint_intptr_bits 32
 #  endif
-# elif defined (__i386__) || defined (_WIN32) || defined (WIN32)
+# elif defined (__i386__) || defined (_WIN32) || defined (WIN32) || defined (MAPIP)
 #  define stdint_intptr_bits 32
 # elif defined (__INTEL_COMPILER)
 /* TODO -- what will Intel do about x86-64? */
@@ -642,5 +646,31 @@ typedef uint_least32_t uint_fast32_t;
 #endif
 
 #endif
+
+
+#if !defined __cplusplus || defined __STDC_CONSTANT_MACROS
+
+#undef INT8_C
+#define INT8_C(c) __INT8_C(c)
+#undef INT16_C
+#define INT16_C(c) __INT16_C(c)
+#undef INT32_C
+#define INT32_C(c) __INT32_C(c)
+#undef INT64_C
+#define INT64_C(c) __INT64_C(c)
+#undef UINT8_C
+#define UINT8_C(c) __UINT8_C(c)
+#undef UINT16_C
+#define UINT16_C(c) __UINT16_C(c)
+#undef UINT32_C
+#define UINT32_C(c) __UINT32_C(c)
+#undef UINT64_C
+#define UINT64_C(c) __UINT64_C(c)
+#undef INTMAX_C
+#define INTMAX_C(c) __INTMAX_C(c)
+#undef UINTMAX_C
+#define UINTMAX_C(c) __UINTMAX_C(c)
+
+#endif /* !defined __cplusplus || defined __STDC_CONSTANT_MACROS */
 
 #endif	//STDINT_H

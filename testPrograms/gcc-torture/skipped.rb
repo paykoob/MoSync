@@ -119,6 +119,19 @@ SKIPPED = [
 'gcc.dg/always_inline.c',	# fails on purpose
 'gcc.dg/always_inline2.c',	# fails on purpose
 'gcc.dg/always_inline3.c',	# fails on purpose
+'gcc.dg/asm-2.c',	# broken inline assembly
+'gcc.dg/asm-3.c',	# broken inline assembly
+'gcc.dg/asm-4.c',	# broken inline assembly
+'gcc.dg/asm-pr24146.c',	# broken inline assembly
+'gcc.dg/builtin-apply1.c',	# __builtin_apply
+'gcc.dg/builtin-apply2.c',	# __builtin_apply
+'gcc.dg/builtin-apply3.c',	# __builtin_apply
+'gcc.dg/builtin-apply4.c',	# __builtin_apply
+'gcc.dg/builtin-return-1.c',	# __builtin_return
+'gcc.dg/builtin-unreachable-1.c',	# broken inline assembly
+'gcc.dg/builtins-20.c',	# fails on purpose
+'gcc.dg/builtins-57.c',	# fails on purpose
+'gcc.dg/builtins-65.c',	# fails on purpose
 
 #bugs below
 
@@ -146,6 +159,10 @@ SKIP_LINES = [
 '#include <iomanip>',
 '#include <exception>',
 '#include <sstream>',
+'/* { dg-require-alias "" } */',
+'// { dg-require-alias "" }',
+'/* { dg-require-ifunc "" } */',
+'// { dg-require-weak "" }',
 ]
 
 SKIPPED_DIRS = [

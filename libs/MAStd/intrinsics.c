@@ -17,6 +17,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "limits.h"
 #include "ma.h"
+#include "stdint.h"
 
 #if 0
 /*
@@ -102,3 +103,21 @@ int __cmpdi2(long a, long b) {
 }
 
 #endif
+
+int __bswapsi2 (int u)
+{
+	return ((((u) & 0xff000000) >> 24)
+		| (((u) & 0x00ff0000) >>  8)
+		| (((u) & 0x0000ff00) <<  8)
+		| (((u) & 0x000000ff) << 24));
+}
+
+int64_t __bswapdi2(int64_t a) {
+	MA_DV dv;
+	int temp;
+	dv.ll = a;
+	temp = dv.hi;
+	dv.hi = __builtin_bswap32(dv.lo);
+	dv.lo = __builtin_bswap32(temp);
+	return dv.ll;
+}

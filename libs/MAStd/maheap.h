@@ -53,7 +53,7 @@ extern "C" {
 * \note The maximum heap size depends on the heapsize setting in the build
 */
 
-void * malloc(int size);
+void * malloc(size_t size);
 
 /** \brief Allocate initialized memory.
 * Allocates memory from the mosync heap and sets the contents to null.
@@ -66,7 +66,7 @@ void * malloc(int size);
 * \note The maximum heap size depends of the datasize setting in the build.
 */
 
-void * calloc(int num_elem, int size_elem);
+void * calloc(size_t num_elem, size_t size_elem);
 
 /** \brief Deallocate memory.
 * Deallocates memory from the mosync heap.
@@ -89,7 +89,7 @@ void free(void *mem);
 * \param old The old block of memory.
 * \param size The requested size.
 */
-void* realloc(void* old, int size);
+void* realloc(void* old, size_t size);
 
 
 /**

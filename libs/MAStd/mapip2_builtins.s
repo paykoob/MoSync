@@ -27,3 +27,24 @@ _pow:
 _atan2:
 	fatan2 f8,f9
 	ret
+
+.global _sinf
+.set _sinf,_sin
+
+.global _cosf
+.set _cosf,_cos
+
+.global _tanf
+.set _tanf,_tan
+
+.global _tanl
+.set _tanl,_tan
+
+.global _atan2f
+.set _atan2f,_atan2
+
+.global _cargl
+.set _cargl,_carg
+
+.global _cargf
+.set _cargf,_carg

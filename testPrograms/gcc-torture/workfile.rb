@@ -49,9 +49,6 @@ end
 
 # allowed modes: run, compile, dejaGnu (parse the source file to find compile or run).
 SETTINGS[:source_paths] =
-	dgSub('gcc.dg', :compile)+
-	dgSub('g++.dg', :run)+
-	dgSub('g++.old-deja', :run)+
 [
 	#dg('c-c++-common/dfp'),	# decimal floating point is not supported.
 	dg('c-c++-common/torture', :run),
@@ -61,8 +58,11 @@ SETTINGS[:source_paths] =
 	sp('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
 	sp('compat/', BASE + 'gcc.c-torture/compat'),
 	sp('', BASE + 'gcc.c-torture/execute'),
-]
-
+]+
+	dgSub('gcc.dg', :compile)+
+	dgSub('g++.dg', :run)+
+	dgSub('g++.old-deja', :run)+
+[]
 
 NEEDS_HEAP = [
 '20000914-1.c',
@@ -165,20 +165,11 @@ class TTWork < PipeExeWork
 			@sourcepath,
 		]
 
-		if(false)
-			@EXTRA_OBJECTS = [
-				FileTask.new(self, 'build/helpers.o'),
-			]
-			unless(NEEDS_HEAP.include?(name) || name.end_with?('.C'))
-				@EXTRA_OBJECTS << FileTask.new(self, 'build/override_heap.o')
-			end
-		else
-			@EXTRA_OBJECTS = [
-				FileTask.new(self, Libdir.get()+'helpers.o'),
-			]
-			unless(NEEDS_HEAP.include?(name) || name.end_with?('.C'))
-				@EXTRA_OBJECTS << FileTask.new(self, Libdir.get()+'override_heap.o')
-			end
+		@EXTRA_OBJECTS = [
+			FileTask.new(self, Libdir.get()+'helpers.o'),
+		]
+		unless(NEEDS_HEAP.include?(name) || f.sourcePath.mode == :dejaGnu)
+			@EXTRA_OBJECTS << FileTask.new(self, Libdir.get()+'override_heap.o')
 		end
 
 		@SPECIFIC_CFLAGS = {
@@ -190,9 +181,6 @@ class TTWork < PipeExeWork
 			'pr42833.c' => ' -D__INT_LEAST8_TYPE__=char -D__UINT_LEAST32_TYPE__=unsigned',
 			'pr22493-1.c' => ' -fwrapv',
 			'pr23047.c' => ' -fwrapv',
-			'fp-cmp-1.c' => ' -DSIGNAL_SUPPRESS',
-			'fp-cmp-2.c' => ' -DSIGNAL_SUPPRESS',
-			'fp-cmp-3.c' => ' -DSIGNAL_SUPPRESS',
 			'rbug.c' => ' -D__SPU__',
 			'pr47141.c' => ' -D__UINTPTR_TYPE__=unsigned',
 		}
@@ -203,7 +191,7 @@ class TTWork < PipeExeWork
 		#puts 'define_cflags'
 		include_dirs = @EXTRA_INCLUDES
 		include_flags = include_dirs.collect {|dir| " -I \""+File.expand_path_fix(dir)+'"'}.join
-		flags = ' -g -w'
+		flags = ' -g -w -DSIGNAL_SUPPRESS'
 		flags << ' -O2 -fomit-frame-pointer' if(CONFIG == "")
 		flags << ' -ffloat-store -fno-inline' if(@sourcefile.sourcePath.base == 'ieee/')
 		flags << include_flags
@@ -229,6 +217,9 @@ class TTWork < PipeExeWork
 				compile
 			elsif(@mode == :skip)
 				return
+			elsif(@mode == :preprocess)
+				@EXTRA_CFLAGS << ' -E'
+				compile
 			else
 				raise "Unknown mode in #{@sourcepath}: #{@mode.inspect}"
 			end
@@ -254,18 +245,37 @@ class TTWork < PipeExeWork
 				ts = '{ target '
 				xfails = '{ xfail '
 				i = line.index(dgdo)
+				e = nil
 				if(i)
-					ti = line.index(ts)
+					e = ti = line.index(ts)
 					if(ti)
-						# no tests are targeted at mapip2.
-						@mode = :skip
-						return
+						ti += ts.length
+						te = line.index(' }', ti)
+						raise "Bad dg-do line!" if(!te)
+						target = line.slice(ti, te-ti).strip
+						if(target == 'inttypes_types' ||
+							target == 'fpic' ||
+							target == 'native' ||
+							target.start_with?('i?86-*-*') ||
+							false)
+							# do nothing
+						elsif(target.start_with?('{ {') ||
+							target == 'alpha*-*-* cris-*-* crisv32-*-* i?86-*-* mmix-*-* powerpc*-*-* rs6000-*-* x86_64-*-*' ||
+							false)
+							@mode = :skip
+							return
+						else
+							$stderr.puts "#{@sourcepath}:1: Unknown target: #{target}"
+							exit(1)
+						end
 					end
-					xi = line.index(xfails)
-					if(xi)
-						e = xi-1
-					else
-						e = line.index(' }', i)
+					if(!e)
+						xi = line.index(xfails)
+						if(xi)
+							e = xi-1
+						else
+							e = line.index(' }', i)
+						end
 					end
 					raise "Bad dg-do line!" if(!e)
 					@mode = line.slice(i+dgdo.length, e-(i+dgdo.length)).strip.to_sym
@@ -282,7 +292,8 @@ class TTWork < PipeExeWork
 					options = line.slice(i, e-i).split
 
 					# because we don't use collect2, -frepo will not work.
-					if(options.include?('-frepo'))
+					if(options.include?('-frepo') ||
+						options.include?('-fprofile-arcs'))
 						@mode = :skip
 						return
 					end

@@ -7,9 +7,9 @@
 #define LONG_MIN    (-2147483647L - 1) /* minimum (signed) long value */
 #define LONG_MAX      2147483647L   /* maximum (signed) long value */
 #define ULONG_MAX     0xffffffffUL  /* maximum unsigned long value */
-#define LLONG_MAX     9223372036854775807i64       /* maximum signed long long int value */
-#define LLONG_MIN   (-9223372036854775807i64 - 1)  /* minimum signed long long int value */
-#define ULLONG_MAX    0xffffffffffffffffui64       /* maximum unsigned long long int value */
+#define LLONG_MAX     9223372036854775807LL       /* maximum signed long long int value */
+#define LLONG_MIN   (-9223372036854775807LL - 1)  /* minimum signed long long int value */
+#define ULLONG_MAX    0xffffffffffffffffULL       /* maximum unsigned long long int value */
 #define SCHAR_MAX 127
 #define UCHAR_MAX 255
 #define SCHAR_MIN -128
