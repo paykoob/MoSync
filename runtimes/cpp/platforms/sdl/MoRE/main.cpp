@@ -95,7 +95,9 @@ int main2(int argc, char **argv) {
 #ifdef EMULATOR
 	settings.timeout = 0;
 #endif
+#ifdef FAKE_CALL_STACK
 	const char* sldFile = NULL;
+#endif
 	const char* xFile = NULL;
 #ifdef GDB_DEBUG
 	bool gdb = false;
@@ -122,7 +124,7 @@ int main2(int argc, char **argv) {
 	for(int i = 1; i < argc; i++) {
 		LOG("%i:%s\n", i, argv[i]);
 		if((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0)) {
-			static const char sInfo[] = 
+			static const char sInfo[] =
 				"MoSync Runtime Environment (MoRE) (c) MoSync AB 2010\n"
 				"\n"
 				"  Options (Optional):\n"
@@ -165,7 +167,7 @@ int main2(int argc, char **argv) {
 		else if(strcmp(argv[i], "-program")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -program");			
+				LOG("not enough parameters for -program");
 				return 1;
 			}
 			programFile = argv[i];
@@ -174,20 +176,20 @@ int main2(int argc, char **argv) {
 		else if(strcmp(argv[i], "-resource")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -resource");			
+				LOG("not enough parameters for -resource");
 				return 1;
 			}
 			resourceFile = argv[i];
 		} else if(strcmp(argv[i], "-resolution")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -resolution");			
+				LOG("not enough parameters for -resolution");
 				return 1;
 			}
 			settings.profile.mScreenWidth = atoi(argv[i]);
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -resolution");			
+				LOG("not enough parameters for -resolution");
 				return 1;
 			}
 			settings.profile.mScreenHeight = atoi(argv[i]);
@@ -195,7 +197,7 @@ int main2(int argc, char **argv) {
 		} else if(strcmp(argv[i], "-icon")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -icon");			
+				LOG("not enough parameters for -icon");
 				return 1;
 			}
 
@@ -211,35 +213,37 @@ int main2(int argc, char **argv) {
 		} else if(strcmp(argv[i], "-model")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -model");			
+				LOG("not enough parameters for -model");
 				return 1;
 			}
 			settings.profile.mModel = argv[i];
 		} else if(strcmp(argv[i], "-vendor")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -vendor");			
+				LOG("not enough parameters for -vendor");
 				return 1;
 			}
 			settings.profile.mVendor = argv[i];
 		} else if(strcmp(argv[i], "-sld")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -sld");			
+				LOG("not enough parameters for -sld");
 				return 1;
 			}
+#ifdef FAKE_CALL_STACK
 			sldFile = argv[i];
+#endif
 		} else if(strcmp(argv[i], "-resmem")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -resmem");			
+				LOG("not enough parameters for -resmem");
 				return 1;
 			}
 			settings.resmem = atoi(argv[i]);
 		} else if(strcmp(argv[i], "-x")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -x");			
+				LOG("not enough parameters for -x");
 				return 1;
 			}
 			xFile = argv[i];
@@ -253,7 +257,7 @@ int main2(int argc, char **argv) {
 		} else if(strcmp(argv[i], "-timeout")==0) {
 			i++;
 			if(i>=argc) {
-				LOG("not enough parameters for -timeout");			
+				LOG("not enough parameters for -timeout");
 				return 1;
 			}
 			settings.timeout = atoi(argv[i]);
@@ -380,6 +384,17 @@ void Base::reportCallStack() {
 		Core::GetFakeCallStackDepth(gCore) << 2);
 }
 
+static void dumpIp(int ip) {
+	int line;
+	std::string file;
+	bool res = mapIp(ip, line, file);
+	LOG("0x%x", ip);
+	if(res) {
+		LOG("(%s:%i)", file.c_str(), line);
+	}
+	LOG("\n");
+}
+
 int Base::maDumpCallStackEx(const char* str, int data) {
 	if(gCore == NULL)
 		return -2;
@@ -389,17 +404,9 @@ int Base::maDumpCallStackEx(const char* str, int data) {
 	LOG("Call stack: %i frames\n", depth);
 	const int* fcs = Core::GetFakeCallStack(gCore);
 	for(int i=0; i<depth; i++) {
-		//todo: translate
-		int ip = fcs[i];
-		int line;
-		std::string file;
-		bool res = mapIp(ip, line, file);
-		LOG("%i: 0x%x", i, ip);
-		if(res) {
-			LOG("(%s:%i)", file.c_str(), line);
-		}
-		LOG("\n");
+		dumpIp(fcs[i] - 1);
 	}
+	dumpIp(Core::GetIp(gCore));
 	return 0;
 }
 
