@@ -686,7 +686,7 @@ void GL_APIENTRY glFogx (GLenum pname, GLfixed param)
 	{
 		if (!is_valid_fogmode(param))
 			ERROR(GL_INVALID_ENUM);
-		
+
 		dgl.glFogi(pname, param);
 		LEAVE();
 	}
@@ -787,7 +787,7 @@ GLenum GL_APIENTRY glGetError (void)
 	LEAVE2(error);
 }
 
-const GLubyte * GL_APIENTRY glGetString (GLenum name)
+const GLubyte * glGetString (GLenum name)
 {
 	ENTER();
 

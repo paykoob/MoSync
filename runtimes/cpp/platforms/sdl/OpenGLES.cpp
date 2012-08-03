@@ -17,10 +17,12 @@ MA 02110-1301, USA.
 
 #include "config_platform.h"
 #include "OpenGLES.h"
-#include <windows.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_syswm.h>
 #include <helpers/log.h>
+
+#ifdef WIN32
+#include <windows.h>
 
 namespace Base {
 
@@ -255,3 +257,5 @@ namespace Base {
 	}
 
 }
+#else	//WIN32
+#endif	//WIN32

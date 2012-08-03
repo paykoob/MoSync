@@ -338,6 +338,30 @@ namespace Base {
 	}
 #endif
 
+#if defined(EMULATOR) && !defined(WIN32) && defined(SUPPORT_OPENGL_ES)
+	bool subViewOpen(int left, int top, int width, int height, SubView& out) {
+		return true;
+	}
+	bool subViewClose(const SubView& sv) {
+		return false;
+	}
+	bool openGLInit(const SubView& subView) {
+		TEST_Z(gScreen = SDL_SetVideoMode(screenWidth, screenHeight, 32, SDL_OPENGL));
+		sOpenGLMode = true;
+		return true;
+	}
+	bool openGLClose(const SubView& subView) {
+		return false;
+	}
+	bool openGLSwap(const SubView& subView) {
+		SDL_GL_SwapBuffers();
+		return true;
+	}
+	bool openGLProcessEvents(const SubView &subView) {
+		return true;
+	}
+#endif
+
 	static bool setupScreen(const Syscall::STARTUP_SETTINGS& settings) {
 #ifndef MOBILEAUTHOR
 #ifdef __USE_SYSTEM_RESOLUTION__
@@ -734,6 +758,10 @@ namespace Base {
 
 	static void MAUpdateScreen() {
 #ifndef MOBILEAUTHOR
+#if !defined(WIN32) && defined(SUPPORT_OPENGL_ES)
+		if(sOpenGLMode)
+			return;
+#endif
 		if(sSkin) {
 			sSkin->drawScreen();
 			sSkin->drawMultiTouchSimulation();
@@ -2286,7 +2314,7 @@ namespace Base {
 			return RES_OK;
 
 		default:
-			LOGD("maIOCtl(%i) unimplemented.\n", function);
+			LOG("maIOCtl(%i) unimplemented.\n", function);
 			return IOCTL_UNAVAILABLE;
 		}
 	}	//maIOCtl

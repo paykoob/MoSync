@@ -768,7 +768,7 @@ public:
 
 		// hard-coded size for now
 		// ARM has only one memory segment; data and code are one.
-		CODE_SEGMENT_SIZE = DATA_SEGMENT_SIZE = 16*1024*1024;
+		CODE_SEGMENT_SIZE = DATA_SEGMENT_SIZE = 64*1024*1024;
 		mem_cs = (byte*)(mem_ds = new int[DATA_SEGMENT_SIZE / sizeof(int)]);
 		DEBUG_ASSERT(mem_ds != NULL);
 
@@ -783,8 +783,8 @@ public:
 		// p2: heap size
 		// p3: ctor chain
 		regs[REG_p0] = DATA_SEGMENT_SIZE;
-		regs[REG_p1] = 64*1024;
-		regs[REG_p2] = (1024*1024);
+		regs[REG_p1] = 1024*1024;
+		regs[REG_p2] = 32*(1024*1024);
 
 		// some programs have no ctor section.
 		regs[REG_p3] = 0;
@@ -1317,7 +1317,10 @@ void WRITE_REG(int reg, int value) {
 		if(address == 0) return NULL;
 		if(uint(address) >= DATA_SEGMENT_SIZE || uint(address+size) >= DATA_SEGMENT_SIZE ||
 			uint(size) > DATA_SEGMENT_SIZE)
+		{
+			LOG("GetValidatedMemRange(address 0x%x, size 0x%x)\n", address, size);
 			BIG_PHAT_ERROR(ERR_MEMORY_OOB);
+		}
 #ifdef MEMORY_PROTECTION
 		checkProtection(address, size);
 #endif

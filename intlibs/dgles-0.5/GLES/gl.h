@@ -57,7 +57,11 @@ extern "C" {
 #   endif
 #endif
 
-#define GL_APIENTRY 
+#   ifdef __GL_EXPORTS
+#       define GL_APIENTRY __attribute__ ((visibility ("default")))
+#   else
+#       define GL_APIENTRY
+#   endif
 
 #ifndef GLAPI
 #	define GLAPI GL_API
@@ -762,7 +766,7 @@ GL_API void GL_APIENTRY glGetIntegerv (GLenum pname, GLint *params);
 GL_API void GL_APIENTRY glGetLightxv (GLenum light, GLenum pname, GLfixed *params);
 GL_API void GL_APIENTRY glGetMaterialxv (GLenum face, GLenum pname, GLfixed *params);
 GL_API void GL_APIENTRY glGetPointerv (GLenum pname, void **params);
-GL_API const GLubyte * GL_APIENTRY glGetString (GLenum name);
+GL_API const GLubyte * glGetString (GLenum name) GL_APIENTRY;
 GL_API void GL_APIENTRY glGetTexEnviv (GLenum env, GLenum pname, GLint *params);
 GL_API void GL_APIENTRY glGetTexEnvxv (GLenum env, GLenum pname, GLfixed *params);
 GL_API void GL_APIENTRY glGetTexParameteriv (GLenum target, GLenum pname, GLint *params);
