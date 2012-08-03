@@ -256,11 +256,22 @@ class TTWork < PipeExeWork
 						if(target == 'inttypes_types' ||
 							target == 'fpic' ||
 							target == 'native' ||
+							target == '{ int32plus' ||
 							target.start_with?('i?86-*-*') ||
 							false)
 							# do nothing
 						elsif(target.start_with?('{ {') ||
 							target == 'alpha*-*-* cris-*-* crisv32-*-* i?86-*-* mmix-*-* powerpc*-*-* rs6000-*-* x86_64-*-*' ||
+							target == 'hppa*-*-*' ||
+							target == '{ *-*-darwin*' ||
+							target == 'm68k-*-* fido-*-* sparc-*-*' ||
+							target.include?('pcc_bitfield_type_matters') ||
+							target.start_with?('i?86-*-linux') ||
+							target.start_with?('*-*-linux*') ||
+							target.start_with?('powerpc*-*-*') ||
+							target.start_with?('sh-*-*') ||
+							target.start_with?('*-*-interix*') ||
+							target.start_with?('*-*-solaris') ||
 							false)
 							@mode = :skip
 							return
@@ -351,7 +362,8 @@ class TTWork < PipeExeWork
 					end
 				end
 
-				if(line.index('{ dg-error ') || line.index('{ dg-bogus ') ||
+				if(line.index('{ dg-error ') ||
+					#line.index('{ dg-bogus ') ||
 					line.index('throw ') ||
 					false)
 					@mode = :skip

@@ -46,6 +46,7 @@ mod.class_eval do
 			@IGNORED_FILES << 'crtlib.s'
 			@EXTRA_SOURCEFILES << '../MAStd/crtlib.s'
 			@EXTRA_SOURCEFILES << '../MAStd/mapip2_builtins.s'
+			@EXTRA_SOURCEFILES << '../MAStd/mastack.s'
 		else
 			@EXTRA_OBJECTS = [FileTask.new(self, 'libc/sys/mosync/crtlib.s')]
 		end
