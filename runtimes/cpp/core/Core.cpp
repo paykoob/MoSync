@@ -772,11 +772,17 @@ public:
 		mem_cs = (byte*)(mem_ds = new int[DATA_SEGMENT_SIZE / sizeof(int)]);
 		DEBUG_ASSERT(mem_ds != NULL);
 
+		int maxCustomEventSize = getMaxCustomEventSize();
+		customEventPointer = ((char*)mem_ds) + (DATA_SEGMENT_SIZE - maxCustomEventSize);
+
+		STACK_TOP = DATA_SEGMENT_SIZE - maxCustomEventSize;
+		STACK_BOTTOM = STACK_TOP-Head.StackSize;
+		DUMPHEX(STACK_TOP);
+		DUMPHEX(STACK_BOTTOM);
+
 		// set the initial registers
 		// sp: top of stack
-		regs[REG_sp] = DATA_SEGMENT_SIZE - 16;
-		STACK_TOP = regs[REG_sp];
-		DUMPHEX(STACK_TOP);
+		regs[REG_sp] = STACK_TOP - 16;
 
 		// p0: memory size
 		// p1: stack size
