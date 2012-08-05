@@ -132,6 +132,7 @@ SKIPPED = [
 'gcc.dg/builtins-20.c',	# fails on purpose
 'gcc.dg/builtins-57.c',	# fails on purpose
 'gcc.dg/builtins-65.c',	# fails on purpose
+'gcc.dg/cproj-fails-with-broken-glibc.c',	# fails on purpose
 
 #bugs below
 
@@ -148,6 +149,7 @@ SKIPPED_REGEXP = [
 %r{g\+\+.old-deja/g\+\+.abi/vtable3..C},	# typeinfo
 %r{g\+\+.old-deja/g\+\+.mike/eh.+.C},	# exceptions
 %r{g\+\+.old-deja/g\+\+.other/dyncast..C},	# dynamic_cast
+/gcc.dg\/c99-tgmath-..c/,	# tgmath.h
 ]
 
 # if a dejaGnu test includes any of these lines, it is skipped.
@@ -163,6 +165,7 @@ SKIP_LINES = [
 '// { dg-require-alias "" }',
 '/* { dg-require-ifunc "" } */',
 '// { dg-require-weak "" }',
+'#include <unwind.h>',
 ]
 
 SKIPPED_DIRS = [
@@ -186,6 +189,8 @@ if(!USE_NEWLIB)
 	SKIPPED << 'g++.old-deja/g++.other/init18.C'	# atexit
 	SKIPPED << 'g++.old-deja/g++.other/init19.C'	# atexit
 	SKIPPED << 'g++.old-deja/g++.other/init5.C'	# atexit
+	SKIPPED << 'gcc.dg/cdce1.c'	# errno.h
+	SKIPPED << 'gcc.dg/cdce2.c'	# errno.h
 end
 
 if(CONFIG == "")

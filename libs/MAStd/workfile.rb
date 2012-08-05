@@ -14,15 +14,9 @@ mod.class_eval do
 		@LOCAL_DLLS = ["mosync"]
 	end
 
-	def copyGlHeaders()
-		@INSTALL_INCDIR = "GLES"
-		@HEADER_DIRS = ["GLES"]
-		copyHeaders
-	end
-
-	def copyGl2Headers()
-		@INSTALL_INCDIR = "GLES2"
-		@HEADER_DIRS = ["GLES2"]
+	def copySubHeaders(name)
+		@INSTALL_INCDIR = name
+		@HEADER_DIRS = [name]
 		copyHeaders
 	end
 
@@ -101,8 +95,9 @@ mod.class_eval do
 			"mastdlib.c" => " -Wno-deprecated-declarations",
 			}, &HashMergeAdd).merge(pipe_specflags, &HashMergeAdd)
 
-		copyGlHeaders()
-		copyGl2Headers()
+		copySubHeaders('GLES')
+		copySubHeaders('GLES2')
+		copySubHeaders('bits')
 
 		@HEADER_DIRS = ["."]
 		@INSTALL_INCDIR = "."

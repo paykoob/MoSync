@@ -196,12 +196,8 @@
 
 /* defined in stddef */
 #ifdef MAPIP
-typedef long ptrdiff_t;
-typedef unsigned long size_t;
-typedef unsigned short wchar_t;
-#define WINT_MIN 0
-#define WINT_MAX UINT_MAX
-#endif
+#include "bits/_stdint.h"
+#else
 
 #ifndef _PSTDINT_H_INCLUDED
 #define _PSTDINT_H_INCLUDED
@@ -232,7 +228,7 @@ typedef unsigned short wchar_t;
 # define INT8_MAX 0x7f
 #endif
 #ifndef INT8_MIN
-# define INT8_MIN INT8_C(0x80)
+# define INT8_MIN (-0x80)
 #endif
 #ifndef int8_t
 # if (SCHAR_MAX == INT8_MAX) || defined (S_SPLINT_S)
@@ -268,7 +264,7 @@ typedef unsigned short wchar_t;
 # define INT16_MAX 0x7fff
 #endif
 #ifndef INT16_MIN
-# define INT16_MIN INT16_C(0x8000)
+# define INT16_MIN (-0x8000)
 #endif
 #ifndef int16_t
 #if (INT_MAX == INT16_MAX) || defined (S_SPLINT_S)
@@ -319,7 +315,7 @@ typedef unsigned short wchar_t;
 # define INT32_MAX (0x7fffffffL)
 #endif
 #ifndef INT32_MIN
-# define INT32_MIN INT32_C(0x80000000)
+# define INT32_MIN (-0x80000000)
 #endif
 #ifndef int32_t
 #if (LONG_MAX == INT32_MAX) || defined (S_SPLINT_S)
@@ -672,5 +668,7 @@ typedef uint_least32_t uint_fast32_t;
 #define UINTMAX_C(c) __UINTMAX_C(c)
 
 #endif /* !defined __cplusplus || defined __STDC_CONSTANT_MACROS */
+
+#endif	/* MAPIP */
 
 #endif	//STDINT_H

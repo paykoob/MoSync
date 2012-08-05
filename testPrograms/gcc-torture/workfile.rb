@@ -49,6 +49,9 @@ end
 
 # allowed modes: run, compile, dejaGnu (parse the source file to find compile or run).
 SETTINGS[:source_paths] =
+	dgSub('gcc.dg', :compile)+
+	dgSub('g++.dg', :run)+
+	dgSub('g++.old-deja', :run)+
 [
 	#dg('c-c++-common/dfp'),	# decimal floating point is not supported.
 	dg('c-c++-common/torture', :run),
@@ -59,9 +62,6 @@ SETTINGS[:source_paths] =
 	sp('compat/', BASE + 'gcc.c-torture/compat'),
 	sp('', BASE + 'gcc.c-torture/execute'),
 ]+
-	dgSub('gcc.dg', :compile)+
-	dgSub('g++.dg', :run)+
-	dgSub('g++.old-deja', :run)+
 []
 
 NEEDS_HEAP = [
@@ -257,7 +257,7 @@ class TTWork < PipeExeWork
 							target == 'fpic' ||
 							target == 'native' ||
 							target == '{ int32plus' ||
-							target.start_with?('i?86-*-*') ||
+							target == 'c99_runtime' ||
 							false)
 							# do nothing
 						elsif(target.start_with?('{ {') ||
@@ -265,6 +265,9 @@ class TTWork < PipeExeWork
 							target == 'hppa*-*-*' ||
 							target == '{ *-*-darwin*' ||
 							target == 'm68k-*-* fido-*-* sparc-*-*' ||
+							target == 'ia64-*-* i?86-*-* x86_64-*-*' ||
+							target == 'arm*-*-pe*' ||
+							target.start_with?('i?86-*-*') ||
 							target.include?('pcc_bitfield_type_matters') ||
 							target.start_with?('i?86-*-linux') ||
 							target.start_with?('*-*-linux*') ||
@@ -272,6 +275,8 @@ class TTWork < PipeExeWork
 							target.start_with?('sh-*-*') ||
 							target.start_with?('*-*-interix*') ||
 							target.start_with?('*-*-solaris') ||
+							target.start_with?('hppa*-*-hpux*') ||
+							target.start_with?('*-*-darwin') ||
 							false)
 							@mode = :skip
 							return
@@ -279,6 +284,10 @@ class TTWork < PipeExeWork
 							$stderr.puts "#{@sourcepath}:1: Unknown target: #{target}"
 							exit(1)
 						end
+					end
+					if(!e)
+						# bad formatting; ignore
+						e = line.index('{target')
 					end
 					if(!e)
 						xi = line.index(xfails)
@@ -304,7 +313,9 @@ class TTWork < PipeExeWork
 
 					# because we don't use collect2, -frepo will not work.
 					if(options.include?('-frepo') ||
-						options.include?('-fprofile-arcs'))
+						options.include?('-fprofile-arcs') ||
+						options.include?('-fno-keep-inline-dllexport') ||
+						true)
 						@mode = :skip
 						return
 					end
