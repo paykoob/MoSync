@@ -21,9 +21,8 @@
 
 #define RESOURCE_MEMORY_LIMIT
 
-#ifdef WIN32
 #define SUPPORT_OPENGL_ES
-#endif
+#define MA_PROF_SUPPORT_WIDGETAPI
 
 #define GDB_DEBUG
 
