@@ -86,7 +86,7 @@ def sh(cmd)
 	puts cmd
 	if(HOST == :win32)
 		success = system(cmd)
-		raise "Command failed" unless(success)
+		error "Command failed" unless(success)
 	else
 		# Open a process.
 		IO::popen(cmd) do |io|

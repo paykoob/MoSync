@@ -218,7 +218,8 @@ class GccWork < BuildWork
 	def collect_files(ending)
 		files = @SOURCES.collect {|dir| Dir[dir+"/*"+ending]}
 		files.flatten!
-		files.reject! {|file| @IGNORED_FILES.member?(File.basename(file))}
+		files.reject! {|file| @IGNORED_FILES.member?(File.basename(file)) ||
+			!file.end_with?(ending)}	# this one's for windows, whose Dir[] implementation is not case-sensitive.
 		files += @EXTRA_SOURCEFILES.select do |file| check_extra_sourcefile(file, ending) end
 		tasks = files.collect do |file| FileTask.new(self, file) end
 		extra_tasks = @EXTRA_SOURCETASKS.select do |file| file.to_s.getExt == ending end

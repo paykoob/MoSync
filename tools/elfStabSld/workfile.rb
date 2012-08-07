@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-require File.expand_path('../../rules/exe.rb')
+require File.expand_path('../../rules/native_mosync.rb')
 require File.expand_path('../../rules/mosync_util.rb')
 require 'stringio'
 
@@ -47,7 +47,7 @@ class GenStabDefsC < MemoryGeneratedFileTask
 	end
 end
 
-work = ExeWork.new
+work = MoSyncExe.new
 work.instance_eval do
 	@SOURCES = ['.']
 	@EXTRA_SOURCEFILES = [

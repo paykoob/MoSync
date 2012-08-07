@@ -127,7 +127,7 @@ namespace Core {
 		int regs[128];
 		union FREG {
 			double d;
-			long unsigned int ll;
+			uint64_t ll;
 			int i[2];
 		};
 		FREG freg[16];

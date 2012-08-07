@@ -1,7 +1,7 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-#include "elf.h"
+#include <elf.h>
 #include "FileStream.h"
 #include <stdint.h>
 #include "helpers/array.h"
@@ -65,6 +65,10 @@ static void dumpStabs(const DebuggingData& data);
 static void writeSld(const DebuggingData& data, const char* sldName);
 
 static const char* s_sldName;
+
+#ifdef main
+#undef main
+#endif
 
 int main(int argc, const char** argv) {
 	if(argc != 3) {
@@ -143,7 +147,7 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 			if(s.n_type == N_SLINE) {
 				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
 					//i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
-				SLD sld = { s.n_value, s.n_desc, fileNum };
+				SLD sld = { (size_t)s.n_value, s.n_desc, fileNum };
 				slds.push_back(sld);
 			}
 			// function
@@ -269,7 +273,7 @@ static bool readStabs(const char* elfName, DebuggingData& data) {
 
 #define INVALID_INCOMPAT_CHECK(data, invalid_value, compatible_value) \
 if(data == invalid_value) { LOG("%s = %s\n", #data, #invalid_value); DEBIG_PHAT_ERROR; }\
-if(data != compatible_value) { LOG("%s = 0x%X\n", #data, data);\
+if(data != compatible_value) { LOG("%s = 0x%X\n", #data, (uint32_t)data);\
 DEBIG_PHAT_ERROR; }
 
 	INVALID_INCOMPAT_CHECK(ehdr.e_ident[EI_CLASS], ELFCLASSNONE, ELFCLASS32);
