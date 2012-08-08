@@ -1,84 +1,62 @@
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-
-#include <elf.h>
-#include "FileStream.h"
-#include <stdint.h>
-#include "helpers/array.h"
-#include "build/stabdefs.h"
-#include <vector>
-#include <set>
-
-#define Log printf
-#define DUMP_STABS 0
-
-#define HAVE_EMPTY_NFUN 1
-
-using namespace Base;
-using namespace std;
-
-typedef int32_t bfd_vma;
-
-struct Stab {
-	unsigned int n_strx;         /* index into string table of name */
-	unsigned char n_type;         /* type of symbol */
-	unsigned char n_other;        /* misc info (usually empty) */
-	unsigned short n_desc;        /* description field */
-	bfd_vma n_value;              /* value of symbol */
-};
-
-struct SLD {
-	size_t address, line, filenum;
-};
-
-struct Function {
-	const char* name;
-	unsigned start;
-#if HAVE_EMPTY_NFUN
-	unsigned end;
-#endif
-	bool operator<(const Function& o) const { return start < o.start; }
-};
-
-struct Variable {
-	const char* name;
-	unsigned scope, address;
-};
-
-template<class T> class Array0 : public Array<T> {
-public:
-	Array0() : Array<T>(0) {}
-};
-
-struct DebuggingData {
-	Array0<Stab> stabs;
-	// todo: string tables, symbol table.
-	// this is the .stabstr section
-	Array0<char> stabstr;
-	bfd_vma textSectionEndAddress;
-};
+#include "elfStabSld.h"
 
 static bool readStabs(const char* elfName, DebuggingData& data);
 #if DUMP_STABS
 static void dumpStabs(const DebuggingData& data);
 #endif
 static void writeSld(const DebuggingData& data, const char* sldName);
+static void parseStabs(const DebuggingData& data);
 
-static const char* s_sldName;
+static const char* s_outputName;
+
+vector<File> files;
+vector<SLD> slds;
+set<Function> functions;
+
+#ifdef main
+#undef main
+#endif
+
+enum Mode {
+	eSLD,
+	eCPP,
+	eCS,
+};
 
 #ifdef main
 #undef main
 #endif
 
 int main(int argc, const char** argv) {
-	if(argc != 3) {
-		printf("Usage: elfStabSld <elf> <sld>\n");
+	if(argc < 3) {
+		printf("Usage: elfStabSld [options] <input> <output>\n");
 		printf("\n");
-		printf("Reads the .stab section of an elf file and outputs an sld file suitable for MoRE.\n");
+		printf("Reads the .stab section of an elf file and outputs a text file, depending on options:\n");
+		printf(" Default: An sld file suitable for MoRE.\n");
+		printf(" -cpp\tC++ code suitable for the iOS runtime.\n");
+		printf(" -cs\tC# code suitable for the Windows Phone runtime.\n");
 		return 1;
 	}
-	const char* elfName = argv[1];
-	const char* sldName = s_sldName = argv[2];
+
+	Mode mode = eSLD;
+
+	// parse options
+	int i = 1;
+	while(argv[i][0] == '-') {
+		const char* a = argv[i];
+		if(strcmp(a, "-cpp") == 0)
+			mode = eCPP;
+		else if(strcmp(a, "-cs") == 0)
+			mode = eCS;
+		else {
+			printf("Unrecognized option: %s\n", a);
+			exit(1);
+		}
+		i++;
+	}
+
+	const char* elfName = argv[i];
+	s_outputName = argv[i+1];
 
 	DebuggingData data;
 	if(!readStabs(elfName, data)) {
@@ -89,24 +67,24 @@ int main(int argc, const char** argv) {
 	dumpStabs(data);
 #endif
 
-	writeSld(data, sldName);
+	parseStabs(data);
 
-	remove("temp.sld");
-	//rename(sldName, "temp.sld");
+	switch(mode) {
+	case eSLD:
+		writeSld(data, s_outputName);
+		break;
+	case eCPP:
+		writeCpp(data, s_outputName);
+		break;
+	case eCS:
+		writeCs(data, s_outputName);
+		break;
+	}
+
 	return 0;
 }
 
-static void writeSld(const DebuggingData& data, const char* sldName) {
-	// open file
-	FILE* file = fopen(sldName, "w");
-
-	// declare data for later passes
-	vector<SLD> slds;
-	set<Function> functions;
-	vector<Variable> variables;
-
-	// file list
-	fputs("Files\n", file);
+static void parseStabs(const DebuggingData& data) {
 	//printf("data.stringSize: %" PRIuPTR "\n", data.stabstr.size());
 	size_t strOffset = 0;
 	size_t fileNum = 0;
@@ -140,9 +118,12 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 				const char* filename = stabstr + s.n_strx;
 				//printf("filename?: %s\n", filename);
 				if(filename[strlen(filename)-1] != '/') {
-					fprintf(file, "%" PRIuPTR ":%" PRIuPTR ":%s\n", fileNum, fileNum, filename);
+					File file;
+					file.name = filename;
+					files.push_back(file);
 				}
 			}
+			else
 			// source line
 			if(s.n_type == N_SLINE) {
 				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
@@ -150,6 +131,7 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 				SLD sld = { (size_t)s.n_value, s.n_desc, fileNum };
 				slds.push_back(sld);
 			}
+			else
 			// function
 			if(s.n_type == N_FUN) {
 				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
@@ -167,7 +149,9 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 					DEBUG_ASSERT(!f.name);
 					f.name = name;
 					f.start = address;
+					f.info = NULL;
 				} else {
+					DEBUG_ASSERT(f.info != NULL);
 					f.end = f.start + address - 1;
 					functions.insert(f);
 					f.name = NULL;
@@ -175,6 +159,7 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 #else
 				f.name = name;
 				f.start = address;
+				f.scope = fileNum;
 				functions.insert(f);
 #endif
 #if 0
@@ -187,20 +172,52 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 				}
 #endif
 			}
-			// variable
+			else
 #if 0
+			// variable
 			if(s.n_type == N_ROSYM || s.n_type == N_STSYM || s.n_type == N_LCSYM || s.n_type == N_GSYM) {
-				printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
-					i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
+				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+					//i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
 				const char* name = stabstr + s.n_strx;
 				unsigned address = s.n_value;
 				//Variable v = { name, fileNum, address };
-				printf("%s %" PRIuPTR " 0x%x\n", name, fileNum, address);
+				//printf("%s %" PRIuPTR " 0x%x\n", name, fileNum, address);
+			}
+			else
+#endif
+			// MoSync custom stab: function return & parameter info.
+			if(s.n_type == N_MOSYNC) {
+				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+					//i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
+				f.info = stabstr + s.n_strx;
+				//printf("info: %s\n", f.info);
+			}
+#if 0
+			else
+			{
+				// print all unhandled stabs
+				printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+					i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
 			}
 #endif
 		}
 		fileNum++;
 		strOffset += strTabFragSize;
+	}
+	DEBUG_ASSERT(!f.name);
+}
+
+static void writeSld(const DebuggingData& data, const char* sldName) {
+	// open file
+	FILE* file = fopen(sldName, "w");
+
+	// dummy
+	vector<Variable> variables;
+
+	// output Files
+	fputs("Files\n", file);
+	for(size_t i=0; i<files.size(); i++) {
+		fprintf(file, "%" PRIuPTR ":%" PRIuPTR ":%s\n", i, i, files[i].name);
 	}
 
 	// output SLD
@@ -212,7 +229,6 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 	}
 
 	// output FUNCTIONS
-	DEBUG_ASSERT(!f.name);
 	fputs("FUNCTIONS\n", file);
 	{
 #if HAVE_EMPTY_NFUN	// empty N_FUNs marks the length of a function.
@@ -389,6 +405,6 @@ DEBIG_PHAT_ERROR; }
 
 void MoSyncErrorExit(int code) {
 	printf("MoSyncErrorExit(%i)\n", code);
-	remove(s_sldName);
+	remove(s_outputName);
 	exit(code);
 }

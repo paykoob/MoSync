@@ -58,6 +58,20 @@ class PipeCppTask < PipeTask
 	end
 end
 
+class Mapip2CppTask < MultiFileTask
+	def initialize(work, name, objects, libs, linkflags)
+		@elfTask = Mapip2LinkTask.new(work, name, objects, libs, linkflags)
+		@targetDir = File.dirname(name)
+		super(work, name, [@targetDir + '/rebuild.build.cpp', @targetDir + '/data_section.bin'])
+		@prerequisites << @elfTask
+	end
+	def execute
+		sh "#{mosyncdir}/bin/elfStabSld -cpp #{@elfTask} rebuild.build.cpp"
+		FileUtils.mv('rebuild.build.cpp', @targetDir + '/rebuild.build.cpp')
+		FileUtils.mv('data_section.bin', @targetDir + '/data_section.bin')
+	end
+end
+
 # Packs a MoSync program for installation.
 # resource can be nil. all other parameters must be valid.
 class MoSyncPackTask < Task
@@ -174,7 +188,7 @@ module MoSyncExeModule
 		return (defined?(PACK) && @PACK_MODEL.beginsWith('Apple/'))
 	end
 	def pipeTaskClass
-		return (isPackingForIOS ? PipeCppTask : super)
+		return (isPackingForIOS ? Mapip2CppTask : super)
 	end
 	def libTask(lib)
 		return FileTask.new(self, "#{mosync_libdir}/#{@COMMON_BUILDDIR_NAME}/#{lib}#{libFileEnding}")

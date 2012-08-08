@@ -52,6 +52,7 @@ StabDef.new(0x48, 'N_BSLINE'),	# Line number in bss segment; see Line Numbers.
 #StabDef.new(0x48, 'N_BROWS'),	# Sun source code browser, path to .cb file; see N_BROWS.
 StabDef.new(0x4a, 'N_DEFD'),	# GNU Modula2 definition module dependency; see N_DEFD.
 StabDef.new(0x4c, 'N_FLINE'),	# Function start/body/end line numbers (Solaris2),.
+StabDef.new(0x4e, 'N_ENSYM'),	# MacOS X: This tells the end of a relocatable function + debugging info.
 StabDef.new(0x50, 'N_EHDECL'),	# GNU C++ exception variable; see N_EHDECL.
 #StabDef.new(0x50, 'N_MOD2'),	# Modula2 info "for imc" (according to Ultrix V4.0),; see N_MOD2.
 StabDef.new(0x54, 'N_CATCH'),	# GNU C++ catch clause; see N_CATCH.
@@ -77,4 +78,5 @@ StabDef.new(0xf2, 'N_NBDATA'),	# Gould non-base registers; see Gould.
 StabDef.new(0xf4, 'N_NBBSS'),	# Gould non-base registers; see Gould.
 StabDef.new(0xf6, 'N_NBSTS'),	# Gould non-base registers; see Gould.
 StabDef.new(0xf8, 'N_NBLCS'),	# Gould non-base registers; see Gould.
+StabDef.new(0xfa, 'N_MOSYNC'),	# MoSync custom stabs.
 ]
