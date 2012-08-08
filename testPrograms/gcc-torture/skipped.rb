@@ -112,6 +112,7 @@ SKIPPED = [
 'g++.old-deja/g++.robertl/eb17.C',	# dynamic_cast
 'g++.old-deja/g++.robertl/eb50.C',	# exceptions
 'g++.old-deja/g++.robertl/eb88.C',	# exceptions
+'gcc.dg/20081223-1.c',	# fails on purpose
 'gcc.dg/Walways-true-2.c',  # gas says: redefined symbol cannot be used on reloc
 'gcc.dg/alias-5.c',	# require-alias
 'gcc.dg/alias-6.c',	# require-alias
@@ -123,6 +124,7 @@ SKIPPED = [
 'gcc.dg/asm-3.c',	# broken inline assembly
 'gcc.dg/asm-4.c',	# broken inline assembly
 'gcc.dg/asm-pr24146.c',	# broken inline assembly
+'gcc.dg/attr-alias-2.c',	# alias
 'gcc.dg/builtin-apply1.c',	# __builtin_apply
 'gcc.dg/builtin-apply2.c',	# __builtin_apply
 'gcc.dg/builtin-apply3.c',	# __builtin_apply
@@ -143,6 +145,9 @@ SKIPPED = [
 'compile/limits-exprparen.c',	# gcc bug, segfault due to 27796 stack frames.
 #'g++.old-deja/g++.law/ctors18.C',	# emit_move_insn SImode -> QImode. This one's different.
 #'g++.old-deja/g++.law/cvt3.C',	# emit_move_insn SImode -> QImode.
+
+'gcc.dg/initpri1.c',	# mapip2 bug, constructor priority.
+'gcc.dg/initpri3.c',	# mapip2 bug, constructor priority.
 ]
 
 SKIPPED_REGEXP = [
@@ -191,6 +196,7 @@ if(!USE_NEWLIB)
 	SKIPPED << 'g++.old-deja/g++.other/init5.C'	# atexit
 	SKIPPED << 'gcc.dg/cdce1.c'	# errno.h
 	SKIPPED << 'gcc.dg/cdce2.c'	# errno.h
+	SKIPPED << 'gcc.dg/errno-1.c'	# errno.h
 end
 
 if(CONFIG == "")

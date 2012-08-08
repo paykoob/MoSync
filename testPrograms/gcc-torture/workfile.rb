@@ -9,8 +9,9 @@ end
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_lib.rb')
 require 'fileutils'
-require 'settings.rb'
-require 'skipped.rb'
+require './settings.rb'
+require './skipped.rb'
+require './dejaGnu.rb'
 
 if(target)
 	puts "Target: #{target}"
@@ -207,15 +208,17 @@ class TTWork < PipeExeWork
 		makeGccTask(FileTask.new(self, @sourcepath), '.o').invoke
 	end
 	def invoke
+		begin
 		if(@sourcefile.sourcePath.mode == :dejaGnu)
 			@mode = @sourcefile.sourcePath.defaultMode
-			parseMode
+			parseDejaGnu
 			#puts "Mode #{@mode} for #{@NAME}"
 			if(@mode == :run || @mode == :link)
 				super
 			elsif(@mode == :compile)
 				compile
 			elsif(@mode == :skip)
+				puts "Skipped #{@sourcepath}"
 				return
 			elsif(@mode == :preprocess)
 				@EXTRA_CFLAGS << ' -E'
@@ -228,7 +231,14 @@ class TTWork < PipeExeWork
 		else
 			super
 		end
+		rescue
+			puts "#{@sourcepath}:1:"
+			raise
+		end
 	end
+
+	include DejaGnu
+
 	# scans a C file for { dg-do [compile|run] }
 	def parseMode
 		open(@sourcepath) do |file|
