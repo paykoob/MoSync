@@ -1,4 +1,5 @@
 #include "elfStabSld.h"
+#include "../../runtimes/cpp/core/gen-opcodes.h"
 
 #include <sstream>
 
@@ -108,14 +109,39 @@ bool readSegments(const DebuggingData& data, Array0<byte>& bytes) {
 	return true;
 }
 
+typedef const char* (*getRegNameFunc)(size_t);
+static void printRegisterDeclarations(FILE* file, const char* type, unsigned regUsage, size_t nRegs,
+	size_t start, size_t paramLow, size_t paramHi, unsigned nParams, getRegNameFunc grn)
+{
+	if(regUsage != 0) {
+		bool first = true;
+		for(size_t i=start; i<nRegs; i++) {
+			if((regUsage & (1 << i)) == 0)
+				continue;
+			if(i >= paramLow && i <= paramHi && (i - paramLow) < nParams)
+				continue;
+			if(first) {
+				first = false;
+				fputs(type, file);
+			} else
+				fputs(", ", file);
+			fputs(grn(i), file);
+		}
+		if(!first)
+			fputs(";\n", file);
+	}
+}
 
 static void printFunctionContents(const DebuggingData& data, const Array0<byte>& bytes, FILE* file, const Function& f) {
-	// todo: declare used registers (except parameter regs, which are already declared)
-
 	// output instructions
 	ostringstream os;
 	SIData pid = { os, data.elfFile, bytes, {0,0} };
 	streamFunctionInstructions(pid, f);
+
+	// declare registers
+	printRegisterDeclarations(file, "int ", pid.regUsage.i, nIntRegs, REG_fp, REG_p0, REG_p3, f.intParams, getIntRegName);
+	printRegisterDeclarations(file, "double ", pid.regUsage.f, nFloatRegs, 0, 8, 15, f.floatParams, getFloatRegName);
+
 	fputs(os.str().c_str(), file);
 }
 
@@ -132,14 +158,14 @@ static void printFunctionPrototype(FILE* file, const Function& f) {
 	printFunctionName(file, f.name);
 	fputc('(', file);
 	bool first = true;
-	for(int j=0; j<f.intParams; j++) {
+	for(unsigned j=0; j<f.intParams; j++) {
 		if(first)
 			first = false;
 		else
 			fputs(", ", file);
 		fprintf(file, "int p%i", j);
 	}
-	for(int j=0; j<f.floatParams; j++) {
+	for(unsigned j=0; j<f.floatParams; j++) {
 		if(first)
 			first = false;
 		else

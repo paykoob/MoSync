@@ -56,7 +56,7 @@ struct Function {
 
 	// filled by writer
 	ReturnType returnType;
-	int intParams, floatParams;
+	unsigned intParams, floatParams;
 	bool operator<(const Function& o) const { return start < o.start; }
 };
 
@@ -108,3 +108,7 @@ struct SIData {
 
 void streamFunctionInstructions(SIData& data, const Function& f);
 void streamFunctionName(ostream& os, const char* name);
+
+const char* getIntRegName(size_t r);
+const char* getFloatRegName(size_t r);
+extern const size_t nIntRegs, nFloatRegs;

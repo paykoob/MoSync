@@ -1170,6 +1170,12 @@ void WRITE_REG(int reg, int value) {
 
 #define IB ((int)(*ip++))
 
+#define FETCH_RD	rd = IB; LOGC(" rd%i(0x%08x)", rd, RD);
+#define FETCH_RS	rs = IB; LOGC(" rs%i(0x%08x)", rs, RS);
+
+#define FETCH_FRD	rd = IB; LOGC(" frd%i(0x%" PRIx64 ", %g)", rd, FRD.ll, FRD.d);
+#define FETCH_FRS	rs = IB; LOGC(" frs%i(0x%" PRIx64 ", %g)", rs, FRS.ll, FRS.d);
+
 #include "core_helpers.h"
 
 #define LOG_ARITH(...)

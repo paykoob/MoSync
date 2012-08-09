@@ -3,15 +3,16 @@
 struct CCore {
 	unsigned printInstruction(unsigned ip);
 
+	SIData& data;
 	ostream& os;
 	const Function& f;
 	const byte* bytes;
 };
 
 void streamFunctionInstructions(SIData& data, const Function& f) {
-	printf("printInstructions(0x%x => 0x%x)\n", f.start, f.end);
+	//printf("printInstructions(0x%x => 0x%x)\n", f.start, f.end);
 	DEBUG_ASSERT(f.end >= f.start);
-	CCore core = { data.stream, f, data.bytes };
+	CCore core = { data, data.stream, f, data.bytes };
 	unsigned ip = f.start;
 	while(ip <= f.end) {
 		ip = core.printInstruction(ip);
@@ -23,7 +24,7 @@ void streamFunctionInstructions(SIData& data, const Function& f) {
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
-static const char* getIntRegName(size_t r) {
+const char* getIntRegName(size_t r) {
 	if(r < ARRAY_SIZE(mapip2_register_names)) {
 		return mapip2_register_names[r];
 	} else {
@@ -31,7 +32,7 @@ static const char* getIntRegName(size_t r) {
 	}
 };
 
-static const char* getFloatRegName(size_t r) {
+const char* getFloatRegName(size_t r) {
 	if(r < ARRAY_SIZE(mapip2_float_register_names)) {
 		return mapip2_float_register_names[r];
 	} else {
@@ -39,10 +40,17 @@ static const char* getFloatRegName(size_t r) {
 	}
 };
 
+const size_t nIntRegs = ARRAY_SIZE(mapip2_register_names), nFloatRegs = ARRAY_SIZE(mapip2_float_register_names);
+
 #include "../../runtimes/cpp/core/core_helpers.h"
 #include "../../runtimes/cpp/core/gen-opcodes.h"
 
 #define IB ((int)(bytes[ip++]))
+
+#define FETCH_RD rd = IB; data.regUsage.i |= (1 << rd);
+#define FETCH_RS rs = IB; data.regUsage.i |= (1 << rs);
+#define FETCH_FRD rd = IB; data.regUsage.f |= (1 << rd);
+#define FETCH_FRS rs = IB; data.regUsage.f |= (1 << rs);
 
 #define IMM imm32
 #define IMMU "(unsigned)" << imm32
@@ -89,19 +97,19 @@ static void streamFunctionCall(ostream& os, const Function& cf) {
 	streamFunctionName(os, cf.name);
 	os << "(";
 	bool first = true;
-	for(int i=0; i<cf.intParams; i++) {
+	for(unsigned i=0; i<cf.intParams; i++) {
 		if(first)
 			first = false;
 		else
 			os << ", ";
 		os << REG(REG_p0 + i);
 	}
-	for(int i=0; i<cf.floatParams; i++) {
+	for(unsigned i=0; i<cf.floatParams; i++) {
 		if(first)
 			first = false;
 		else
 			os << ", ";
-		os << FREG(8 + i);
+		os << FREG(8 + i) << ".d";
 	}
 	os << ")";
 }
@@ -351,7 +359,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			switch(f.returnType) {
 			case eVoid: os << "return;"; break;
 			case eInt: os << "return r0;"; break;
-			case eFloat: os << "return f8;"; break;
+			case eFloat: os << "return f8.d;"; break;
 			case eLong: os << "{ FREG temp; temp.i[0] = r0; temp.i[1] = r1; return temp.ll; }"; break;
 			}
 		EOP;
@@ -366,9 +374,9 @@ unsigned CCore::printInstruction(unsigned ip) {
 			Function dummy;
 			dummy.start = IMM;
 			set<Function>::const_iterator itr = functions.find(dummy);
-			printf("Searched for function at 0x%x\n", IMM);
+			//printf("Searched for function at 0x%x\n", IMM);
 			if(itr == functions.end()) {
-				os << "Broken function\n";
+				os << "Broken function @ " << IMM << "\n";
 				return ip;
 			}
 			DEBUG_ASSERT(itr != functions.end());
@@ -376,7 +384,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			switch(cf.returnType) {
 			case eVoid: break;
 			case eInt: os << "r0 = "; break;
-			case eFloat: os << "f8 = "; break;
+			case eFloat: os << "f8.d = "; break;
 			case eLong: os << "{ FREG temp; temp.ll = "; break;
 			}
 			streamFunctionCall(os, cf);
@@ -408,7 +416,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 		OPC(JC_LEU)	FETCH_RD_RS_CONST	JCU(<=);	EOP;
 
 		OPC(JPI)	FETCH_CONST	os << "goto " << label(IMM) << ";";	EOP;
-		OPC(JPR)	FETCH_RD	DEBIG_PHAT_ERROR;	EOP;
+		OPC(JPR)	FETCH_RD	os << "jumpReg(" << RD << ");";	EOP;
 
 		OPC(XB)	FETCH_RD_RS	os << RD << " = ((" << RS << " & 0x80) == 0) ? (" << RS << " & 0xFF) : (" << RS << " | ~0xFF);"; EOP;
 		OPC(XH)	FETCH_RD_RS	os << RD << " = ((" << RS << " & 0x8000) == 0) ? (" << RS << " & 0xFFFF) : (" << RS << " | ~0xFFFF);"; EOP;
