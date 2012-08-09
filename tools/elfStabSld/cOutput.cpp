@@ -1,12 +1,15 @@
 #include "elfStabSld.h"
 
+#include <sstream>
+
 static void printFunctionName(FILE* file, const char* name);
 static void printFunctionPrototype(FILE* file, const Function& f);
-static void printFunctionContents(FILE* file, const Function& f);
+static void printFunctionContents(const DebuggingData& data, const Array0<byte>& bytes, FILE* file, const Function& f);
 static void parseFunctionInfo(Function& f);
+static bool readSegments(const DebuggingData& data, Array0<byte>& bytes);
 
 void writeCpp(const DebuggingData& data, const char* cppName) {
-	FILE* file = fopen(cppName, "w");
+	FILE* file = gOutputFile = fopen(cppName, "w");
 
 	fputs(
 "//****************************************\n"
@@ -31,12 +34,15 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 "// Definitions\n"
 		, file);
 
+	Array0<byte> bytes;
+	DEBUG_ASSERT(readSegments(data, bytes));
+
 	for(set<Function>::iterator i=functions.begin(); i!=functions.end(); ++i) {
 		const Function& f(*i);
 		fputc('\n', file);
 		printFunctionPrototype(file, f);
 		fputs(" {\n", file);
-		printFunctionContents(file, f);
+		printFunctionContents(data, bytes, file, f);
 		fputs("}\n", file);
 	}
 
@@ -45,19 +51,84 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 
 void writeCs(const DebuggingData& data, const char* csName) {
 	printf("Not implemented!\n");
-	exit(1);
+	DEBIG_PHAT_ERROR;
 }
 
 
-static void printFunctionContents(FILE* file, const Function& f) {
+bool readSegments(const DebuggingData& data, Array0<byte>& bytes) {
+	//Read Program Table
+	//LOG("%i segments, offset %X:\n", data.e_phnum, data.e_phoff);
+
+	// first, find the size of the data.
+	unsigned size = 0;
+	Stream& file(data.elfFile);
+	for(unsigned i=0; i<data.e_phnum; i++) {
+		Elf32_Phdr phdr;
+		TEST(file.seek(Seek::Start, data.e_phoff + i * sizeof(Elf32_Phdr)));
+		TEST(file.readObject(phdr));
+#if 0
+		LOG("Type: 0x%X, Offset: 0x%X, VAddress: %08X, PAddress: %08X, Filesize: 0x%X",
+			phdr.p_type, phdr.p_offset, phdr.p_vaddr, (phdr.p_paddr), phdr.p_filesz);
+		LOG(", Memsize: 0x%X, Flags: %08X, Align: %i\n",
+			(phdr.p_memsz), phdr.p_flags, (phdr.p_align));
+#endif
+		if(phdr.p_type == PT_NULL)
+			continue;
+		else if(phdr.p_type == PT_LOAD) {
+#if 0
+			bool text = (phdr.p_flags & PF_X);
+			LOG("%s section: 0x%x, 0x%x bytes\n",
+				text ? "text" : "data",
+				phdr.p_vaddr, phdr.p_filesz);
+#endif
+			size = MAX(size, phdr.p_vaddr + phdr.p_filesz);
+		} else {
+			DEBIG_PHAT_ERROR;
+		}
+	}
+
+	// then we can allocate the buffer and read the data.
+	bytes.resize(size);
+
+	for(unsigned i=0; i<data.e_phnum; i++) {
+		Elf32_Phdr phdr;
+		TEST(file.seek(Seek::Start, data.e_phoff + i * sizeof(Elf32_Phdr)));
+		TEST(file.readObject(phdr));
+		if(phdr.p_type == PT_NULL)
+			continue;
+		else if(phdr.p_type == PT_LOAD) {
+			TEST(file.seek(Seek::Start, phdr.p_offset));
+			void* dst = bytes + phdr.p_vaddr;
+			LOG("Reading 0x%x bytes to %p...\n", phdr.p_filesz, dst);
+			TEST(file.read(dst, phdr.p_filesz));
+		} else {
+			DEBIG_PHAT_ERROR;
+		}
+	}
+	return true;
+}
+
+
+static void printFunctionContents(const DebuggingData& data, const Array0<byte>& bytes, FILE* file, const Function& f) {
 	// todo: declare used registers (except parameter regs, which are already declared)
 
 	// output instructions
-	//printInstructions(file, f.start, f.end);
+	ostringstream os;
+	SIData pid = { os, data.elfFile, bytes, {0,0} };
+	streamFunctionInstructions(pid, f);
+	fputs(os.str().c_str(), file);
 }
 
+// warning: must match enum ReturnType!
+static const char* returnTypeStrings[] = {
+	"void",
+	"int",
+	"double",
+	"int64_t",
+};
+
 static void printFunctionPrototype(FILE* file, const Function& f) {
-	fprintf(file, "static %s ", f.returnType);
+	fprintf(file, "static %s ", returnTypeStrings[f.returnType]);
 	printFunctionName(file, f.name);
 	fputc('(', file);
 	bool first = true;
@@ -78,13 +149,28 @@ static void printFunctionPrototype(FILE* file, const Function& f) {
 	fputc(')', file);
 }
 
+static bool isctype(int c) {
+	return isalnum(c) || c == '_';
+}
+
+void streamFunctionName(ostream& os, const char* name) {
+	const char* ptr = name;
+	while(*ptr) {
+		if(isctype(*ptr))
+			os << *ptr;
+		else
+			os << '_';
+		ptr++;
+	}
+}
+
 static void printFunctionName(FILE* file, const char* name) {
 	const char* ptr = name;
 	while(*ptr) {
-		if(*ptr == ':')
-			fputc('_', file);
-		else
+		if(isctype(*ptr))
 			fputc(*ptr, file);
+		else
+			fputc('_', file);
 		ptr++;
 	}
 }
@@ -97,15 +183,15 @@ static void parseFunctionInfo(Function& f) {
 	DEBUG_ASSERT(comma);
 	int tlen = comma - type;
 	if(strncmp(type, "void", tlen) == 0)
-		f.returnType = "void";
+		f.returnType = eVoid;
 	else if(strncmp(type, "int", tlen) == 0)
-		f.returnType = "int";
+		f.returnType = eInt;
 	else if(strncmp(type, "double", tlen) == 0)
-		f.returnType = "double";
+		f.returnType = eFloat;
 	else if(strncmp(type, "float", tlen) == 0)
-		f.returnType = "double";
+		f.returnType = eFloat;
 	else if(strncmp(type, "long", tlen) == 0)
-		f.returnType = "int64_t";
+		f.returnType = eLong;
 	else
 		DEBIG_PHAT_ERROR;
 

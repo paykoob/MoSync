@@ -23,6 +23,7 @@ IX_*.h
 MAHeaders.h
 program
 program.comb
+program.sld
 resources
 resources.deps
 Resources

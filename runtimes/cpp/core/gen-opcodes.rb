@@ -186,6 +186,21 @@ def outputParseNode(file, prefix, op)
 	end
 end
 
+def writeRegisterNames(file)
+	file.puts
+	file.puts 'const char* const mapip2_register_names[] = {'
+	REGISTERS.each do |r|
+		file.puts "\t\"#{r}\","
+	end
+	file.puts '};'
+	file.puts
+	file.puts 'const char* const mapip2_float_register_names[] = {'
+	(0..FREG_COUNT-1).each do |i|
+		file.puts "\t\"f#{i}\","
+	end
+	file.puts '};'
+end
+
 if(mode == 'cgen')
 	open(filename, 'w') do |file|
 		i = 0
@@ -267,18 +282,11 @@ elsif(mode == 'binutils/desc')
 			file.puts "{ \"#{m}\", #{nodePart("_#{m}", op)} },"
 		end
 		file.puts '};'
-		file.puts
-		file.puts 'const char* const mapip2_register_names[] = {'
-		REGISTERS.each do |r|
-			file.puts "\t\"#{r}\","
-		end
-		file.puts '};'
-		file.puts
-		file.puts 'const char* const mapip2_float_register_names[] = {'
-		(0..FREG_COUNT-1).each do |i|
-			file.puts "\t\"f#{i}\","
-		end
-		file.puts '};'
+		writeRegisterNames(file)
+	end
+elsif(mode == 'regnames')
+	open(filename, 'w') do |file|
+		writeRegisterNames(file)
 	end
 else
 	raise "Invalid mode: #{mode}"

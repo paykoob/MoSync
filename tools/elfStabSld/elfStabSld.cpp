@@ -1,6 +1,6 @@
 #include "elfStabSld.h"
 
-static bool readStabs(const char* elfName, DebuggingData& data);
+static bool readStabs(Stream& elfFile, DebuggingData& data);
 #if DUMP_STABS
 static void dumpStabs(const DebuggingData& data);
 #endif
@@ -12,6 +12,7 @@ static const char* s_outputName;
 vector<File> files;
 vector<SLD> slds;
 set<Function> functions;
+FILE* gOutputFile = NULL;
 
 #ifdef main
 #undef main
@@ -58,8 +59,9 @@ int main(int argc, const char** argv) {
 	const char* elfName = argv[i];
 	s_outputName = argv[i+1];
 
-	DebuggingData data;
-	if(!readStabs(elfName, data)) {
+	FileStream file(elfName);
+	DebuggingData data(file);
+	if(!readStabs(file, data)) {
 		printf("Could not read stabs!\n");
 		return 1;
 	}
@@ -189,6 +191,7 @@ static void parseStabs(const DebuggingData& data) {
 			if(s.n_type == N_MOSYNC) {
 				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
 					//i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
+				DEBUG_ASSERT(f.info == NULL);
 				f.info = stabstr + s.n_strx;
 				//printf("info: %s\n", f.info);
 			}
@@ -275,9 +278,8 @@ static void dumpStabs(const DebuggingData& data) {
 }
 #endif
 
-static bool readStabs(const char* elfName, DebuggingData& data) {
+static bool readStabs(Stream& file, DebuggingData& data) {
 	Elf32_Ehdr ehdr;
-	FileStream file(elfName);
 	TEST(file.isOpen());
 	TEST(file.readObject(ehdr));
 
@@ -369,42 +371,18 @@ DEBIG_PHAT_ERROR; }
 		}
 	}
 
-#if 0
-	//Read Program Table
-	LOG("%i segments, offset %X:\n", ehdr.e_phnum, ehdr.e_phoff);
-	for(int i=0; i<ehdr.e_phnum; i++) {
-		Elf32_Phdr phdr;
-		TEST(file.seek(Seek::Start, ehdr.e_phoff + i * sizeof(Elf32_Phdr)));
-		TEST(file.readObject(phdr));
-		LOG("Type: 0x%X, Offset: 0x%X, VAddress: %08X, PAddress: %08X, Filesize: 0x%X",
-			phdr.p_type, phdr.p_offset, phdr.p_vaddr, (phdr.p_paddr), phdr.p_filesz);
-		LOG(", Memsize: 0x%X, Flags: %08X, Align: %i\n",
-			(phdr.p_memsz), phdr.p_flags, (phdr.p_align));
-		if(phdr.p_type == PT_NULL)
-			continue;
-		else if(phdr.p_type == PT_LOAD) {
-			bool text = (phdr.p_flags & PF_X);
-			LOG("%s section: 0x%x, 0x%x bytes\n",
-				text ? "text" : "data",
-				phdr.p_vaddr, phdr.p_filesz);
-#if 0
-			TEST(file.seek(Seek::Start, phdr.p_offset));
-			void* dst = mem_ds;
-			if(phdr.p_vaddr != 0)
-				dst = this->GetValidatedMemRange(phdr.p_vaddr, phdr.p_filesz);
-			LOG("Reading 0x%x bytes to %p...\n", phdr.p_filesz, dst);
-			TEST(file.read(dst, phdr.p_filesz));
-#endif
-		} else {
-			DEBIG_PHAT_ERROR;
-		}
-	}	//for
-#endif
+	// store Segment Table info
+	data.e_phnum = ehdr.e_phnum;
+	data.e_phoff = ehdr.e_phoff;
 	return true;
 }
 
 void MoSyncErrorExit(int code) {
 	printf("MoSyncErrorExit(%i)\n", code);
-	remove(s_outputName);
+	printf("remove(%s)\n", s_outputName);
+	if(gOutputFile)
+		fclose(gOutputFile);
+	gOutputFile = NULL;
+	//remove(s_outputName);
 	exit(code);
 }

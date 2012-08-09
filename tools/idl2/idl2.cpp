@@ -790,6 +790,31 @@ static void outputSyscallArmAsm(const Interface& maapi) {
 	}
 }
 
+static const char* stabReturnType(const Function& f) {
+	if(f.returnType == "void" || f.returnType == "noreturn")
+		return "void";
+	else if(f.returnType == "double" || f.returnType == "float")
+		return "float";
+	else if(f.returnType == "longlong")
+		return "long";
+	else
+		return "int";
+}
+
+static void calculateNArgs(const Function& f, int& ni, int& nf) {
+	ni = nf = 0;
+	for(size_t j=0; j<f.args.size(); j++) {
+		const Argument& a(f.args[j]);
+		if(a.type == "double" || a.type == "float")
+			nf += 1;
+		// a 64-bit argument must fit completely in registers, or it goes on the stack.
+		else if(a.type == "longlong" && ni < 3)
+			ni += 2;
+		else
+			ni += 1;
+	}
+}
+
 static void outputSyscallMapip2Asm(const Interface& maapi) {
 	ofstream stream("Output/mapip2_syscalls.s");
 
@@ -799,13 +824,21 @@ static void outputSyscallMapip2Asm(const Interface& maapi) {
 
 	for(size_t i=0; i<maapi.functions.size(); i++) {
 		const Function& f(maapi.functions[i]);
+		int ni, nf;
+		calculateNArgs(f, ni, nf);
 		stream <<
+			// stabs are needed by elfStabSld.
+			".stabs \"_"<<f.name<<"\",36,0,0,_"<<f.name<<"\n"	// N_FUN, start
+			".stabs \""<<stabReturnType(f)<<","<<ni<<","<<nf<<"\",250,0,0,0\n"	// N_MOSYNC
 			".global _"<<f.name<<"\n"
 			"_"<<f.name<<":\n"
 			"\tsyscall "<<f.number<<"\n"
 			"\tret\n"
+			"Lscope"<<f.number<<":\n"
+			".stabs \"\",36,0,0,Lscope"<<f.number<<"-_"<<f.name<<"\n"	// N_FUN, end (empty string)
 		;
 	}
+	stream << ".stabd	78,0,0\n";	// EOF
 }
 
 static void outputAsmConfigLst(const Interface& maapi) {

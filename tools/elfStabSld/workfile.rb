@@ -47,6 +47,15 @@ class GenStabDefsC < MemoryGeneratedFileTask
 	end
 end
 
+GEN_REGNAMES = FileTask.new(nil, 'build/gen-regnames.h')
+GEN_REGNAMES.instance_eval do
+	@gen = '../../runtimes/cpp/core/gen-opcodes.rb'
+	@prerequisites << FileTask.new(nil, @gen)
+	def execute
+		sh "ruby #{@gen} regnames #{@NAME}"
+	end
+end
+
 work = MoSyncExe.new
 work.instance_eval do
 	@SOURCES = ['.']
@@ -56,6 +65,7 @@ work.instance_eval do
 	]
 	@PREREQUISITES = [
 		GenStabDefsH.new(self),
+		GEN_REGNAMES,
 	]
 	@EXTRA_SOURCETASKS = [
 		GenStabDefsC.new(self),
