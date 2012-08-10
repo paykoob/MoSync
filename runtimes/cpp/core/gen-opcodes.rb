@@ -6,10 +6,43 @@
 # C
 # custom binutils description
 
+Operand = Struct.new('Operand', :type, :offset)
 Opcode = Struct.new('Opcode', :name, :mnemonic, :operands)
 
 def o(n,m,o)
-	Opcode.new(n,m,o)
+	Opcode.new(n,m,generateOffsetOperands(o))
+end
+
+def isRegister(opType)
+	case opType
+	when :rd, :rs, :frd, :frs
+		return true
+	else
+		return false
+	end
+end
+
+def generateOffsetOperands(o)
+	# first count the registers.
+	nreg = 0;
+	o.each do |op|
+		nreg += 1 if(isRegister(op) || op == :adaddr)
+	end
+	# then set the offsets
+	regOffset = 1
+	immOffset = 1 + nreg
+	ops = []
+	o.each do |op|
+		if(isRegister(op))
+			offset = regOffset
+			regOffset += 1
+		else
+			offset = immOffset
+			immOffset += ((op == :imm8) ? 1 : 4)
+		end
+		ops << Operand.new(op, offset)
+	end
+	return ops
 end
 
 OPCODES = [
@@ -27,7 +60,7 @@ OPCODES = [
 	o(:stb, 'ld.b', [:adaddr, :rs]),
 	o(:sth, 'ld.h', [:adaddr, :rs]),
 	o(:std, 'ld.d', [:adaddr, :rs]),
-	o(:jpr, 'jp', [:rd]),
+	o(:case, 'case', [:rd, :imm, :imm, :imm, :aiaddr]),
 	o(:jpi, 'jp', [:aiaddr]),
 	o(:callr, 'call', [:rd]),
 	o(:calli, 'call', [:aiaddr]),
@@ -175,12 +208,12 @@ def outputParseNode(file, prefix, op)
 	prefix = prefix.gsub(' ', '_')
 	if(op.is_a? Hash)
 		op.each do |operand, children|
-			outputParseNode(file, prefix + '_' + operand.to_s, children)
+			outputParseNode(file, prefix + '_' + operand.type.to_s, children)
 		end
 		file.puts "static const mapip2_parse_node _#{prefix}[] = {"
 		op.each do |operand, children_or_opcode|
-			c = nodePart("_#{prefix}_#{operand}", children_or_opcode)
-			file.puts "\t{ #{operand.to_s.upcase}, #{c} },"
+			c = nodePart("_#{prefix}_#{operand.type}", children_or_opcode)
+			file.puts "\t{ #{operand.type.to_s.upcase}, #{c}, #{operand.offset} },"
 		end
 		file.puts '};'
 	end
@@ -240,7 +273,7 @@ elsif(mode == 'binutils/desc')
 		file.puts 'const mapip2_insn mapip2_insns[] = {'
 		OPCODES.each do |op|
 			file.puts "{ OP_#{op.name.to_s.upcase}, \"#{op.mnemonic}\", { "+
-				op.operands.collect { |r| r.to_s.upcase + ', ' }.join + "END } },"
+				op.operands.collect { |r| r.type.to_s.upcase + ', ' }.join + "END } },"
 		end
 		file.puts '};'
 		file.puts

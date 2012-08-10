@@ -472,7 +472,6 @@ VMLOOP_LABEL
 		OPC(JC_LEU)	FETCH_RD_RS_CONST	if (RDU <= RSU)	{ JMP_IMM; }	EOP;
 
 		OPC(JPI)	FETCH_CONST		JMP_IMM		EOP;
-		OPC(JPR)	FETCH_RD		JMP_RD		EOP;
 
 		//OPC(XB)		FETCH_RD_RS		RD = (int)((char) RS); EOP;
 		OPC(XB)	FETCH_RD_RS	RD = ((RS & 0x80) == 0) ? (RS & 0xFF) : (RS | ~0xFF); EOP;
@@ -489,21 +488,19 @@ VMLOOP_LABEL
 				return ip;
 		}
 		EOP;
-#if 0	// disabled for now
+
 		OPC(CASE) FETCH_RD; FETCH_CONST; {
-			imm32 <<= 2;
-			uint CaseStart = MEM(int, imm32, READ);
-			uint CaseLength = MEM(int, imm32 + 1*sizeof(int), READ);
+			uint CaseStart = IMM;
+			FETCH_CONST; uint CaseLength = IMM;
+			FETCH_CONST; uint tableAddress = IMM;
+			FETCH_CONST; uint defaultLabel = IMM;
 			uint index = RD - CaseStart;
 			if(index <= CaseLength) {
-				int tableAddress = imm32 + 3*sizeof(int);
 				JMP_GENERIC(MEM(int, tableAddress + index*sizeof(int), READ));
 			} else {
-				int DefaultCaseAddress = MEM(int, imm32 + 2*sizeof(int), READ);
-				JMP_GENERIC(DefaultCaseAddress);
+				JMP_GENERIC(defaultLabel);
 			}
 		} EOP;
-#endif
 
 #if 0
 #ifdef ENABLE_DEBUGGER

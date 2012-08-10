@@ -36,6 +36,7 @@ const char* getFloatRegName(size_t r) {
 	if(r < ARRAY_SIZE(mapip2_float_register_names)) {
 		return mapip2_float_register_names[r];
 	} else {
+		printf("Bad float reg: %i\n", r);
 		DEBIG_PHAT_ERROR;
 	}
 };
@@ -416,7 +417,34 @@ unsigned CCore::printInstruction(unsigned ip) {
 		OPC(JC_LEU)	FETCH_RD_RS_CONST	JCU(<=);	EOP;
 
 		OPC(JPI)	FETCH_CONST	os << "goto " << label(IMM) << ";";	EOP;
-		OPC(JPR)	FETCH_RD	os << "jumpReg(" << RD << ");";	EOP;
+
+/*
+    The index to dispatch on, which has mode SImode.
+    The lower bound for indices in the table, an integer constant.
+    The total range of indices in the table—the largest index minus the smallest one (both inclusive).
+    A label that precedes the table itself.
+    A label to jump to if the index has a value outside the bounds.
+*/
+		OPC(CASE)
+		{
+			FETCH_RD_CONST;
+			unsigned low = IMM;
+			FETCH_CONST;
+			unsigned count = IMM;
+			FETCH_CONST;
+			unsigned tableAddr = IMM;
+			FETCH_CONST;
+			unsigned defaultLabel = IMM;
+			printf("case %s, %u, %u, %u, %u\n", RD, low, count, tableAddr, defaultLabel);
+			_flushall();
+			os << "switch(" << RD << ") {\n";
+			for(unsigned i=0; i<=count; i++) {
+				os << "\t\tcase " << (low + i) << ": goto " << label(*((int*)(bytes + tableAddr) + i)) << ";\n";
+			}
+			os << "\t\tdefault: goto " << label(defaultLabel) << ";\n";
+			os << "\t}";
+		}
+		EOP;
 
 		OPC(XB)	FETCH_RD_RS	os << RD << " = ((" << RS << " & 0x80) == 0) ? (" << RS << " & 0xFF) : (" << RS << " | ~0xFF);"; EOP;
 		OPC(XH)	FETCH_RD_RS	os << RD << " = ((" << RS << " & 0x8000) == 0) ? (" << RS << " & 0xFFFF) : (" << RS << " | ~0xFFFF);"; EOP;
