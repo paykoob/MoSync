@@ -1,5 +1,9 @@
 #!/usr/bin/ruby
 
+require './settings.rb'
+
+EXIT_ON_ERROR = false if(!SETTINGS[:stop_on_fail])
+
 target = nil
 if(ARGV.size > 0 && ARGV[0].end_with?('.c'))
 	target = ARGV[0]
@@ -9,7 +13,6 @@ end
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_lib.rb')
 require 'fileutils'
-require './settings.rb'
 require './skipped.rb'
 require './dejaGnu.rb'
 
@@ -51,8 +54,8 @@ end
 # allowed modes: run, compile, dejaGnu (parse the source file to find compile or run).
 SETTINGS[:source_paths] =
 	dgSub('gcc.dg', :compile)+
-	dgSub('g++.dg', :run)+
-	dgSub('g++.old-deja', :run)+
+	#dgSub('g++.dg', :run)+
+	#dgSub('g++.old-deja', :run)+
 [
 	#dg('c-c++-common/dfp'),	# decimal floating point is not supported.
 	dg('c-c++-common/torture', :run),
@@ -184,6 +187,9 @@ class TTWork < PipeExeWork
 			'pr23047.c' => ' -fwrapv',
 			'rbug.c' => ' -D__SPU__',
 			'pr47141.c' => ' -D__UINTPTR_TYPE__=unsigned',
+			'struct-layout-1_main.c' => ' -DSKIP_DECIMAL_FLOAT',
+			'struct-layout-1_x.c' => ' -DSKIP_DECIMAL_FLOAT',
+			'struct-layout-1_y.c' => ' -DSKIP_DECIMAL_FLOAT',
 		}
 		@EXTRA_EMUFLAGS = ' -noscreen -allowdivzero'
 		@NAME = name
@@ -210,6 +216,7 @@ class TTWork < PipeExeWork
 	def invoke
 		begin
 		if(@sourcefile.sourcePath.mode == :dejaGnu)
+			@EXTRA_CFLAGS = ''
 			@mode = @sourcefile.sourcePath.defaultMode
 			parseDejaGnu
 			#puts "Mode #{@mode} for #{@NAME}"
@@ -231,9 +238,11 @@ class TTWork < PipeExeWork
 		else
 			super
 		end
-		rescue
-			puts "#{@sourcepath}:1:"
-			raise
+		rescue => e
+			puts "#{@sourcepath}:#{@lineNum}:"
+			p e
+			#raise
+			exit(1)
 		end
 	end
 
@@ -446,7 +455,7 @@ files.each do |f|
 
 	if(!builddir)
 		work = TTWork.new(f, bn)
-		work.invoke
+		work.setup
 		builddir = work.builddir
 		oldBase = sp.base
 	end
@@ -461,6 +470,8 @@ files.each do |f|
 	logFile = ofn.ext('.log' + suffix)
 	sldFile = ofn.ext('.sld' + suffix)
 	force_rebuild = SETTINGS[:rebuild_failed] && File.exists?(failFile)
+
+	next if(SETTINGS[:retry_failed] && File.exists?(failFile))
 
 	if(SETTINGS[:strict_prerequisites])
 		if(!work)
@@ -487,6 +498,7 @@ files.each do |f|
 	end
 
 	begin
+		FileUtils.mkdir_p(builddir)
 		FileUtils.rm_f(winFile)
 		FileUtils.touch(failFile)
 		if(work.mode == :compile)

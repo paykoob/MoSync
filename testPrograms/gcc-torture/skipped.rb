@@ -7,13 +7,12 @@ SKIPPED = [
 'stdio-opt-3.c', #stdio
 '20020720-1.c', #fails.on.purpose
 '20030125-1.c', #fails.on.purpose
-'20050121-1.c', #complex.type
 #'960512-1.c', #complex.type
 #'complex-1.c', #complex.type
 #'complex-2.c', #complex.type
 #'complex-3.c', #complex.type
 #'complex-4.c', #complex.type
-'complex-5.c', #complex.type
+'complex-5.c', #complex builtins
 #'complex-6.c', #complex.type
 'ffs-1.c', #builtin.function
 'ffs-2.c', #builtin.function
@@ -135,6 +134,36 @@ SKIPPED = [
 'gcc.dg/builtins-57.c',	# fails on purpose
 'gcc.dg/builtins-65.c',	# fails on purpose
 'gcc.dg/cproj-fails-with-broken-glibc.c',	# fails on purpose
+'gcc.dg/old-style-asm-1.c',	# broken inline assembly
+'gcc.dg/pr38338.c',	# __builtin_apply
+'gcc.dg/pr43564.c',	# broken inline assembly
+'gcc.dg/pr47276.c',	# require-alias
+'gcc.dg/pragma-isr-trapa2.c',	# sh-* only
+'gcc.dg/charset/asm1.c',	# broken inline assembly
+'gcc.dg/compat/scalar-by-value-5.c',	# not meant to be compiled on its own
+'gcc.dg/compat/scalar-by-value-6.c',	# not meant to be compiled on its own
+'gcc.dg/compat/scalar-by-value-dfp_x.c',	# DFP not supported
+'gcc.dg/compat/scalar-by-value-dfp_y.c',	# DFP not supported
+'gcc.dg/compat/scalar-return-dfp_x.c',	# DFP not supported
+'gcc.dg/compat/scalar-return-dfp_y.c',	# DFP not supported
+'gcc.dg/compat/struct-layout-1_generate.c',	# not meant to be compiled on its own
+'gcc.dg/lto/20081120-1_0.c',	# lacks main()
+'gcc.dg/lto/20081120-2_0.c',	# lacks main()
+'gcc.dg/lto/20081204-1_0.c',	# lacks main()
+'gcc.dg/lto/20081212-1_0.c',	# lacks main()
+'gcc.dg/lto/20081222_1.c',	# alias
+'gcc.dg/lto/20081224_0.c',	# lacks main()
+'gcc.dg/lto/20090116_0.c',	# lacks main()
+'gcc.dg/special/20000419-2.c',	# alias
+'gcc.dg/special/alias-1.c',	# alias
+'gcc.dg/special/alias-2.c',	# alias
+'gcc.dg/special/wkali-2.c',	# alias
+'gcc.dg/special/wkali-2a.c',	# main
+'gcc.dg/special/wkali-2b.c',	# alias
+'gcc.dg/torture/builtin-math-7.c',	# complex
+'gcc.dg/torture/pr47473.c',	# complex
+'gcc.dg/torture/pr48044.c',	# alias
+'gcc.dg/vect/pr32224.c',	# broken inline assembly
 
 #bugs below
 
@@ -148,6 +177,16 @@ SKIPPED = [
 
 'gcc.dg/initpri1.c',	# mapip2 bug, constructor priority.
 'gcc.dg/initpri3.c',	# mapip2 bug, constructor priority.
+'gcc.dg/compat/scalar-return-4_x.c',	# mapip2 bug, promote_function_mode(QCImode)
+'gcc.dg/compat/scalar-return-4_y.c',	# mapip2 bug, emit_move_insn QCImode -> SImode
+'20050121-1.c', # mapip2 bug, emit_move_insn QCImode -> SImode
+'gcc.dg/cpp/trigraphs.c',	# does NOT like // comments.
+'gcc.dg/debug/pr41717.c',	# mapip2 bug, complex float
+'gcc.dg/graphite/id-2.c',	# mapip2 bug, complex float
+'gcc.dg/torture/fp-int-convert-float.c',	# mapip2 bug, floatdisf2
+'gcc.dg/torture/pr26869.c',	# mapip2 bug, complex float
+'gcc.dg/torture/pr27773.c',	# mapip2 bug, complex float
+'gcc.dg/torture/pr40328.c',	# mapip2 bug, complex float
 ]
 
 SKIPPED_REGEXP = [
@@ -166,15 +205,21 @@ SKIP_LINES = [
 '#include <iomanip>',
 '#include <exception>',
 '#include <sstream>',
-'/* { dg-require-alias "" } */',
-'// { dg-require-alias "" }',
-'/* { dg-require-ifunc "" } */',
-'// { dg-require-weak "" }',
 '#include <unwind.h>',
+'#include <setjmp.h>',
+'#include "tree-vect.h"',
+'#include <sys/mman.h>',
 ]
 
 SKIPPED_DIRS = [
 'g++.old-deja/g++.eh',
+'gcc.dg/dfp',
+'gcc.dg/fixed-point',
+'gcc.dg/lto',	# while we should theoretically support LTO, the tests are too tricky.
+'gcc.dg/pch',
+'gcc.dg/plugin',
+'gcc.dg/vmx',
+'gcc.dg/vxworks',
 ]
 
 if(!USE_NEWLIB)
@@ -185,6 +230,8 @@ if(!USE_NEWLIB)
 	SKIP_LINES << '#include <iterator>'
 	SKIP_LINES << '#include <utility>'
 	SKIP_LINES << '#include <algorithm>'
+	SKIP_LINES << '#include <limits>'
+	SKIP_LINES << '#include "guality.h"'
 	SKIPPED << 'pr34456.c'	# qsort
 	SKIPPED << 'g++.old-deja/g++.jason/template44.C'	# qsort
 	SKIPPED << 'g++.old-deja/g++.martin/bitset1.C'	# bitset
@@ -197,6 +244,7 @@ if(!USE_NEWLIB)
 	SKIPPED << 'gcc.dg/cdce1.c'	# errno.h
 	SKIPPED << 'gcc.dg/cdce2.c'	# errno.h
 	SKIPPED << 'gcc.dg/errno-1.c'	# errno.h
+	SKIPPED << 'gcc.dg/lto/20081024_0.c'	# vsnprintf
 end
 
 if(CONFIG == "")
@@ -210,4 +258,5 @@ else
 	SKIPPED << 'pr17377.c'	# mapip2 bug, __builtin_return_address
 	SKIPPED << 'c-c++-common/Wunused-var-8.c'	# mapip2 bug, find_valid_class(DI, SI)
 	SKIPPED << 'c-c++-common/restrict-1.c'	# fails on purpose
+	SKIPPED << 'gcc.dg/torture/builtin-power-1.c'	# fails on purpose
 end

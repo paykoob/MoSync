@@ -16,6 +16,9 @@ char* getenv(const char* key) {
 	return NULL;
 }
 
+void fflush(void* f);
+void fflush(void* f) {
+}
 #endif
 
 int __main(void);

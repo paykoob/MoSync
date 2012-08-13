@@ -124,6 +124,17 @@ float __floatundisf(unsigned long long a) {
 	return (float)(double)a;
 }
 
+float __powisf2(float a, int b) {
+	return (float)pow(a, (double)b);
+}
+
+double __powidf2(double a, int b) {
+	return pow(a, (double)b);
+}
+
+float sqrtf(float f) {
+	return (float)sqrt(f);
+}
 
 /* the following deal with IEEE single-precision numbers */
 

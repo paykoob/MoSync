@@ -1,108 +1,155 @@
 # support routines for handling dejaGnu tests
 
+BAD_OPTIONS = [
+	'-fprofile',
+	'-fdump',
+	'-fexceptions',
+	'-ftrapv',
+	'--dump=',
+	'-fno-foobar',
+	'-ftree-parallelize-loops',
+	'-Wclobbered',
+	'-mavx',
+	'-msse2',
+	'-std=iso9899:1990 -pedantic',
+	'-std=iso9899:199409 -pedantic',
+	'-fopenmp',
+]
+
 EFFECTIVE_TARGETS = [
+	'c99_runtime',
 	'double64plus',
+	'freorder',
+	'hard_float',
 	'int32plus',
 	'lto',
+	'mempcpy',
+	'nonpic',
 	'ptr32plus',
+	'section_anchors',
+	'size32plus',
+	'split_stack',
 	'stdint_types',
+	'vect_condition',
+	'vect_double',
+	'vect_float',
+	'vect_floatint_cvt',
+	'vect_int',
+	'vect_int_mult',
+	'vect_intfloat_cvt',
+	'vect_long',
+	'vect_long_long',
+	'vect_shift',
+	'vect_uintfloat_cvt',
+	'wchar',
 ]
 
 INEFFECTIVE_TARGETS = [
+	'arm_eabi',
+	'dfp',
 	'fpic',
+	'fstack_protector',
 	'ilp32',
 	'lp64',
+	'non_strict_align',
+	'pthread',
+	'pthread_h',
+	'sse',
+	'sse_runtime',
+	'sse2_runtime',
 	'sync_char_short',
 	'sync_int_long',
+	'tls',
+	'tls_native',
+	'tls_runtime',
+	'tls_emulated',
 	'trampolines',
 ]
 
 ACCEPTABLE_TARGETS = [
 	'c99_runtime',
+	'gas',
 	'init_priority',
 	'int32plus',
 	'inttypes_types',
 	'lto',
 	'native',
 	'nonpic',
+	'stdint_types',
+	'vect_cmdline_needed',
+	'vect_int',
+	'wchar',
 	'*-*-*gnu*',
+	'*-*-*',
 	'!',
 ]
 
 UNACCEPTABLE_TARGETS = [
 	'||',
 	'&&',
+	'-O0',
+	'-mlongcall',
+	'4byte_wchar_t',
+	'avx_runtime',
 	'default_packed',
+	'dfp',
+	'fixed_point',
 	'fpic',
 	'ilp32',
 	'lp64',
 	'pcc_bitfield_type_matters',
-	'No Inf support',
-	'consts are shorts, not longs',
-	'SPU float rounds towards zero',
-	'*-*-cygwin*',
-	'*-*-darwin',
-	'*-*-darwin*',
-	'*-*-interix*',
-	'*-*-linux*',
-	'*-*-mingw*',
-	'*-*-solaris',
-	'*-*-solaris*',
-	'*-*-solaris2.1[0-9]*',
-	'*-*-solaris2.[89]*',
-	'*-*-vxworks*',
-	'*-*-darwin[912]*',
-	'alpha*-*-*',
-	'alpha*-*-linux*',
-	'alpha*-dec-osf*',
-	'alpha*-dec-osf5*',
-	'arm*-*-*',
-	'arm*-*-*eabi',
-	'arm*-*-pe*',
-	'avr-*-*',
-	'cris-*-*',
-	'crisv32-*-*',
-	'fido-*-*',
-	'h8300-*-*',
-	'h8300*-*-*',
-	'hppa*-*-hpux*',
-	'hppa*-*-*',
-	'i?86-*-*',
-	'i?86-*-darwin',
-	'i?86-*-darwin*',
-	'i?86-*-linux',
-	'i?86-*-linux*',
-	'i?86-*-netware',
-	'i686-*-*',
-	'i?86-pc-cygwin',
-	'ia64-*-*',
-	'ia64-*-hpux11.*',
-	'ia64-*-linux*',
-	'm32c-*-*',
-	'm68k-*-*',
-	'mips*-*-*',
-	'mips-*-linux-*',
-	'-mflip-mips16',
-	'mmix-*-*',
-	'-msx*',
-	'pdp11-*-*',
-	'powerpc*-*-*',
-	'powerpc*-*-darwin*',
-	'powerpc*-*-linux*',
-	'powerpc-ibm-aix*',
-	'rs6000-*-*',
-	's390*-*-*',
-	's390*-*-linux*',
-	'sh-*-*',
-	'sh[1234ble]*-*-*',
-	'sh2a*-*-*',
-	'sparc-*-*',
-	'sparc*-*-*',
-	'sparc*-*-linux*',
-	'spu-*-*',
-	'vax-*-*',
-	'x86_64-*-*',
-	'x86_64-*-linux*',
+	'powerpc_hard_double',
+	'vmx_hw',
+	#'No Inf support',
+	#'No NaN support',
+	#'No Inf/NaN support',
+	#'Bug in _Q_dtoq',
+	#'No scheduling',
+	#'consts are shorts, not longs',
+	#'SPU float rounds towards zero',
+	'-m*nofpu*',
+	'-m4al*',
+	/-cygwin/,
+	/-darwin/,
+	/-interix/,
+	/-linux/,
+	/-mingw/,
+	/-netware/,
+	/-osf5.*/,
+	/-solaris/,
+	/-vxworks/,
+	/alpha.*-/,
+	/arm.*-/,
+	/avr.*-/,
+	/cris.*-/,
+	/fido.*-/,
+	/h8300.*-/,
+	/hppa.*-/,
+	/i?86.*-/,
+	/i686.*-/,
+	/ia64.*-/,
+	/m32c.*-/,
+	/m68k.*-/,
+	/mcore-/,
+	/mips.*-/,
+	'mips64',
+	/mmix.*-/,
+	/moxie-/,
+	/-msx/,
+	/pdp11-/,
+	/powerpc.*-/,
+	'powerpc_altivec_ok',
+	/rs6000.*-/,
+	/rx-/,
+	/s390.*-/,
+	/sh-/,
+	/sh\*-/,
+	/sh4.*-/,
+	/sh\[.*-/,
+	/sparc.*-/,
+	/spu-/,
+	/vax-/,
+	/x86_64.*-/,
 ]
 
 class Object
@@ -116,18 +163,44 @@ module DejaGnu
 # set @mode.
 # optionally, set @EXTRA_SOURCEFILES, @EXTRA_CFLAGS, @EXTRA_CPPFLAGS
 def parseDejaGnu
+	@mode = :compile
 	open(@sourcepath) do |file|
+		multilineComment = false
+		@lineNum = 0
 		file.each do |line|
+			@lineNum += 1
+			if(SKIP_LINES.include?(line.strip))
+				@mode = :skip
+				return
+			end
 			# skip non-comment lines.
 			start = line.index('//')
 			if(!start)
 				start = line.index('/*')
+				if(start)
+					multilineComment = !line.include?('*/')
+					#puts "mlc start #{@lineNum}" if(multilineComment)
+				end
 			end
-			next if(!start)
+			next if(!start && !multilineComment)
+			if(multilineComment)
+				if(line.include?('*/'))
+					multilineComment = false
+					#puts "mlc stop #{@lineNum}"
+				end
+				start = 0
+			end
 			# check to see if it's a dg directive.
 			# assuming that any comment containing '{' must be dg-formatted.
 			start = line.index('{', start)
 			next if(!start)
+
+			# but just in case it isn't...
+			stop = line.index('}', start)
+			next if(!stop)
+
+			# tr-paste.c
+			next if(multilineComment && !line.index('*/', stop))
 
 			# not gonna work
 			#@tokens = line.slice(start..-1).split(/[ {}]/)
@@ -136,10 +209,14 @@ def parseDejaGnu
 			@pos = start
 			a = tokenize()
 
+			# pr43002.c
+			next if(!a[0].start_with?('dg-'))
+
 			# parse the results.
 			#p a
 			case(a[0])
-			when 'dg-do' then
+			when 'dg-do',
+				'dg-lto-do'
 				# mode
 				@mode = a[1].to_sym
 				@mode = :compile if(@mode == :assemble)
@@ -154,6 +231,9 @@ def parseDejaGnu
 								@mode = :skip
 								return
 							end
+						when 'xfail'	# expected to fail?
+							@mode = :skip
+							return
 						else
 							raise "Unknown option in array: #{o.inspect}"
 						end
@@ -168,10 +248,14 @@ def parseDejaGnu
 						return
 					end
 				end
-			when 'dg-skip-if'
-				a[1..-1].each do |ret|
+			when 'dg-skip-if',
+			'dg-xfail-run-if'
+				reason = a[1]
+				raise "Invalid skip-if" if(!reason.is_a?(String))
+				a[2..-1].each do |ret|
 					if(ret != '' && ret != '*' && ret != [''] && ret != ['*'] &&
 						isAcceptableTarget?(ret))
+						puts "Because: #{reason.inspect}"
 						@mode = :skip
 						return
 					end
@@ -180,21 +264,39 @@ def parseDejaGnu
 				a[1..-1].each do |as|
 					@EXTRA_SOURCEFILES << File.dirname(@sourcepath)+'/'+as
 				end
-			when 'dg-options' then
-				raise "Invalid option" if(!a[1].is_a?(String))
+			when 'dg-options',
+				'dg-lto-options',
+				'dg-extra-ld-options'
+				op = a[1]
+				if(op.is_an?(Array))
+					#raise "Invalid option" if(a[1].size != 1)
+					aa = op
+					if(aa.is_an?(Array) && aa.size == 1)
+						aa = aa[0]
+					end
+					op = aa.join(' ')
+				end
+				raise "Invalid option #{op.inspect}" if(!op.is_a?(String))
 				# if we don't have a target, set both flags.
 				# if target is c, set c flags.
 				# if target is c++, set c++ flags.
 				# if target is something else, set both flags if the target is acceptable
-				options = ' '+a[1]
+				options = ' '+op
 				raise hell if(a[3])
-				if(options.include?('-fprofile') ||
-					options.include?('-fexceptions') ||
-					options.include?('-ftrapv') ||
-					options.include?('-fdump'))
-					@mode = :skip
-					return
+				BAD_OPTIONS.each do |bo|
+					if(options.include?(bo))
+						@mode = :skip
+						return
+					end
 				end
+
+				options.gsub!('$srcdir', BASE)
+
+				if(a[0] == 'dg-extra-ld-options')
+					@EXTRA_LINKFLAGS = options
+					next
+				end
+
 				ta = a[2]
 				if(ta)
 					raise "error" if(!ta.is_an?(Array))
@@ -229,18 +331,32 @@ def parseDejaGnu
 					@EXTRA_CFLAGS = options
 					@EXTRA_CPPFLAGS = options
 				end
+			when 'dg-final'
+				aa = a[1]
+				#p aa
+				if(aa.is_an?(Array))
+					if(aa[0].start_with?('scan-assembler'))
+						@mode = :skip
+						return
+					end
+				end
+			when 'dg-message'
+				if(a[1] == 'terminated')
+					@mode = :skip
+					return
+				end
 			when 'dg-require-named-sections',
 				'dg-require-ifunc',
 				'dg-require-profiling',
 				'dg-require-dll',
 				'dg-xfail-if',
+				'dg-require-linker-plugin',
+				'dg-require-compat-dfp',
 				'dg-error'
 				@mode = :skip
 				return
-			when 'dg-final',
-				'dg-bogus',
+			when 'dg-bogus',
 				'dg-timeout-factor',
-				'dg-message',
 				'dg-prune-output',
 				'dg-excess-errors',
 				'dg-require-alias',
@@ -249,6 +365,10 @@ def parseDejaGnu
 				'dg-require-visibility',
 				'dg-add-options',
 				'xxdg-warning',
+				'dg-require-iconv',
+				'dg-suppress-ld-options',
+				'dg-final-use',
+				'dg-require-weak-override',
 				'dg-warning'
 				# ignored
 			else
@@ -280,8 +400,8 @@ def isAcceptableTarget?(t)
 	if(ACCEPTABLE_TARGETS.include?(t))
 		return true
 	end
-	if(UNACCEPTABLE_TARGETS.include?(t))
-		return false
+	UNACCEPTABLE_TARGETS.each do |u|
+		return false if(u === t)
 	end
 	raise "Unknown target: #{t.inspect}"
 end
@@ -316,13 +436,24 @@ def tokenize()
 
 	if(char == '"')
 		@pos += 1
-		si = @line.index('"', @pos) - 1
-		n = si+2
+		#p @pos
+		# empty string
+		if(char == '"')
+			@pos += 1
+			return ''
+		end
+		si = @line.index(/[^\\]"/, @pos)
+		if(si)
+			n = si+2
+		else
+			si = @line.index('"', @pos) - 1
+			n = si+2
+		end
 	else
 		si = @line.index(/[ }]/, @pos) - 1
 		n = si+1
 	end
-	s = @line.slice(@pos..si)
+	s = @line.slice(@pos..si).gsub('\"', '"')
 	@pos = n
 	return s
 end
