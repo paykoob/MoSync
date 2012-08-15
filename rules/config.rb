@@ -10,10 +10,13 @@ default_const(:USE_GCC_VERSION_IN_BUILDDIR_NAME, true)
 default_const(:GCC_PIPE_EXTRA_FLAGS, ' -pipe')
 default_const(:PRINT_FLAG_CHANGES, false)
 default_const(:PRINT_GCC_VERSION_INFO, false)
-default_const(:GCC_DRIVER_NAME, mosyncdir + "/bin/xgcc")
+default_const(:GCC_DRIVER_NAME, mosyncdir + '/mapip2/xgcc' + EXE_FILE_ENDING)
 # array of strings, filenames.
-default_const(:PIPE_EXTRA_DEPENDENCIES, [])
-default_const(:USE_GNU_BINUTILS, false)
+default_const(:PIPE_EXTRA_DEPENDENCIES, [
+mosyncdir + '/mapip2/bin/cc1' + EXE_FILE_ENDING,
+mosyncdir + '/libexec/gcc/mapip2/4.6.3/as' + EXE_FILE_ENDING,
+])
+default_const(:USE_GNU_BINUTILS, true)
 default_const(:LD_EXTRA_DEPENDENCIES, [])
 default_const(:EXIT_ON_ERROR, true)
-default_const(:PRINT_WORKING_DIRECTORY, true)
+default_const(:PRINT_WORKING_DIRECTORY, false)

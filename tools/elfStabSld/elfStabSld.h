@@ -9,11 +9,14 @@
 #include <vector>
 #include <set>
 #include <ostream>
+#include <unordered_map>
 
 #define Log printf
 #define DUMP_STABS 0
 
 #define HAVE_EMPTY_NFUN 1
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 using namespace Base;
 using namespace std;
@@ -44,6 +47,11 @@ enum ReturnType {
 	eLong,
 };
 
+struct CallInfo {
+	ReturnType returnType;
+	unsigned intParams, floatParams;
+};
+
 struct Function {
 	// filled by parser
 	const char* name;
@@ -55,8 +63,7 @@ struct Function {
 	const char* info;
 
 	// filled by writer
-	ReturnType returnType;
-	unsigned intParams, floatParams;
+	CallInfo ci;
 	bool operator<(const Function& o) const { return start < o.start; }
 };
 
@@ -77,17 +84,27 @@ public:
 struct DebuggingData {
 	DebuggingData(Stream& ef) : elfFile(ef) {}
 	Stream& elfFile;
+	Elf32_Ehdr ehdr;
 	Array0<Stab> stabs;
 	// todo: string tables, symbol table.
 	// this is the .stabstr section
 	Array0<char> stabstr;
 	bfd_vma textSectionEndAddress;
-	unsigned e_phnum, e_phoff;
+	// these are valid only in cOutput mode.
+	Array0<Elf32_Rela> textRela, rodataRela, dataRela;
 };
+
+// stores the set of addresses to functions that may be called by register.
+// hopefully, this set should remain small.
+typedef set<unsigned> CallRegs;
+
+// key: return address
+typedef unordered_map<unsigned, CallInfo> CallMap;
 
 extern vector<File> files;
 extern vector<SLD> slds;
 extern set<Function> functions;
+extern CallMap gCallMap;
 extern FILE* gOutputFile;
 
 void writeCpp(const DebuggingData& data, const char*);
@@ -96,8 +113,10 @@ void writeCs(const DebuggingData& data, const char*) __attribute__((noreturn));
 struct SIData {
 	// input
 	ostream& stream;
+	CallRegs& cr;
 	Stream& elfFile;
 	const Array0<byte>& bytes;
+	const Array0<Elf32_Rela>& textRela;
 
 	// output
 	struct RegUsage {
@@ -108,6 +127,9 @@ struct SIData {
 
 void streamFunctionInstructions(SIData& data, const Function& f);
 void streamFunctionName(ostream& os, const char* name);
+void streamCallRegName(ostream& os, const CallInfo& ci);
+
+CallInfo parseCallInfoStab(const char* stab);
 
 const char* getIntRegName(size_t r);
 const char* getFloatRegName(size_t r);

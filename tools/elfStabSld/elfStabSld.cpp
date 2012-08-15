@@ -1,17 +1,18 @@
 #include "elfStabSld.h"
 
-static bool readStabs(Stream& elfFile, DebuggingData& data);
+static bool readStabs(Stream& elfFile, DebuggingData& data, bool cOutput);
 #if DUMP_STABS
 static void dumpStabs(const DebuggingData& data);
 #endif
 static void writeSld(const DebuggingData& data, const char* sldName);
-static void parseStabs(const DebuggingData& data);
+static void parseStabs(const DebuggingData& data, bool cOutput);
 
 static const char* s_outputName;
 
 vector<File> files;
 vector<SLD> slds;
 set<Function> functions;
+CallMap gCallMap;
 FILE* gOutputFile = NULL;
 
 #ifdef main
@@ -40,16 +41,19 @@ int main(int argc, const char** argv) {
 	}
 
 	Mode mode = eSLD;
+	bool cOutput = false;
 
 	// parse options
 	int i = 1;
 	while(argv[i][0] == '-') {
 		const char* a = argv[i];
-		if(strcmp(a, "-cpp") == 0)
+		if(strcmp(a, "-cpp") == 0) {
 			mode = eCPP;
-		else if(strcmp(a, "-cs") == 0)
+			cOutput = true;
+		} else if(strcmp(a, "-cs") == 0) {
 			mode = eCS;
-		else {
+			cOutput = true;
+		} else {
 			printf("Unrecognized option: %s\n", a);
 			exit(1);
 		}
@@ -61,7 +65,7 @@ int main(int argc, const char** argv) {
 
 	FileStream file(elfName);
 	DebuggingData data(file);
-	if(!readStabs(file, data)) {
+	if(!readStabs(file, data, cOutput)) {
 		printf("Could not read stabs!\n");
 		return 1;
 	}
@@ -69,7 +73,7 @@ int main(int argc, const char** argv) {
 	dumpStabs(data);
 #endif
 
-	parseStabs(data);
+	parseStabs(data, cOutput);
 
 	switch(mode) {
 	case eSLD:
@@ -86,7 +90,7 @@ int main(int argc, const char** argv) {
 	return 0;
 }
 
-static void parseStabs(const DebuggingData& data) {
+static void parseStabs(const DebuggingData& data, bool cOutput) {
 	//printf("data.stringSize: %" PRIuPTR "\n", data.stabstr.size());
 	size_t strOffset = 0;
 	size_t fileNum = 0;
@@ -191,9 +195,22 @@ static void parseStabs(const DebuggingData& data) {
 			if(s.n_type == N_MOSYNC) {
 				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
 					//i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
-				DEBUG_ASSERT(f.info == NULL);
-				f.info = stabstr + s.n_strx;
-				//printf("info: %s\n", f.info);
+				const char* stab = stabstr + s.n_strx;
+				switch(s.n_other) {
+				case 0:	// function info
+					DEBUG_ASSERT(f.info == NULL);
+					f.info = stab;
+					//printf("info: %s\n", f.info);
+					break;
+				case 1:	// call info
+					if(cOutput) {
+						pair<CallMap::iterator, bool> res = gCallMap.insert(pair<unsigned, CallInfo>(s.n_value, parseCallInfoStab(stab)));
+						DEBUG_ASSERT(res.second);
+					}
+					break;
+				default:
+					DEBIG_PHAT_ERROR;
+				}
 			}
 #if 0
 			else
@@ -206,6 +223,9 @@ static void parseStabs(const DebuggingData& data) {
 		}
 		fileNum++;
 		strOffset += strTabFragSize;
+	}
+	if(cOutput) {
+		printf("Found %" PRIuPTR " function calls.\n", gCallMap.size());
 	}
 	DEBUG_ASSERT(!f.name);
 }
@@ -278,8 +298,8 @@ static void dumpStabs(const DebuggingData& data) {
 }
 #endif
 
-static bool readStabs(Stream& file, DebuggingData& data) {
-	Elf32_Ehdr ehdr;
+static bool readStabs(Stream& file, DebuggingData& data, bool readCOutputData) {
+	Elf32_Ehdr& ehdr(data.ehdr);
 	TEST(file.isOpen());
 	TEST(file.readObject(ehdr));
 
@@ -342,7 +362,7 @@ DEBIG_PHAT_ERROR; }
 				DEBIG_PHAT_ERROR;
 			}
 			const char* name = (shdr.sh_name == 0) ? "" : (&strings[shdr.sh_name]);
-#if 0
+#if 1
 			LOG("Name: %s(%i), Type: 0x%X, Flags: %08X, Address: %08X, Offset: 0x%X",
 				name, shdr.sh_name,
 				(shdr.sh_type), (shdr.sh_flags),
@@ -368,12 +388,11 @@ DEBIG_PHAT_ERROR; }
 				TEST(file.seek(Seek::Start, shdr.sh_offset));
 				TEST(file.read(data.stabstr, shdr.sh_size));
 			}
+			if(readCOutputData) {
+				//".text.rela", ".rodata.rela", ".data.rela";
+			}
 		}
 	}
-
-	// store Segment Table info
-	data.e_phnum = ehdr.e_phnum;
-	data.e_phoff = ehdr.e_phoff;
 	return true;
 }
 
