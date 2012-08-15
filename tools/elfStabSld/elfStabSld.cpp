@@ -13,6 +13,7 @@ vector<File> files;
 vector<SLD> slds;
 set<Function> functions;
 CallMap gCallMap;
+FunctionPointerMap gFunctionPointerMap;
 FILE* gOutputFile = NULL;
 
 #ifdef main
@@ -389,7 +390,29 @@ DEBIG_PHAT_ERROR; }
 				TEST(file.read(data.stabstr, shdr.sh_size));
 			}
 			if(readCOutputData) {
-				//".text.rela", ".rodata.rela", ".data.rela";
+				Array0<Elf32_Rela>* relaP = NULL;
+				if(strcmp(name, ".rela.text") == 0)
+					relaP = &data.textRela;
+				else if(strcmp(name, ".rela.rodata") == 0)
+					relaP = &data.rodataRela;
+				else if(strcmp(name, ".rela.data") == 0)
+					relaP = &data.dataRela;
+				if(relaP) {
+					Array0<Elf32_Rela>& rela(*relaP);
+					DEBUG_ASSERT(shdr.sh_size % sizeof(Elf32_Rela) == 0);
+					rela.resize(shdr.sh_size / sizeof(Elf32_Rela));
+					TEST(file.seek(Seek::Start, shdr.sh_offset));
+					TEST(file.read(rela, shdr.sh_size));
+					printf("%s: %" PRIuPTR " entries.\n", name, rela.size());
+				}
+			}
+			// to use the relocation tables, we'll need the symbol table.
+			if(readCOutputData && strcmp(name, ".symtab") == 0) {
+				DEBUG_ASSERT(shdr.sh_size % sizeof(Elf32_Sym) == 0);
+				data.symbols.resize(shdr.sh_size / sizeof(Elf32_Sym));
+				TEST(file.seek(Seek::Start, shdr.sh_offset));
+				TEST(file.read(data.symbols, shdr.sh_size));
+				printf("%s: %" PRIuPTR " symbols.\n", name, data.symbols.size());
 			}
 		}
 	}

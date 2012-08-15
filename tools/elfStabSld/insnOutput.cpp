@@ -2,6 +2,7 @@
 
 struct CCore {
 	unsigned printInstruction(unsigned ip);
+	void checkFunctionPointer(unsigned ip);
 
 	SIData& data;
 	ostream& os;
@@ -50,6 +51,8 @@ const size_t nIntRegs = ARRAY_SIZE(mapip2_register_names), nFloatRegs = ARRAY_SI
 #define FETCH_RS rs = IB; data.regUsage.i |= (1 << rs);
 #define FETCH_FRD rd = IB; data.regUsage.f |= (1 << rd);
 #define FETCH_FRS rs = IB; data.regUsage.f |= (1 << rs);
+
+#define FETCH_CONST if(op != OP_CALLI) checkFunctionPointer(ip); FETCH_IMM32
 
 #define IMM imm32
 #define IMMU "(unsigned)" << imm32
@@ -511,4 +514,9 @@ unsigned CCore::printInstruction(unsigned ip) {
 		DEBIG_PHAT_ERROR;
 	}
 	return ip;
+}
+
+void CCore::checkFunctionPointer(unsigned ip) {
+	// if ip has a reloc to the text section, it is a function pointer.
+	// make sure that the value points to a valid function, then add the value to the callReg map
 }

@@ -2,20 +2,41 @@
 #include "../../runtimes/cpp/core/gen-opcodes.h"
 
 #include <sstream>
+#include <fstream>
 
-static void printFunctionName(FILE* file, const char* name);
-static void printFunctionPrototype(FILE* file, const Function& f);
-static void printFunctionContents(const DebuggingData& data, const Array0<byte>& bytes,
-	FILE* file, const Function& f, CallRegs& cr, const Array0<Elf32_Rela>& textRela);
+static void streamFunctionPrototype(ostream& os, const Function& f);
+static void streamFunctionContents(const DebuggingData& data, const Array0<byte>& bytes,
+	ostream& os, const Function& f, CallRegs& cr, const Array0<Elf32_Rela>& textRela);
 static void parseFunctionInfo(Function& f);
 static bool readSegments(const DebuggingData& data, Array0<byte>& bytes);
 static void setCallRegDataRefs(const DebuggingData& data, CallRegs& cr);
 static void parseStabParams(const char* comma, unsigned& intParams, unsigned& floatParams);
+static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci);
+
+// warning: must match enum ReturnType!
+static const char* returnTypeStrings[] = {
+	"void",
+	"int",
+	"double",
+	"int64_t",
+};
 
 void writeCpp(const DebuggingData& data, const char* cppName) {
-	FILE* file = gOutputFile = fopen(cppName, "w");
+	Array0<byte> bytes;
+	DEBUG_ASSERT(readSegments(data, bytes));
 
-	fputs(
+	// gotta do this first; the others rely on it.
+	for(set<Function>::iterator i = functions.begin(); i != functions.end(); ++i) {
+		Function& f((Function&)*i);
+		parseFunctionInfo(f);
+	}
+
+	CallRegs cr;
+	setCallRegDataRefs(data, cr);
+
+	ofstream file(cppName);
+
+	file <<
 "//****************************************\n"
 "//          Generated Cpp code\n"
 "//****************************************\n"
@@ -23,40 +44,40 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 "#include \"mstypeinfo.h\"\n"
 "\n"
 "// Prototypes\n"
-"\n"
-		,file);
+"\n";
 
-	for(set<Function>::iterator i=functions.begin(); i!=functions.end(); ++i) {
-		Function& f((Function&)*i);
-		parseFunctionInfo(f);
-		printFunctionPrototype(file, f);
-		fputs(";\n", file);
+	for(FunctionPointerMap::const_iterator itr = gFunctionPointerMap.begin();
+		itr != gFunctionPointerMap.end(); ++itr)
+	{
+		const CallInfo& ci(itr->first);
+		file << "static " << returnTypeStrings[ci.returnType] << " ";
+		streamCallRegName(file, ci);
+		streamFunctionPrototypeParams(file, ci);
+		file << ";\n";
 	}
 
-	fputs(
+	for(set<Function>::iterator i = functions.begin(); i != functions.end(); ++i) {
+		Function& f((Function&)*i);
+		streamFunctionPrototype(file, f);
+		file << ";\n";
+	}
+
+	file <<
 "\n"
-"// Definitions\n"
-		, file);
-
-	Array0<byte> bytes;
-	DEBUG_ASSERT(readSegments(data, bytes));
-
-	CallRegs cr;
-	setCallRegDataRefs(data, cr);
+"// Definitions\n";
 
 	for(set<Function>::iterator i=functions.begin(); i!=functions.end(); ++i) {
 		const Function& f(*i);
-		fputc('\n', file);
-		printFunctionPrototype(file, f);
-		fputs(" {\n", file);
-		printFunctionContents(data, bytes, file, f, cr, data.textRela);
-		fputs("}\n", file);
+		file << '\n';
+		streamFunctionPrototype(file, f);
+		file << " {\n";
+		streamFunctionContents(data, bytes, file, f, cr, data.textRela);
+		file << "}\n";
 	}
 
 	// CallReg
-	fputc('\n', file);
+	file << '\n';
 
-	fclose(file);
 }
 
 void writeCs(const DebuggingData& data, const char* csName) {
@@ -120,12 +141,63 @@ bool readSegments(const DebuggingData& data, Array0<byte>& bytes)
 	return true;
 }
 
+#if 0
+typedef struct
+{
+  Elf32_Addr	r_offset;		/* Address */
+  Elf32_Word	r_info;			/* Relocation type and symbol index */
+  Elf32_Sword	r_addend;		/* Addend */
+} Elf32_Rela;
+
+typedef struct
+{
+  Elf32_Word	st_name;		/* Symbol name (string tbl index) */
+  Elf32_Addr	st_value;		/* Symbol value */
+  Elf32_Word	st_size;		/* Symbol size */
+  unsigned char	st_info;		/* Symbol type and binding */
+  unsigned char	st_other;		/* Symbol visibility */
+  Elf32_Section	st_shndx;		/* Section index */
+} Elf32_Sym;
+#endif
+
+static void setCallRegDataRefs(const DebuggingData& data, const Array0<Elf32_Rela>& rela, CallRegs& cr) {
+	for(size_t i=0; i<rela.size(); i++) {
+		const Elf32_Rela& r(rela[i]);
+		const Elf32_Sym& sym(data.symbols[ELF32_R_SYM(r.r_info)]);
+		//printf("stt: %i, val: %i, section %i\n", ELF32_ST_TYPE(sym.st_info), sym.st_value, sym.st_shndx);
+		fflush(stdout);
+		// assuming here that section 1 is .text
+		if(ELF32_ST_TYPE(sym.st_info) == STT_FUNC ||
+			(ELF32_ST_TYPE(sym.st_info) == STT_NOTYPE && sym.st_shndx == 1))
+		{
+			Function dummy;
+			dummy.start = sym.st_value;
+			set<Function>::const_iterator itr = functions.find(dummy);
+			DEBUG_ASSERT(itr != functions.end());
+			const Function& f(*itr);
+			printf("Found function pointer to: %s, type %i\n", f.name, f.ci.returnType);
+			fflush(stdout);
+			gFunctionPointerMap[f.ci].insert(sym.st_value);
+		}
+	}
+}
+
 static void setCallRegDataRefs(const DebuggingData& data, CallRegs& cr)
 {
+	// We search the relocations in the data segment for references to the code segment,
+	// which means function pointers.
+	// Together with immediates that will be extracted from the code section,
+	// this will be the list of functions that can be called by register.
+	printf("rodata: %" PRIuPTR " relas\n", data.rodataRela.size());
+	setCallRegDataRefs(data, data.rodataRela, cr);
+	printf("data: %" PRIuPTR " relas\n", data.dataRela.size());
+	setCallRegDataRefs(data, data.dataRela, cr);
+	printf("Total callRegs: %" PRIuPTR "\n", gFunctionPointerMap.size());
+	fflush(stdout);
 }
 
 typedef const char* (*getRegNameFunc)(size_t);
-static void printRegisterDeclarations(FILE* file, const char* type, unsigned regUsage, size_t nRegs,
+static void streamRegisterDeclarations(ostream& os, const char* type, unsigned regUsage, size_t nRegs,
 	size_t start, size_t paramLow, size_t paramHi, unsigned nParams, getRegNameFunc grn)
 {
 	if(regUsage != 0) {
@@ -137,59 +209,55 @@ static void printRegisterDeclarations(FILE* file, const char* type, unsigned reg
 				continue;
 			if(first) {
 				first = false;
-				fputs(type, file);
+				os << type;
 			} else
-				fputs(", ", file);
-			fputs(grn(i), file);
+				os << ", ";
+			os << grn(i);
 		}
 		if(!first)
-			fputs(";\n", file);
+			os << ";\n";
 	}
 }
 
-static void printFunctionContents(const DebuggingData& data, const Array0<byte>& bytes,
-	FILE* file, const Function& f, CallRegs& cr, const Array0<Elf32_Rela>& textRela)
+static void streamFunctionContents(const DebuggingData& data, const Array0<byte>& bytes,
+	ostream& os, const Function& f, CallRegs& cr, const Array0<Elf32_Rela>& textRela)
 {
 	// output instructions
-	ostringstream os;
-	SIData pid = { os, cr, data.elfFile, bytes, textRela, {0,0} };
+	ostringstream oss;
+	SIData pid = { oss, cr, data.elfFile, bytes, textRela, {0,0} };
 	streamFunctionInstructions(pid, f);
 
 	// declare registers
-	printRegisterDeclarations(file, "int ", pid.regUsage.i, nIntRegs, REG_fp, REG_p0, REG_p3, f.ci.intParams, getIntRegName);
-	printRegisterDeclarations(file, "double ", pid.regUsage.f, nFloatRegs, 0, 8, 15, f.ci.floatParams, getFloatRegName);
+	streamRegisterDeclarations(os, "int ", pid.regUsage.i, nIntRegs, REG_fp, REG_p0, REG_p3, f.ci.intParams, getIntRegName);
+	streamRegisterDeclarations(os, "double ", pid.regUsage.f, nFloatRegs, 0, 8, 15, f.ci.floatParams, getFloatRegName);
 
-	fputs(os.str().c_str(), file);
+	os << oss.str();
 }
 
-// warning: must match enum ReturnType!
-static const char* returnTypeStrings[] = {
-	"void",
-	"int",
-	"double",
-	"int64_t",
-};
-
-static void printFunctionPrototype(FILE* file, const Function& f) {
-	fprintf(file, "static %s ", returnTypeStrings[f.ci.returnType]);
-	printFunctionName(file, f.name);
-	fputc('(', file);
+static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci) {
+	os << '(';
 	bool first = true;
-	for(unsigned j=0; j<f.ci.intParams; j++) {
+	for(unsigned j=0; j<ci.intParams; j++) {
 		if(first)
 			first = false;
 		else
-			fputs(", ", file);
-		fprintf(file, "int p%i", j);
+			os << ", ";
+		os << "int p" << j;
 	}
-	for(unsigned j=0; j<f.ci.floatParams; j++) {
+	for(unsigned j=0; j<ci.floatParams; j++) {
 		if(first)
 			first = false;
 		else
-			fputs(", ", file);
-		fprintf(file, "double f%i", 8+j);
+			os << ", ";
+		os << "double f" << (8+j);
 	}
-	fputc(')', file);
+	os << ')';
+}
+
+static void streamFunctionPrototype(ostream& os, const Function& f) {
+	os << "static " << returnTypeStrings[f.ci.returnType] << " ";
+	streamFunctionName(os, f.name);
+	streamFunctionPrototypeParams(os, f.ci);
 }
 
 static bool isctype(int c) {
@@ -203,17 +271,6 @@ void streamFunctionName(ostream& os, const char* name) {
 			os << *ptr;
 		else
 			os << '_';
-		ptr++;
-	}
-}
-
-static void printFunctionName(FILE* file, const char* name) {
-	const char* ptr = name;
-	while(*ptr) {
-		if(isctype(*ptr))
-			fputc(*ptr, file);
-		else
-			fputc('_', file);
 		ptr++;
 	}
 }

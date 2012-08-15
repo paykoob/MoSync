@@ -10,6 +10,7 @@
 #include <set>
 #include <ostream>
 #include <unordered_map>
+#include <map>
 
 #define Log printf
 #define DUMP_STABS 0
@@ -35,11 +36,6 @@ struct SLD {
 	size_t address, line, filenum;
 };
 
-struct Parameter {
-	const char* stab;
-	int regnum;
-};
-
 enum ReturnType {
 	eVoid,
 	eInt,
@@ -50,6 +46,14 @@ enum ReturnType {
 struct CallInfo {
 	ReturnType returnType;
 	unsigned intParams, floatParams;
+
+	bool operator<(const CallInfo& o) const {
+		if(returnType != o.returnType)
+			return returnType < o.returnType;
+		if(intParams != o.intParams)
+			return intParams < o.intParams;
+		return floatParams < o.floatParams;
+	}
 };
 
 struct Function {
@@ -92,6 +96,7 @@ struct DebuggingData {
 	bfd_vma textSectionEndAddress;
 	// these are valid only in cOutput mode.
 	Array0<Elf32_Rela> textRela, rodataRela, dataRela;
+	Array0<Elf32_Sym> symbols;
 };
 
 // stores the set of addresses to functions that may be called by register.
@@ -101,10 +106,16 @@ typedef set<unsigned> CallRegs;
 // key: return address
 typedef unordered_map<unsigned, CallInfo> CallMap;
 
+// function address, index to functions
+typedef set<unsigned> FunctionPointerSet;
+
+typedef map<CallInfo, FunctionPointerSet> FunctionPointerMap;
+
 extern vector<File> files;
 extern vector<SLD> slds;
 extern set<Function> functions;
 extern CallMap gCallMap;
+extern FunctionPointerMap gFunctionPointerMap;
 extern FILE* gOutputFile;
 
 void writeCpp(const DebuggingData& data, const char*);

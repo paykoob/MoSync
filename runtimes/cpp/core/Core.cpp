@@ -1176,6 +1176,8 @@ void WRITE_REG(int reg, int value) {
 #define FETCH_FRD	rd = IB; LOGC(" frd%i(0x%" PRIx64 ", %g)", rd, FRD.ll, FRD.d);
 #define FETCH_FRS	rs = IB; LOGC(" frs%i(0x%" PRIx64 ", %g)", rs, FRS.ll, FRS.d);
 
+#define FETCH_CONST FETCH_IMM32
+
 #include "core_helpers.h"
 
 #define LOG_ARITH(...)

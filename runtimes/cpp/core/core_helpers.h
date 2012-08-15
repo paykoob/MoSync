@@ -1,5 +1,4 @@
 
-#define FETCH_CONST	FETCH_IMM32
 #define FETCH_INT	FETCH_IMM32
 
 #define FETCH_IMM8	imm32 = IB; LOGC(" n%i", imm32);
