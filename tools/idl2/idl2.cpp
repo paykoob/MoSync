@@ -1051,12 +1051,9 @@ static void outputSyscallStaticJava(const Interface& maapi) {
 
 		staticJavaStream << getSJType(maapi, f.returnType, true)<<" "<<f.name<<" (";
 
-		if(f.returnType == "double")
-			staticConversionNeeded = true;
-
 		for(size_t j=0; j<f.args.size(); j++) {
 			const Argument& a(f.args[j]);
-			if(a.type == "MAString" || a.type == "MAWString" || a.type == "double")
+			if(a.type == "MAString" || a.type == "MAWString")
 				staticConversionNeeded = arguments = true;
 			if(a.type == "NCString")
 				staticConversionNeeded = false;
@@ -1070,16 +1067,11 @@ static void outputSyscallStaticJava(const Interface& maapi) {
 			string jPracticalArgType = (a.in ? a.type : "MAAddress");
 
 			staticJavaStream << sjType << " " << a.name;
-			if(a.type == "double") {
-				staticJavaStream << "1, "<<sjType<<" "<<a.name<<"2";
-				staticJavaInvokeStream << "_SYSCALL_CONVERT_long("<<a.name<<"1, "<<a.name<<"2)";
+			if(jPracticalArgType == "MAString" || jPracticalArgType == "MAWString") {
+				staticJavaInvokeStream << "_SYSCALL_CONVERT_"<<jPracticalArgType<<
+					"("<<a.name<<")";
 			} else {
-				if(jPracticalArgType == "MAString" || jPracticalArgType == "MAWString") {
-					staticJavaInvokeStream << "_SYSCALL_CONVERT_"<<jPracticalArgType<<
-						"("<<a.name<<")";
-				} else {
-					staticJavaInvokeStream << a.name;
-				}
+				staticJavaInvokeStream << a.name;
 			}
 		}
 		staticJavaStream << ") throws Exception {";
@@ -1129,14 +1121,17 @@ static void outputSyscallStaticCpp(const Interface& maapi) {
 			string sjType = getSJType(maapi, a.type, a.in);
 			string ctype = cType(maapi, a.type);
 
-			staticCppStream << "int" << " " << a.name;
+			staticCppStream << sjType << " " << a.name;
+#if 0
 			if(a.type == "double") {
 				staticCppStream << "1, "<<sjType<<" "<<a.name<<"2";
 
 				staticCppInvokeStream << "convertDoubleArg(" << a.name << "1, " << a.name << "2" << ")";//a.name << "_dv" << ".d";
 
 
-			} else if(isPointerType(maapi, a.type )) {
+			} else
+#endif
+			if(isPointerType(maapi, a.type )) {
 				staticCppInvokeStream << "convertPointerArg<"<<ctype<<">("<<a.name<<")";
 			} else {
 				staticCppInvokeStream << "convertSingleArg<"<<ctype<<">("<<a.name<<")";
@@ -1148,17 +1143,14 @@ static void outputSyscallStaticCpp(const Interface& maapi) {
 
 		stream << staticCppInitStream.str();
 
+		stream << "\t";
 		if(f.returnType != "void" && f.returnType != "noreturn") {
-			stream << "	int ret;\n";
-			string returnType = cType(maapi, f.returnType);
+			stream << "return ";
 			if(isPointerType(maapi, f.returnType)) {
-				returnType = "void*";
+				stream << "convertRet<void*> ";
 			}
-			stream << "	convertRet<" << returnType << ">(ret, __dbl_high, (" << returnType << ") SYSCALL_IMPL(" << f.name<<")("<<staticCppInvokeStream.str()<<"));\n";
-			stream << "	return ret;\n";
-			stream << "}\n";
 		}
-		else stream << "	SYSCALL_IMPL(" << f.name<<")("<<staticCppInvokeStream.str()<<");\n}\n";
+		stream << "(SYSCALL_IMPL(" << f.name<<")("<<staticCppInvokeStream.str()<<"));\n}\n";
 	}
 }
 

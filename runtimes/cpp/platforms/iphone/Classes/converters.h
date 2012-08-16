@@ -18,34 +18,11 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <helpers/maapi_defs.h>
 
 template <typename T>
-inline void convertRet(int& r14, int& r15, T type) {
-	r14 = (int)type;
-}
+inline int convertRet(T type);
 
 template <>
-inline void convertRet<double>(int& r14, int& r15, double type) {
-	MA_DV dv;
-	dv.d = type;
-	r14 = dv.hi;
-	r15 = dv.lo;
-}
-
-template <>
-inline void convertRet<longlong>(int& r14, int& r15, longlong type) {
-	r14 = (type&0xffffffff);
-	r15 = (int)((unsigned long long)type>>32);
-}
-
-template <>
-inline void convertRet<float>(int& r14, int& r15, float type) {
-	MA_FV fv;
-	fv.f = type;
-	r14 = fv.i;
-}
-
-template <>
-inline void convertRet<void*>(int& r14, int& r15, void* type) {
-	r14 = (int)((byte*)type - (int)mem_ds);
+inline int convertRet<void*>(void* type) {
+	return (int)((byte*)type - (int)mem_ds);
 }
 
 template <typename T>

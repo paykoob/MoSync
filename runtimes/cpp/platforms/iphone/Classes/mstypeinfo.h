@@ -28,6 +28,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <helpers/cpp_maapi.h>
 #endif
 
+#include <stdint.h>
+#include <math.h>
+
 #undef SYSCALL
 
 #define SYSCALL_IMPL(x) ::x
@@ -43,19 +46,30 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 //#define SXSHORT(xx) (int)((short)(xx))
 //#define SXBYTE(xx) (int)((char)(xx))
-#define SXSHORT(xx) ((((xx) & 0x8000) == 0) ? ((xx) & 0xFFFF) : ((xx) | ~0xFFFF))
-#define SXBYTE(xx) ((((xx) & 0x80) == 0) ? ((xx) & 0xFF) : ((xx) | ~0xFF))
+//#define SXSHORT(xx) ((((xx) & 0x8000) == 0) ? ((xx) & 0xFFFF) : ((xx) | ~0xFFFF))
+//#define SXBYTE(xx) ((((xx) & 0x80) == 0) ? ((xx) & 0xFF) : ((xx) | ~0xFF))
 
 #define SYSCALL(name)	wrap_##name
 
 void MoSyncDiv0();
 
 extern int sp;
-int __dbl_high;
 
 extern unsigned char* mem_ds;
 
 #include "syscall_static_cpp.h"
+
+#undef SYSCALL
+#define SYSCALL(name)	wrap##name
+
+#define zr 0
+
+union FREG {
+	double d;
+	uint64_t ll;
+	int i[2];
+};
+
 
 unsigned char* CppInitReadData(const char* file, int fileSize, int mallocSize);
 

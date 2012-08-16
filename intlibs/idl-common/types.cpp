@@ -209,9 +209,9 @@ string getSJType(const Interface& inf, const string& type, bool argIn) {
 	if(argType == "noreturn")
 		return "void";
 	if(argType == "float")
-		return "int";
+		return "double";
 	if(argType == "double")
-		return "int";
+		return "double";
 
 	if(argType == "uint")
 		return "int";

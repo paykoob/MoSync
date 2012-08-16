@@ -31,6 +31,9 @@ ___CTOR_LIST__:
 	.text
 	.global crt0_startup
 
+.stabs "crt0_startup",36,0,0,crt0_startup
+.stabs "void,4,0",250,0,0,0
+
 	// sp: top of stack
 	// p0: memory size
 	// p1: stack size
@@ -65,3 +68,8 @@ crt_exit:
 
 	ld	p0, [sp,0]	// restore return value
 	call &_maExit
+
+Lscope1:
+.stabs "",36,0,0,Lscope1-crt0_startup
+
+.stabd	78,0,0	// EOF

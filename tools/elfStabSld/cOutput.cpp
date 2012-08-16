@@ -297,7 +297,9 @@ static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool 
 }
 
 static void streamFunctionPrototype(ostream& os, const Function& f) {
-	os << "static " << returnTypeStrings[f.ci.returnType] << " ";
+	if(strcmp(f.name, "crt0_startup") != 0)
+		os << "static ";
+	os << returnTypeStrings[f.ci.returnType] << " ";
 	streamFunctionName(os, f.name);
 	streamFunctionPrototypeParams(os, f.ci);
 }

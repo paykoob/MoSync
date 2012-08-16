@@ -53,6 +53,10 @@ const size_t nIntRegs = ARRAY_SIZE(mapip2_register_names), nFloatRegs = ARRAY_SI
 #define FETCH_FRD rd = IB; data.regUsage.f |= (1 << rd);
 #define FETCH_FRS rs = IB; data.regUsage.f |= (1 << rs);
 
+#define FETCH_FRD_RS FETCH_FRD FETCH_RS
+#define FETCH_FRD_CONST FETCH_FRD FETCH_CONST
+#define FETCH_FRD_RS_CONST FETCH_FRD FETCH_RS FETCH_CONST
+
 #define FETCH_CONST if(op != OP_CALLI) checkFunctionPointer(ip); FETCH_IMM32
 
 #define IMM imm32
@@ -312,7 +316,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 
 		OPC(FLDRS) FETCH_RD_RS os << "{ MA_FV fv; fv.i = " << RS << "; " << FRD << " = (double)fv.f; }"; EOP;
 		OPC(FLDRD)
-			FETCH_RD_RS
+			FETCH_FRD_RS
 			os << "{ FREG temp; "
 			"temp.i[0] = " << RS << "; temp.i[1] = " << REG(rs+1) << "; "
 			<< FRD << " = temp.d; }";
@@ -322,7 +326,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 
 		OPC(FLDIS) FETCH_RD_CONST os << "{ MA_FV fv; fv.i = " << IMM << "; " << FRD << " = (double)fv.f; }"; EOP;
 		OPC(FLDID)
-			FETCH_RD_CONST;
+			FETCH_FRD_CONST;
 			os << "{ FREG temp; "
 			"temp.i[0] = " << IMM << "; "; FETCH_CONST; os << "temp.i[1] = " << IMM << "; "
 			<< FRD << " = temp.d; }";
@@ -368,7 +372,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 		EOP;
 
 		OPC(FLDD)
-			FETCH_RD_RS_CONST
+			FETCH_FRD_RS_CONST
 			os << "{ FREG temp; "
 			"temp.i[0] = RINT(" << RS << " + " << IMM << "); "
 			"temp.i[0] = RINT(" << RS << " + " << IMM + 4 << "); "
