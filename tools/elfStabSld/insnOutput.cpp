@@ -3,6 +3,7 @@
 struct CCore {
 	unsigned printInstruction(unsigned ip);
 	void checkFunctionPointer(unsigned ip);
+	void streamReturnType(ReturnType returnType);
 
 	SIData& data;
 	ostream& os;
@@ -92,12 +93,12 @@ std::basic_ostream<charT, Traits>&
 	return os;
 }
 
-static void streamReturnType(ostream& os, ReturnType returnType) {
+void CCore::streamReturnType(ReturnType returnType) {
 	switch(returnType) {
 	case eVoid: break;
-	case eInt: os << "r0 = "; break;
-	case eFloat: os << "f8 = "; break;
-	case eLong: os << "{ FREG temp; temp.ll = "; break;
+	case eInt: os << "r0 = "; data.regUsage.i |= (1 << REG_r0); break;
+	case eFloat: os << "f8 = "; data.regUsage.f |= (1 << 8); break;
+	case eLong: os << "{ FREG temp; temp.ll = "; data.regUsage.i |= (3 << REG_r0); break;
 	}
 }
 
@@ -109,7 +110,9 @@ void streamCallRegName(ostream& os, const CallInfo& ci) {
 	case eFloat: os << "F"; break;
 	case eLong: os << "L"; break;
 	}
+	os << noshowbase;
 	os << ci.intParams << ci.floatParams;
+	os << showbase;
 }
 
 static void streamParameters(ostream& os, const CallInfo& ci, bool first = true) {
@@ -137,6 +140,7 @@ void streamFunctionCall(ostream& os, const Function& cf) {
 }
 
 unsigned CCore::printInstruction(unsigned ip) {
+	os << hex << showbase;
 	os << "L" << ip << ":\t";
 
 	byte op = IB;
@@ -168,8 +172,8 @@ unsigned CCore::printInstruction(unsigned ip) {
 		OPC(SRL)	FETCH_RD_RS	ARITH(rd, RDU, >>, RSU);	EOP;
 		OPC(SRLI)	FETCH_RD_IMM8	ARITH(rd, RDU, >>, IMMU);	EOP;
 
-		OPC(NOT)	FETCH_RD_RS	os << RD << " = ~" << RS;	EOP;
-		OPC(NEG)	FETCH_RD_RS	os << RD << " = -" << RS;	EOP;
+		OPC(NOT)	FETCH_RD_RS	os << RD << " = ~" << RS << ";";	EOP;
+		OPC(NEG)	FETCH_RD_RS	os << RD << " = -" << RS << ";";	EOP;
 
 		OPC(PUSH)	FETCH_RD_RS
 		{
@@ -414,7 +418,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 				return ip;
 			}
 			const CallInfo& ci(itr->second);
-			streamReturnType(os, ci.returnType);
+			streamReturnType(ci.returnType);
 			streamCallRegName(os, ci);
 			os << "(" << RD;
 			streamParameters(os, ci, false);
@@ -435,7 +439,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			}
 			DEBUG_ASSERT(itr != functions.end());
 			const Function& cf(*itr);
-			streamReturnType(os, cf.ci.returnType);
+			streamReturnType(cf.ci.returnType);
 			streamFunctionCall(os, cf);
 			os << ";";
 			if(cf.ci.returnType == eLong) os << " }";
