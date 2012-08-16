@@ -35,7 +35,7 @@ const char* getFloatRegName(size_t r) {
 	if(r < ARRAY_SIZE(mapip2_float_register_names)) {
 		return mapip2_float_register_names[r];
 	} else {
-		printf("Bad float reg: %i\n", r);
+		printf("Bad float reg: %" PRIuPTR "\n", r);
 		DEBIG_PHAT_ERROR;
 	}
 };
@@ -130,7 +130,7 @@ static void streamParameters(ostream& os, const CallInfo& ci, bool first = true)
 	os << ")";
 }
 
-static void streamFunctionCall(ostream& os, const Function& cf) {
+void streamFunctionCall(ostream& os, const Function& cf) {
 	streamFunctionName(os, cf.name);
 	os << "(";
 	streamParameters(os, cf.ci);
@@ -483,8 +483,8 @@ unsigned CCore::printInstruction(unsigned ip) {
 			unsigned tableAddr = IMM;
 			FETCH_CONST;
 			unsigned defaultLabel = IMM;
-			printf("case %s, %u, %u, %u, %u\n", RD, low, count, tableAddr, defaultLabel);
-			_flushall();
+			//printf("case %s, %u, %u, %u, %u\n", RD, low, count, tableAddr, defaultLabel);
+			//_flushall();
 			os << "switch(" << RD << ") {\n";
 			for(unsigned i=0; i<=count; i++) {
 				os << "\t\tcase " << (low + i) << ": goto " << label(*((int*)(bytes + tableAddr) + i)) << ";\n";
@@ -519,4 +519,9 @@ unsigned CCore::printInstruction(unsigned ip) {
 void CCore::checkFunctionPointer(unsigned ip) {
 	// if ip has a reloc to the text section, it is a function pointer.
 	// make sure that the value points to a valid function, then add the value to the callReg map
+	RelocMap::const_iterator itr = data.textRelocMap.find(ip);
+	if(itr == data.textRelocMap.end())
+		return;
+	const Elf32_Rela& r(data.textRela[itr->second]);
+	setCallRegDataRef(data.symbols, r, data.cr);
 }

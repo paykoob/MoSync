@@ -11,7 +11,8 @@ static void parseFunctionInfo(Function& f);
 static bool readSegments(const DebuggingData& data, Array0<byte>& bytes);
 static void setCallRegDataRefs(const DebuggingData& data, CallRegs& cr);
 static void parseStabParams(const char* comma, unsigned& intParams, unsigned& floatParams);
-static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci);
+static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool first = true);
+static void streamCallRegPrototype(ostream& os, const CallInfo& ci);
 
 // warning: must match enum ReturnType!
 static const char* returnTypeStrings[] = {
@@ -46,38 +47,69 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 "// Prototypes\n"
 "\n";
 
+	ostringstream oss;
+
+	// normal function declarations
+	for(set<Function>::iterator i = functions.begin(); i != functions.end(); ++i) {
+		Function& f((Function&)*i);
+		streamFunctionPrototype(oss, f);
+		oss << ";\n";
+	}
+
+	oss <<
+"\n"
+"// Definitions\n";
+
+	// normal function definitions.
+	// this also populates the callReg map.
+	for(set<Function>::iterator i=functions.begin(); i!=functions.end(); ++i) {
+		const Function& f(*i);
+		oss << '\n';
+		streamFunctionPrototype(oss, f);
+		oss << " {\n";
+		streamFunctionContents(data, bytes, oss, f, cr, data.textRela);
+		oss << "}\n";
+	}
+
+	// callReg declarations
 	for(FunctionPointerMap::const_iterator itr = gFunctionPointerMap.begin();
 		itr != gFunctionPointerMap.end(); ++itr)
 	{
 		const CallInfo& ci(itr->first);
-		file << "static " << returnTypeStrings[ci.returnType] << " ";
-		streamCallRegName(file, ci);
-		streamFunctionPrototypeParams(file, ci);
+		streamCallRegPrototype(file, ci);
 		file << ";\n";
 	}
 
-	for(set<Function>::iterator i = functions.begin(); i != functions.end(); ++i) {
-		Function& f((Function&)*i);
-		streamFunctionPrototype(file, f);
-		file << ";\n";
-	}
+	file << oss.str();
 
-	file <<
-"\n"
-"// Definitions\n";
-
-	for(set<Function>::iterator i=functions.begin(); i!=functions.end(); ++i) {
-		const Function& f(*i);
+	// CallReg definitions
+	for(FunctionPointerMap::const_iterator itr = gFunctionPointerMap.begin();
+		itr != gFunctionPointerMap.end(); ++itr)
+	{
+		const CallInfo& ci(itr->first);
+		const FunctionPointerSet& fps(itr->second);
 		file << '\n';
-		streamFunctionPrototype(file, f);
-		file << " {\n";
-		streamFunctionContents(data, bytes, file, f, cr, data.textRela);
-		file << "}\n";
+		streamCallRegPrototype(file, ci);
+		file << " {\n"
+		"\tswitch(pointer) {\n";
+		for(FunctionPointerSet::const_iterator jtr = fps.begin(); jtr != fps.end(); ++jtr) {
+			file << "\tcase " << *jtr << ": ";
+			if(ci.returnType != eVoid)
+				file << "return ";
+			Function dummy;
+			dummy.start = *jtr;
+			set<Function>::const_iterator ftr = functions.find(dummy);
+			DEBUG_ASSERT(ftr != functions.end());
+			const Function& cf(*ftr);
+			streamFunctionCall(file, cf);
+			if(ci.returnType == eVoid)
+				file << "; return";
+			file << ";\n";
+		}
+		file << "\tdefault: maPanic(pointer, \"Invalid callReg\");\n"
+		"\t}\n"
+		"}\n";
 	}
-
-	// CallReg
-	file << '\n';
-
 }
 
 void writeCs(const DebuggingData& data, const char* csName) {
@@ -85,6 +117,12 @@ void writeCs(const DebuggingData& data, const char* csName) {
 	DEBIG_PHAT_ERROR;
 }
 
+static void streamCallRegPrototype(ostream& os, const CallInfo& ci) {
+	os << "static " << returnTypeStrings[ci.returnType] << " ";
+	streamCallRegName(os, ci);
+	os << "(int pointer";
+	streamFunctionPrototypeParams(os, ci, false);
+}
 
 bool readSegments(const DebuggingData& data, Array0<byte>& bytes)
 {
@@ -160,25 +198,29 @@ typedef struct
 } Elf32_Sym;
 #endif
 
+void setCallRegDataRef(const Array0<Elf32_Sym>& symbols, const Elf32_Rela& r, CallRegs& cr) {
+	const Elf32_Sym& sym(symbols[ELF32_R_SYM(r.r_info)]);
+	//printf("stt: %i, val: %i, section %i\n", ELF32_ST_TYPE(sym.st_info), sym.st_value, sym.st_shndx);
+	fflush(stdout);
+	// assuming here that section 1 is .text
+	if(ELF32_ST_TYPE(sym.st_info) == STT_FUNC ||
+		(ELF32_ST_TYPE(sym.st_info) == STT_NOTYPE && sym.st_shndx == 1))
+	{
+		Function dummy;
+		dummy.start = sym.st_value;
+		set<Function>::const_iterator itr = functions.find(dummy);
+		DEBUG_ASSERT(itr != functions.end());
+		const Function& f(*itr);
+		printf("Found function pointer to: %s, type %i\n", f.name, f.ci.returnType);
+		fflush(stdout);
+		gFunctionPointerMap[f.ci].insert(sym.st_value);
+	}
+}
+
 static void setCallRegDataRefs(const DebuggingData& data, const Array0<Elf32_Rela>& rela, CallRegs& cr) {
 	for(size_t i=0; i<rela.size(); i++) {
 		const Elf32_Rela& r(rela[i]);
-		const Elf32_Sym& sym(data.symbols[ELF32_R_SYM(r.r_info)]);
-		//printf("stt: %i, val: %i, section %i\n", ELF32_ST_TYPE(sym.st_info), sym.st_value, sym.st_shndx);
-		fflush(stdout);
-		// assuming here that section 1 is .text
-		if(ELF32_ST_TYPE(sym.st_info) == STT_FUNC ||
-			(ELF32_ST_TYPE(sym.st_info) == STT_NOTYPE && sym.st_shndx == 1))
-		{
-			Function dummy;
-			dummy.start = sym.st_value;
-			set<Function>::const_iterator itr = functions.find(dummy);
-			DEBUG_ASSERT(itr != functions.end());
-			const Function& f(*itr);
-			printf("Found function pointer to: %s, type %i\n", f.name, f.ci.returnType);
-			fflush(stdout);
-			gFunctionPointerMap[f.ci].insert(sym.st_value);
-		}
+		setCallRegDataRef(data.symbols, r, cr);
 	}
 }
 
@@ -224,7 +266,7 @@ static void streamFunctionContents(const DebuggingData& data, const Array0<byte>
 {
 	// output instructions
 	ostringstream oss;
-	SIData pid = { oss, cr, data.elfFile, bytes, textRela, {0,0} };
+	SIData pid = { oss, cr, data.elfFile, bytes, textRela, data.symbols, data.textRelocMap, {0,0} };
 	streamFunctionInstructions(pid, f);
 
 	// declare registers
@@ -234,9 +276,9 @@ static void streamFunctionContents(const DebuggingData& data, const Array0<byte>
 	os << oss.str();
 }
 
-static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci) {
-	os << '(';
-	bool first = true;
+static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool first) {
+	if(first)
+		os << '(';
 	for(unsigned j=0; j<ci.intParams; j++) {
 		if(first)
 			first = false;

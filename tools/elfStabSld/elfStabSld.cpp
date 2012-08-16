@@ -404,6 +404,15 @@ DEBIG_PHAT_ERROR; }
 					TEST(file.seek(Seek::Start, shdr.sh_offset));
 					TEST(file.read(rela, shdr.sh_size));
 					printf("%s: %" PRIuPTR " entries.\n", name, rela.size());
+
+					if(relaP == &data.textRela) {
+						for(unsigned j=0; j<rela.size(); j++) {
+							const Elf32_Rela& r(rela[j]);
+							pair<RelocMap::iterator, bool> res = data.textRelocMap.insert(
+								pair<unsigned, unsigned>(r.r_offset, j));
+							DEBUG_ASSERT(res.second);
+						}
+					}
 				}
 			}
 			// to use the relocation tables, we'll need the symbol table.

@@ -85,6 +85,9 @@ public:
 	Array0() : Array<T>(0) {}
 };
 
+// reloc address => rela index
+typedef unordered_map<unsigned, unsigned> RelocMap;
+
 struct DebuggingData {
 	DebuggingData(Stream& ef) : elfFile(ef) {}
 	Stream& elfFile;
@@ -97,6 +100,7 @@ struct DebuggingData {
 	// these are valid only in cOutput mode.
 	Array0<Elf32_Rela> textRela, rodataRela, dataRela;
 	Array0<Elf32_Sym> symbols;
+	RelocMap textRelocMap;
 };
 
 // stores the set of addresses to functions that may be called by register.
@@ -128,6 +132,8 @@ struct SIData {
 	Stream& elfFile;
 	const Array0<byte>& bytes;
 	const Array0<Elf32_Rela>& textRela;
+	const Array0<Elf32_Sym>& symbols;
+	const RelocMap& textRelocMap;
 
 	// output
 	struct RegUsage {
@@ -139,8 +145,11 @@ struct SIData {
 void streamFunctionInstructions(SIData& data, const Function& f);
 void streamFunctionName(ostream& os, const char* name);
 void streamCallRegName(ostream& os, const CallInfo& ci);
+void streamFunctionCall(ostream& os, const Function& cf);
 
 CallInfo parseCallInfoStab(const char* stab);
+
+void setCallRegDataRef(const Array0<Elf32_Sym>& symbols, const Elf32_Rela& r, CallRegs& cr);
 
 const char* getIntRegName(size_t r);
 const char* getFloatRegName(size_t r);

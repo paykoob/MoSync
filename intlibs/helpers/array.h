@@ -49,8 +49,10 @@ public:
 		DEBUG_ASSERT(index < b);
 		return a[index];
 	}
+#if 0
 	T& operator[](int index) { return (*this)[(size_t)index]; }
 	const T& operator[](int index) const { return (*this)[(size_t)index]; }
+#endif
 
 	operator const T*() const { return a; }
 	operator T*() { return a; }
