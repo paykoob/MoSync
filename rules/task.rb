@@ -131,6 +131,7 @@ class Work < TaskBase
 				args << " FULLSCREEN=\"true\""
 			end
 			args << ' RELOAD=' if(RELOAD)
+			args << " PACK=#{PACK}" if(defined?(PACK))
 			cmd = "workfile.rb #{args} CONFIG=\"#{CONFIG}\""
 			if(HOST == :win32)
 				sh "ruby #{cmd}"

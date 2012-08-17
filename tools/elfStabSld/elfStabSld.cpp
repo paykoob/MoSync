@@ -97,6 +97,7 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 	size_t fileNum = 0;
 	Function f;
 	f.name = NULL;
+	f.info = "";
 	for(size_t i=0; i<data.stabs.size(); i++) {
 		// file-header stab
 		size_t stabEnd;
@@ -199,7 +200,27 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 				const char* stab = stabstr + s.n_strx;
 				switch(s.n_other) {
 				case 0:	// function info
+#if 0
+				if(f.info != NULL) {
+						// weak functions (like inline class methods) may have duplicate implementations.
+						// the code is removed, but the stabs are not.
+						// ensure that the info is identical before accepting a dupe.
+						if(strcmp(f.info, stab) != 0) {
+							printf("Duplicate info mismatch. Old: %s  New: %s\n", f.info, stab);
+#if 1
+						printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+							i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
+						printf("info: %s\n", stab);
+						printf("old function: %s\n", f.name);
+						printf("old info: %s\n", f.info);
+#endif
+							DEBIG_PHAT_ERROR;
+						}
+					}
+#else
 					DEBUG_ASSERT(f.info == NULL);
+					DEBUG_ASSERT(f.name != NULL);
+#endif
 					f.info = stab;
 					//printf("info: %s\n", f.info);
 					break;
@@ -422,6 +443,11 @@ DEBIG_PHAT_ERROR; }
 				TEST(file.seek(Seek::Start, shdr.sh_offset));
 				TEST(file.read(data.symbols, shdr.sh_size));
 				printf("%s: %" PRIuPTR " symbols.\n", name, data.symbols.size());
+			}
+			if(readCOutputData && strcmp(name, ".strtab") == 0) {
+				data.strtab.resize(shdr.sh_size);
+				TEST(file.seek(Seek::Start, shdr.sh_offset));
+				TEST(file.read(data.strtab, shdr.sh_size));
 			}
 		}
 	}

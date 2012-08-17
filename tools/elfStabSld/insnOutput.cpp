@@ -531,5 +531,5 @@ void CCore::checkFunctionPointer(unsigned ip) {
 	if(itr == data.textRelocMap.end())
 		return;
 	const Elf32_Rela& r(data.textRela[itr->second]);
-	setCallRegDataRef(data.symbols, r, data.cr);
+	setCallRegDataRef(data.symbols, data.strtab, r, data.cr);
 }

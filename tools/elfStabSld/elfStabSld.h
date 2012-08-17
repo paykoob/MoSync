@@ -93,13 +93,13 @@ struct DebuggingData {
 	Stream& elfFile;
 	Elf32_Ehdr ehdr;
 	Array0<Stab> stabs;
-	// todo: string tables, symbol table.
 	// this is the .stabstr section
 	Array0<char> stabstr;
 	bfd_vma textSectionEndAddress;
 	// these are valid only in cOutput mode.
 	Array0<Elf32_Rela> textRela, rodataRela, dataRela;
 	Array0<Elf32_Sym> symbols;
+	Array0<char> strtab;	// this one is used by symbols.
 	RelocMap textRelocMap;
 };
 
@@ -133,6 +133,7 @@ struct SIData {
 	const Array0<byte>& bytes;
 	const Array0<Elf32_Rela>& textRela;
 	const Array0<Elf32_Sym>& symbols;
+	const Array0<char>& strtab;
 	const RelocMap& textRelocMap;
 
 	// output
@@ -149,7 +150,7 @@ void streamFunctionCall(ostream& os, const Function& cf);
 
 CallInfo parseCallInfoStab(const char* stab);
 
-void setCallRegDataRef(const Array0<Elf32_Sym>& symbols, const Elf32_Rela& r, CallRegs& cr);
+void setCallRegDataRef(const Array0<Elf32_Sym>& symbols, const Array0<char>& strtab, const Elf32_Rela& r, CallRegs& cr);
 
 const char* getIntRegName(size_t r);
 const char* getFloatRegName(size_t r);

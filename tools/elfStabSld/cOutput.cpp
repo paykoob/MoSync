@@ -81,6 +81,7 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 	}
 
 	file << oss.str();
+	file << hex << showbase;
 
 	// CallReg definitions
 	for(FunctionPointerMap::const_iterator itr = gFunctionPointerMap.begin();
@@ -198,7 +199,7 @@ typedef struct
 } Elf32_Sym;
 #endif
 
-void setCallRegDataRef(const Array0<Elf32_Sym>& symbols, const Elf32_Rela& r, CallRegs& cr) {
+void setCallRegDataRef(const Array0<Elf32_Sym>& symbols, const Array0<char>& strtab, const Elf32_Rela& r, CallRegs& cr) {
 	const Elf32_Sym& sym(symbols[ELF32_R_SYM(r.r_info)]);
 	//printf("stt: %i, val: %i, section %i\n", ELF32_ST_TYPE(sym.st_info), sym.st_value, sym.st_shndx);
 	fflush(stdout);
@@ -209,10 +210,14 @@ void setCallRegDataRef(const Array0<Elf32_Sym>& symbols, const Elf32_Rela& r, Ca
 		Function dummy;
 		dummy.start = sym.st_value;
 		set<Function>::const_iterator itr = functions.find(dummy);
-		DEBUG_ASSERT(itr != functions.end());
+		if(itr == functions.end()) {
+			const char* symName = strtab + sym.st_name;
+			printf("Invalid function pointer @ 0x%x to %s (0x%x) + 0x%x.\n",
+				r.r_offset, symName, sym.st_info, r.r_addend);
+			DEBIG_PHAT_ERROR;
+		}
 		const Function& f(*itr);
-		printf("Found function pointer to: %s, type %i\n", f.name, f.ci.returnType);
-		fflush(stdout);
+		//printf("Found function pointer to: %s, type %i\n", f.name, f.ci.returnType);
 		gFunctionPointerMap[f.ci].insert(sym.st_value);
 	}
 }
@@ -220,7 +225,7 @@ void setCallRegDataRef(const Array0<Elf32_Sym>& symbols, const Elf32_Rela& r, Ca
 static void setCallRegDataRefs(const DebuggingData& data, const Array0<Elf32_Rela>& rela, CallRegs& cr) {
 	for(size_t i=0; i<rela.size(); i++) {
 		const Elf32_Rela& r(rela[i]);
-		setCallRegDataRef(data.symbols, r, cr);
+		setCallRegDataRef(data.symbols, data.strtab, r, cr);
 	}
 }
 
@@ -266,7 +271,7 @@ static void streamFunctionContents(const DebuggingData& data, const Array0<byte>
 {
 	// output instructions
 	ostringstream oss;
-	SIData pid = { oss, cr, data.elfFile, bytes, textRela, data.symbols, data.textRelocMap, {0,0} };
+	SIData pid = { oss, cr, data.elfFile, bytes, textRela, data.symbols, data.strtab, data.textRelocMap, {0,0} };
 	streamFunctionInstructions(pid, f);
 
 	// declare registers
