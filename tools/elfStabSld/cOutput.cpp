@@ -119,10 +119,12 @@ void writeCs(const DebuggingData& data, const char* csName) {
 }
 
 static void streamCallRegPrototype(ostream& os, const CallInfo& ci) {
+	os << noshowbase << dec;
 	os << "static " << returnTypeStrings[ci.returnType] << " ";
 	streamCallRegName(os, ci);
 	os << "(int pointer";
 	streamFunctionPrototypeParams(os, ci, false);
+	os << showbase << hex;
 }
 
 bool readSegments(const DebuggingData& data, Array0<byte>& bytes)

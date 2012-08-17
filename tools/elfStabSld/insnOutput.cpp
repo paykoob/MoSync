@@ -48,10 +48,13 @@ const size_t nIntRegs = ARRAY_SIZE(mapip2_register_names), nFloatRegs = ARRAY_SI
 
 #define IB ((int)(bytes[ip++]))
 
-#define FETCH_RD rd = IB; data.regUsage.i |= (1 << rd);
-#define FETCH_RS rs = IB; data.regUsage.i |= (1 << rs);
-#define FETCH_FRD rd = IB; data.regUsage.f |= (1 << rd);
-#define FETCH_FRS rs = IB; data.regUsage.f |= (1 << rs);
+#define USE_I(r) data.regUsage.i |= (1 << (r))
+#define USE_F(r) data.regUsage.f |= (1 << (r))
+
+#define FETCH_RD rd = IB; USE_I(rd);
+#define FETCH_RS rs = IB; USE_I(rs);
+#define FETCH_FRD rd = IB; USE_F(rd);
+#define FETCH_FRS rs = IB; USE_F(rs);
 
 #define FETCH_FRD_RS FETCH_FRD FETCH_RS
 #define FETCH_FRD_CONST FETCH_FRD FETCH_CONST
@@ -74,7 +77,7 @@ const size_t nIntRegs = ARRAY_SIZE(mapip2_register_names), nFloatRegs = ARRAY_SI
 #define OPC(a) case OP_##a: os << "\t";
 #define EOP os << "\n"; break
 
-#define WRITE_REG(rd, src) os << REG(rd) << " = " << src << ";"
+#define WRITE_REG(rd, src) USE_I(rd); os << REG(rd) << " = " << src << ";"
 
 #define FREG(r) getFloatRegName(r)
 #define FRD FREG(rd)
