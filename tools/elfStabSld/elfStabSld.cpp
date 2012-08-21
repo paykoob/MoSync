@@ -148,7 +148,7 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 				//DEBUG_ASSERT(s.n_desc < 128);
 				const char* name = stabstr + s.n_strx;
 				unsigned address = s.n_value;
-				//printf("%s 0x%02x 0x%x\n", name, s.n_desc, address);
+				printf("%s 0x%02x 0x%x\n", name, s.n_desc, address);
 
 				// insert function into ordered set
 				// we can have duplicate function stabs (inlines or templates).
@@ -158,11 +158,30 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 					DEBUG_ASSERT(!f.name);
 					f.name = name;
 					f.start = address;
+					f.scope = fileNum;
 					f.info = NULL;
 				} else {
 					DEBUG_ASSERT(f.info != NULL);
 					f.end = f.start + address - 1;
+#if 0
 					functions.insert(f);
+#else
+					// Error: weak symbols, such as c++ inlines, can have multiple stabs that are not identical.
+					// If name is different, but start & end are identical, it's the same function.
+					// But some functions have different length, even though they start on the same address.
+					// Only one of these functions are real; the others have been removed by the linker.
+					// We must find out which one is real.
+					pair<set<Function>::iterator, bool> res = functions.insert(f);
+					if(!res.second) {	// duplicate
+						const Function& o(*res.first);
+						if(o != f) {
+							printf("Duplicate function: (%s %i %x %x) (%s %i %x %x)\n",
+								o.name, o.scope, o.start, o.end,
+								f.name, f.scope, f.start, f.end);
+							MoSyncErrorExit(1);
+						}
+					}
+#endif
 					f.name = NULL;
 				}
 #else
@@ -274,14 +293,26 @@ static void writeSld(const DebuggingData& data, const char* sldName) {
 	}
 
 	// output FUNCTIONS
+	// meanwhile, check function integrity.
 	fputs("FUNCTIONS\n", file);
 	{
+		//bool functionsAreOk = true;
+		unsigned lastEnd = 0;
+		const char* lastName = NULL;
 #if HAVE_EMPTY_NFUN	// empty N_FUNs marks the length of a function.
 		set<Function>::const_iterator i=functions.begin();
 		for(; i!=functions.end(); ++i) {
 			const Function& fi(*i);
 			fprintf(file, "%s %x,%x\n",
 				fi.name, fi.start, fi.end);
+			if(fi.start <= lastEnd) {
+				printf("warning: function overlap: %s %x,%x < %s %x\n",
+					fi.name, fi.start, fi.end,
+					lastName, lastEnd);
+				//functionsAreOk = false;
+			}
+			lastEnd = fi.end;
+			lastName = fi.name;
 		}
 #else
 		set<Function>::const_iterator i=functions.begin();

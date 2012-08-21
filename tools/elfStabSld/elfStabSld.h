@@ -68,7 +68,10 @@ struct Function {
 
 	// filled by writer
 	CallInfo ci;
+
 	bool operator<(const Function& o) const { return start < o.start; }
+	bool operator==(const Function& o) const { return start == o.start && end == o.end; }
+	bool operator!=(const Function& o) const { return !(o == *this); }
 };
 
 struct Variable {
