@@ -70,8 +70,10 @@ struct Function {
 	CallInfo ci;
 
 	bool operator<(const Function& o) const { return start < o.start; }
+#if 0
 	bool operator==(const Function& o) const { return start == o.start && end == o.end; }
 	bool operator!=(const Function& o) const { return !(o == *this); }
+#endif
 };
 
 struct Variable {

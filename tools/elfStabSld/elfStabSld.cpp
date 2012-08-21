@@ -5,6 +5,7 @@ static bool readStabs(Stream& elfFile, DebuggingData& data, bool cOutput);
 static void dumpStabs(const DebuggingData& data);
 #endif
 static void writeSld(const DebuggingData& data, const char* sldName);
+static void parseSymbols(const DebuggingData& data);
 static void parseStabs(const DebuggingData& data, bool cOutput);
 
 static const char* s_outputName;
@@ -74,6 +75,7 @@ int main(int argc, const char** argv) {
 	dumpStabs(data);
 #endif
 
+	parseSymbols(data);
 	parseStabs(data, cOutput);
 
 	switch(mode) {
@@ -91,6 +93,66 @@ int main(int argc, const char** argv) {
 	return 0;
 }
 
+#if 0
+typedef struct
+{
+  Elf32_Word	st_name;		/* Symbol name (string tbl index) */
+  Elf32_Addr	st_value;		/* Symbol value */
+  Elf32_Word	st_size;		/* Symbol size */
+  unsigned char	st_info;		/* Symbol type and binding */
+  unsigned char	st_other;		/* Symbol visibility */
+  Elf32_Section	st_shndx;		/* Section index */
+} Elf32_Sym;
+#endif
+
+static bool isFunction(const Elf32_Sym& sym) {
+	// assuming here that section 1 is .text
+	unsigned bind = ELF32_ST_BIND(sym.st_info);
+	return (ELF32_ST_TYPE(sym.st_info) == STT_FUNC) ||
+		(ELF32_ST_TYPE(sym.st_info) == STT_NOTYPE && sym.st_shndx == 1 &&
+		(bind == STB_GLOBAL || bind == STB_WEAK));
+}
+
+static void insertFunction(const Function& f) {
+	printf("insertFunction %s 0x%x\n", f.name, f.start);
+	pair<set<Function>::iterator, bool> res = functions.insert(f);
+	if(!res.second) {	// duplicate
+		printf("Duplicate address 0x%x. Names: %s, %s\n", f.start, res.first->name, f.name);
+		//MoSyncErrorExit(1);
+	}
+}
+
+static void parseSymbols(const DebuggingData& data) {
+	// get functions' name, address and length from symbol table;
+	// it should be more reliable than the stabs.
+	Function f;
+	f.name = NULL;
+	f.info = NULL;
+	for(size_t i=0; i<data.symbols.size(); i++) {
+		const Elf32_Sym& sym(data.symbols[i]);
+		if(isFunction(sym)) {
+			const char* name = data.strtab + sym.st_name;
+			unsigned start = sym.st_value;
+			// if there was a function before this one, assume it ends just before this one starts.
+			if(f.name) {
+				f.end = start - 1;
+				insertFunction(f);
+			}
+			// store the info of this function.
+			f.name = name;
+			f.start = start;
+		} else {
+			//const char* name = data.strtab + sym.st_name;
+			//printf("sym: %02x %02x %i %x %x %s\n", sym.st_info, sym.st_other, sym.st_shndx, sym.st_value, sym.st_size, name);
+		}
+	}
+	// the last function can be assumed to end at the end of the text segment.
+	if(f.name) {
+		f.end = data.textSectionEndAddress - 1;
+		insertFunction(f);
+	}
+}
+
 static void parseStabs(const DebuggingData& data, bool cOutput) {
 	//printf("data.stringSize: %" PRIuPTR "\n", data.stabstr.size());
 	size_t strOffset = 0;
@@ -98,6 +160,8 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 	Function f;
 	f.name = NULL;
 	f.info = "";
+	f.scope = fileNum;
+	f.start = 0;
 	for(size_t i=0; i<data.stabs.size(); i++) {
 		// file-header stab
 		size_t stabEnd;
@@ -150,9 +214,6 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 				unsigned address = s.n_value;
 				printf("%s 0x%02x 0x%x\n", name, s.n_desc, address);
 
-				// insert function into ordered set
-				// we can have duplicate function stabs (inlines or templates).
-				// gotta get rid of them.
 #if HAVE_EMPTY_NFUN
 				if(*name) {
 					DEBUG_ASSERT(!f.name);
@@ -163,41 +224,33 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 				} else {
 					DEBUG_ASSERT(f.info != NULL);
 					f.end = f.start + address - 1;
-#if 0
-					functions.insert(f);
-#else
 					// Error: weak symbols, such as c++ inlines, can have multiple stabs that are not identical.
 					// If name is different, but start & end are identical, it's the same function.
 					// But some functions have different length, even though they start on the same address.
 					// Only one of these functions are real; the others have been removed by the linker.
 					// We must find out which one is real.
-					pair<set<Function>::iterator, bool> res = functions.insert(f);
-					if(!res.second) {	// duplicate
-						const Function& o(*res.first);
-						if(o != f) {
-							printf("Duplicate function: (%s %i %x %x) (%s %i %x %x)\n",
-								o.name, o.scope, o.start, o.end,
-								f.name, f.scope, f.start, f.end);
-							MoSyncErrorExit(1);
+					set<Function>::iterator res = functions.find(f);
+					DEBUG_ASSERT(res != functions.end());
+					// de-const'd. we must be careful and not modify the key value of the Function.
+					Function& o((Function&)*res);
+					if(o.end != f.end) {
+						printf("Warning: duplicate variant function: (%s %i %x %x) (%s %i %x %x)\n",
+							o.name, o.scope, o.start, o.end,
+							f.name, f.scope, f.start, f.end);
+					} else {
+						if(o.info) {
+							printf("Notice: duplicate identical function @ %x: %s %s\n", f.start, o.name, f.name);
+							DEBUG_ASSERT(o.info == f.info);
 						}
+						o.info = f.info;
+						o.scope = f.scope;
 					}
-#endif
 					f.name = NULL;
 				}
 #else
 				f.name = name;
 				f.start = address;
 				f.scope = fileNum;
-				functions.insert(f);
-#endif
-#if 0
-				pair<set<Function>::iterator, bool> res = functions.insert(f);
-				if(!res.second) {	// duplicate
-					if(strcmp(res.first->name, f.name) != 0) {
-						printf("Duplicate address 0x%x. Names: %s, %s\n", address, res.first->name, name);
-						MoSyncErrorExit(1);
-					}
-				}
 #endif
 			}
 			else
@@ -468,14 +521,14 @@ DEBIG_PHAT_ERROR; }
 				}
 			}
 			// to use the relocation tables, we'll need the symbol table.
-			if(readCOutputData && strcmp(name, ".symtab") == 0) {
+			if(strcmp(name, ".symtab") == 0) {
 				DEBUG_ASSERT(shdr.sh_size % sizeof(Elf32_Sym) == 0);
 				data.symbols.resize(shdr.sh_size / sizeof(Elf32_Sym));
 				TEST(file.seek(Seek::Start, shdr.sh_offset));
 				TEST(file.read(data.symbols, shdr.sh_size));
 				printf("%s: %" PRIuPTR " symbols.\n", name, data.symbols.size());
 			}
-			if(readCOutputData && strcmp(name, ".strtab") == 0) {
+			if(strcmp(name, ".strtab") == 0) {
 				data.strtab.resize(shdr.sh_size);
 				TEST(file.seek(Seek::Start, shdr.sh_offset));
 				TEST(file.read(data.strtab, shdr.sh_size));
