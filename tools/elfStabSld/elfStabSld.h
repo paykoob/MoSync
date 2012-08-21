@@ -130,7 +130,7 @@ struct SIData {
 	ostream& stream;
 	CallRegs& cr;
 	Stream& elfFile;
-	const Array0<byte>& bytes;
+	const Array0<byte>& textBytes, & dataBytes;
 	const Array0<Elf32_Rela>& textRela;
 	const Array0<Elf32_Sym>& symbols;
 	const Array0<char>& strtab;

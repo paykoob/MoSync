@@ -94,7 +94,7 @@ int main(int argc, const char** argv) {
 static void parseStabs(const DebuggingData& data, bool cOutput) {
 	//printf("data.stringSize: %" PRIuPTR "\n", data.stabstr.size());
 	size_t strOffset = 0;
-	size_t fileNum = 0;
+	size_t fileNum = -1;
 	Function f;
 	f.name = NULL;
 	f.info = "";
@@ -129,6 +129,7 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 					File file;
 					file.name = filename;
 					files.push_back(file);
+					fileNum++;
 				}
 			}
 			else
@@ -243,7 +244,6 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 			}
 #endif
 		}
-		fileNum++;
 		strOffset += strTabFragSize;
 	}
 	if(cOutput) {

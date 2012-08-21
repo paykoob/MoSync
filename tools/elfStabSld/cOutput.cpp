@@ -5,10 +5,11 @@
 #include <fstream>
 
 static void streamFunctionPrototype(ostream& os, const Function& f);
-static void streamFunctionContents(const DebuggingData& data, const Array0<byte>& bytes,
+static void streamFunctionContents(const DebuggingData& data,
+	const Array0<byte>& textBytes, const Array0<byte>& dataBytes,
 	ostream& os, const Function& f, CallRegs& cr, const Array0<Elf32_Rela>& textRela);
 static void parseFunctionInfo(Function& f);
-static bool readSegments(const DebuggingData& data, Array0<byte>& bytes);
+static bool readSegments(const DebuggingData& data, Array0<byte>& textBytes, Array0<byte>& dataBytes);
 static void setCallRegDataRefs(const DebuggingData& data, CallRegs& cr);
 static void parseStabParams(const char* comma, unsigned& intParams, unsigned& floatParams);
 static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool first = true);
@@ -23,8 +24,13 @@ static const char* returnTypeStrings[] = {
 };
 
 void writeCpp(const DebuggingData& data, const char* cppName) {
-	Array0<byte> bytes;
-	DEBUG_ASSERT(readSegments(data, bytes));
+	Array0<byte> textBytes, dataBytes;
+	DEBUG_ASSERT(readSegments(data, textBytes, dataBytes));
+
+	// output data_section.bin
+	ofstream bin("data_section.bin", ios_base::binary);
+	bin.write((const char*)dataBytes.p(), dataBytes.size());
+	bin.close();
 
 	// gotta do this first; the others rely on it.
 	for(set<Function>::iterator i = functions.begin(); i != functions.end(); ++i) {
@@ -67,7 +73,7 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 		oss << '\n';
 		streamFunctionPrototype(oss, f);
 		oss << " {\n";
-		streamFunctionContents(data, bytes, oss, f, cr, data.textRela);
+		streamFunctionContents(data, textBytes, dataBytes, oss, f, cr, data.textRela);
 		oss << "}\n";
 	}
 
@@ -127,13 +133,13 @@ static void streamCallRegPrototype(ostream& os, const CallInfo& ci) {
 	os << showbase << hex;
 }
 
-bool readSegments(const DebuggingData& data, Array0<byte>& bytes)
+bool readSegments(const DebuggingData& data, Array0<byte>& textBytes, Array0<byte>& dataBytes)
 {
 	//Read Program Table
 	//LOG("%i segments, offset %X:\n", data.e_phnum, data.e_phoff);
 
 	// first, find the size of the data.
-	unsigned size = 0;
+	unsigned datasize = 0, textsize = 0;
 	Stream& file(data.elfFile);
 	const Elf32_Ehdr& ehdr(data.ehdr);
 	for(unsigned i=0; i<ehdr.e_phnum; i++) {
@@ -155,14 +161,21 @@ bool readSegments(const DebuggingData& data, Array0<byte>& bytes)
 				text ? "text" : "data",
 				phdr.p_vaddr, phdr.p_filesz);
 #endif
-			size = MAX(size, phdr.p_vaddr + phdr.p_filesz);
+			unsigned& size(text ? textsize : datasize);
+			// assume all segments are ordered
+			if(phdr.p_vaddr < size) {
+				LOG("segment overlap!\n");
+				DEBIG_PHAT_ERROR;
+			}
+			size = phdr.p_vaddr + phdr.p_filesz;
 		} else {
 			DEBIG_PHAT_ERROR;
 		}
 	}
 
 	// then we can allocate the buffer and read the data.
-	bytes.resize(size);
+	textBytes.resize(textsize);
+	dataBytes.resize(datasize);
 
 	for(unsigned i=0; i<ehdr.e_phnum; i++) {
 		Elf32_Phdr phdr;
@@ -171,8 +184,9 @@ bool readSegments(const DebuggingData& data, Array0<byte>& bytes)
 		if(phdr.p_type == PT_NULL)
 			continue;
 		else if(phdr.p_type == PT_LOAD) {
+			bool text = (phdr.p_flags & PF_X);
 			TEST(file.seek(Seek::Start, phdr.p_offset));
-			void* dst = bytes + phdr.p_vaddr;
+			void* dst = (text ? textBytes : dataBytes) + phdr.p_vaddr;
 			LOG("Reading 0x%x bytes to %p...\n", phdr.p_filesz, dst);
 			TEST(file.read(dst, phdr.p_filesz));
 		} else {
@@ -268,12 +282,14 @@ static void streamRegisterDeclarations(ostream& os, const char* type, unsigned r
 	}
 }
 
-static void streamFunctionContents(const DebuggingData& data, const Array0<byte>& bytes,
+static void streamFunctionContents(const DebuggingData& data,
+	const Array0<byte>& textBytes, const Array0<byte>& dataBytes,
 	ostream& os, const Function& f, CallRegs& cr, const Array0<Elf32_Rela>& textRela)
 {
 	// output instructions
 	ostringstream oss;
-	SIData pid = { oss, cr, data.elfFile, bytes, textRela, data.symbols, data.strtab, data.textRelocMap, {0,0} };
+	SIData pid = { oss, cr, data.elfFile, textBytes, dataBytes,
+		textRela, data.symbols, data.strtab, data.textRelocMap, {0,0} };
 	streamFunctionInstructions(pid, f);
 
 	// declare registers

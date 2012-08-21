@@ -8,13 +8,14 @@ struct CCore {
 	SIData& data;
 	ostream& os;
 	const Function& f;
-	const byte* bytes;
+	const byte* textBytes;
+	const byte* dataBytes;
 };
 
 void streamFunctionInstructions(SIData& data, const Function& f) {
 	//printf("printInstructions(0x%x => 0x%x)\n", f.start, f.end);
 	DEBUG_ASSERT(f.end >= f.start);
-	CCore core = { data, data.stream, f, data.bytes };
+	CCore core = { data, data.stream, f, data.textBytes, data.dataBytes };
 	unsigned ip = f.start;
 	while(ip <= f.end) {
 		ip = core.printInstruction(ip);
@@ -46,7 +47,7 @@ const size_t nIntRegs = ARRAY_SIZE(mapip2_register_names), nFloatRegs = ARRAY_SI
 #include "../../runtimes/cpp/core/core_helpers.h"
 #include "../../runtimes/cpp/core/gen-opcodes.h"
 
-#define IB ((int)(bytes[ip++]))
+#define IB ((int)(textBytes[ip++]))
 
 #define USE_I(r) data.regUsage.i |= (1 << (r))
 #define USE_F(r) data.regUsage.f |= (1 << (r))
@@ -478,9 +479,9 @@ unsigned CCore::printInstruction(unsigned ip) {
 		OPC(JPI)	FETCH_CONST	os << "goto " << label(IMM) << ";";	EOP;
 
 /*
-    The index to dispatch on, which has mode SImode.
+    The index to dispatch on, which has mode `SImode'.
     The lower bound for indices in the table, an integer constant.
-    The total range of indices in the table—the largest index minus the smallest one (both inclusive).
+    The total range of indices in the table--the largest index minus the smallest one (both inclusive).
     A label that precedes the table itself.
     A label to jump to if the index has a value outside the bounds.
 */
@@ -498,7 +499,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			//_flushall();
 			os << "switch(" << RD << ") {\n";
 			for(unsigned i=0; i<=count; i++) {
-				os << "\t\tcase " << (low + i) << ": goto " << label(*((int*)(bytes + tableAddr) + i)) << ";\n";
+				os << "\t\tcase " << (low + i) << ": goto " << label(*((int*)(dataBytes + tableAddr) + i)) << ";\n";
 			}
 			os << "\t\tdefault: goto " << label(defaultLabel) << ";\n";
 			os << "\t}";

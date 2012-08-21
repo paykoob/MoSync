@@ -63,7 +63,7 @@ class Mapip2CppTask < MultiFileTask
 		@elfTask = Mapip2LinkTask.new(work, name, objects, libs, linkflags)
 		@targetDir = File.dirname(name)
 		super(work, name, [@targetDir + '/rebuild.build.cpp',
-			#@targetDir + '/data_section.bin',
+			@targetDir + '/data_section.bin',
 			@targetDir + '/rebuild.build.s',
 		])
 		@prerequisites << @elfTask
@@ -71,8 +71,9 @@ class Mapip2CppTask < MultiFileTask
 	def execute
 		sh "#{mosyncdir}/bin/elfStabSld -cpp #{@elfTask} rebuild.build.cpp"
 		FileUtils.mv('rebuild.build.cpp', @targetDir + '/rebuild.build.cpp')
-		sh "gcc -O2 -S #{@targetDir}/rebuild.build.cpp -I #{mosyncdir}/include-rebuild -o #{@targetDir}/rebuild.build.s"
-		#FileUtils.mv('data_section.bin', @targetDir + '/data_section.bin')
+		sh "gcc -O2 -S #{@targetDir}/rebuild.build.cpp -I #{mosyncdir}/include-rebuild -o #{@targetDir}/rebuild.build.s"+
+			' -fno-exceptions -fno-rtti'
+		FileUtils.mv('data_section.bin', @targetDir + '/data_section.bin')
 	end
 end
 

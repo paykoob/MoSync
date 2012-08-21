@@ -106,7 +106,7 @@ class Mapip2LinkTask < NativeGccLinkTask
 	def initialize(work, name, objects, libs, linkflags)
 		super(work, name, objects, GCC_DRIVER_NAME)
 		#@FLAGS = linkflags
-		@FLAGS = ' -nodefaultlibs -nostartfiles -Wl,--warn-common -Wl,--emit-relocs'
+		@FLAGS = ' -nodefaultlibs -nostartfiles -Wl,--warn-common,--emit-relocs,--no-check-sections'
 		LD_EXTRA_DEPENDENCIES.each do |d|
 			@prerequisites << FileTask.new(self, d)
 		end

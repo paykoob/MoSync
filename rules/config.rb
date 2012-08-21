@@ -13,10 +13,13 @@ default_const(:PRINT_GCC_VERSION_INFO, false)
 default_const(:GCC_DRIVER_NAME, mosyncdir + '/mapip2/xgcc' + EXE_FILE_ENDING)
 # array of strings, filenames.
 default_const(:PIPE_EXTRA_DEPENDENCIES, [
-mosyncdir + '/mapip2/bin/cc1' + EXE_FILE_ENDING,
-mosyncdir + '/libexec/gcc/mapip2/4.6.3/as' + EXE_FILE_ENDING,
+	mosyncdir + '/libexec/gcc/mapip2/4.6.3/cc1' + EXE_FILE_ENDING,
+	mosyncdir + '/libexec/gcc/mapip2/4.6.3/as' + EXE_FILE_ENDING,
 ])
 default_const(:USE_GNU_BINUTILS, true)
-default_const(:LD_EXTRA_DEPENDENCIES, [])
+default_const(:LD_EXTRA_DEPENDENCIES, [
+	mosyncdir + '/libexec/gcc/mapip2/4.6.3/ld' + EXE_FILE_ENDING,
+	mosyncdir + '/libexec/gcc/mapip2/4.6.3/ldscripts/elf32mapip2.x',
+])
 default_const(:EXIT_ON_ERROR, true)
 default_const(:PRINT_WORKING_DIRECTORY, false)
