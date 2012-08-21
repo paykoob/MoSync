@@ -285,11 +285,11 @@ unsigned CCore::printInstruction(unsigned ip) {
 		OPC(LDDR) FETCH_RD_RS WRITE_REG(rd, RS); os << " "; WRITE_REG(rd+1, REG(rs+1)); EOP;
 		OPC(LDDI) FETCH_RD_CONST WRITE_REG(rd, IMM); os << " "; FETCH_CONST; WRITE_REG(rd+1, IMM); EOP;
 
-		OPC(FLOATS) FETCH_RD_RS os << FRD << " = (double)(signed)" << RS << ";"; EOP;
-		OPC(FLOATUNS) FETCH_RD_RS os << FRD << " = (double)(unsigned)" << RS << ";"; EOP;
+		OPC(FLOATS) FETCH_FRD_RS os << FRD << " = (double)(signed)" << RS << ";"; EOP;
+		OPC(FLOATUNS) FETCH_FRD_RS os << FRD << " = (double)(unsigned)" << RS << ";"; EOP;
 
 		OPC(FLOATD)
-			FETCH_RD_RS;
+			FETCH_FRD_RS;
 			os << "{ FREG temp; "
 			"temp.i[0] = " << RS << "; "
 			"temp.i[1] = " << REG(rs+1) << "; "
@@ -297,7 +297,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 		EOP;
 
 		OPC(FLOATUND)
-			FETCH_RD_RS;
+			FETCH_FRD_RS;
 			os << "{ FREG temp; "
 			"temp.i[0] = " << RS << "; "
 			"temp.i[1] = " << REG(rs+1) << "; "
@@ -305,20 +305,20 @@ unsigned CCore::printInstruction(unsigned ip) {
 		EOP;
 
 		OPC(FSTRS)
-			FETCH_RD_RS os << "{ MA_FV fv; ";
+			FETCH_RD_FRS os << "{ MA_FV fv; ";
 			os << "fv.f = (float)" << FRS << "; ";
 			WRITE_REG(rd, "fv.i");
 			os << " }";
 		EOP;
 		OPC(FSTRD)
-			FETCH_RD_RS
+			FETCH_RD_FRS
 			os << "{ FREG temp; temp.d = " << FRS << "; ";
 			WRITE_REG(rd, "temp.i[0]"); os << " ";
 			WRITE_REG(rd+1, "temp.i[1]");
 			os << " }";
 		EOP;
 
-		OPC(FLDRS) FETCH_RD_RS os << "{ MA_FV fv; fv.i = " << RS << "; " << FRD << " = (double)fv.f; }"; EOP;
+		OPC(FLDRS) FETCH_FRD_RS os << "{ MA_FV fv; fv.i = " << RS << "; " << FRD << " = (double)fv.f; }"; EOP;
 		OPC(FLDRD)
 			FETCH_FRD_RS
 			os << "{ FREG temp; "
@@ -328,7 +328,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 
 		OPC(FLDR) FETCH_FRD_FRS os << FRD << " = " << FRS << ";"; EOP;
 
-		OPC(FLDIS) FETCH_RD_CONST os << "{ MA_FV fv; fv.i = " << IMM << "; " << FRD << " = (double)fv.f; }"; EOP;
+		OPC(FLDIS) FETCH_FRD_CONST os << "{ MA_FV fv; fv.i = " << IMM << "; " << FRD << " = (double)fv.f; }"; EOP;
 		OPC(FLDID)
 			FETCH_FRD_CONST;
 			os << "{ FREG temp; "
@@ -369,7 +369,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 		EOP;
 
 		OPC(FLDS)
-			FETCH_RD_RS_CONST
+			FETCH_FRD_RS_CONST
 			os << "{ MA_FV fv; "
 			"fv.i = RINT(" << RS << " + " << IMM << "); "
 			<< FRD << " = (double)fv.f; }";
@@ -426,6 +426,10 @@ unsigned CCore::printInstruction(unsigned ip) {
 				return ip;
 			}
 			const CallInfo& ci(itr->second);
+
+			// ensure that we will get a handler, even if it's empty.
+			gFunctionPointerMap[f.ci];
+
 			streamReturnType(ci.returnType);
 			streamCallRegName(os, ci);
 			os << "(" << RD;

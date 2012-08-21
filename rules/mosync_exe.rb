@@ -66,7 +66,7 @@ class Mapip2CppTask < MultiFileTask
 			@targetDir + '/data_section.bin',
 			@targetDir + '/rebuild.build.s',
 		])
-		@prerequisites << @elfTask
+		@prerequisites << Mapip2SldTask.new(work, @elfTask)
 	end
 	def execute
 		sh "#{mosyncdir}/bin/elfStabSld -cpp #{@elfTask} rebuild.build.cpp"
