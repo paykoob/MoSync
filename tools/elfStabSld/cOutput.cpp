@@ -42,6 +42,7 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 	setCallRegDataRefs(data, cr);
 
 	ofstream file(cppName);
+	gOutputFile = &file;
 
 	file <<
 "//****************************************\n"

@@ -20,6 +20,9 @@ void streamFunctionInstructions(SIData& data, const Function& f) {
 	while(ip <= f.end) {
 		ip = core.printInstruction(ip);
 	}
+	if(ip != f.end + 1) {
+		printf("f.start %x, f.end %x, ip %x\n", f.start, f.end, ip);
+	}
 	DEBUG_ASSERT(ip == f.end + 1);
 }
 

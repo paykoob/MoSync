@@ -8,7 +8,7 @@
 #include "build/stabdefs.h"
 #include <vector>
 #include <set>
-#include <ostream>
+#include <fstream>
 #include <unordered_map>
 #include <map>
 
@@ -120,7 +120,7 @@ extern vector<SLD> slds;
 extern set<Function> functions;
 extern CallMap gCallMap;
 extern FunctionPointerMap gFunctionPointerMap;
-extern FILE* gOutputFile;
+extern ofstream* gOutputFile;
 
 void writeCpp(const DebuggingData& data, const char*);
 void writeCs(const DebuggingData& data, const char*) __attribute__((noreturn));

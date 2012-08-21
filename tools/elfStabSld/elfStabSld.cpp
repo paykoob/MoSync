@@ -14,7 +14,7 @@ vector<SLD> slds;
 set<Function> functions;
 CallMap gCallMap;
 FunctionPointerMap gFunctionPointerMap;
-FILE* gOutputFile = NULL;
+ofstream* gOutputFile = NULL;
 
 #ifdef main
 #undef main
@@ -458,8 +458,8 @@ void MoSyncErrorExit(int code) {
 	printf("MoSyncErrorExit(%i)\n", code);
 	printf("remove(%s)\n", s_outputName);
 	if(gOutputFile)
-		fclose(gOutputFile);
+		gOutputFile->close();
 	gOutputFile = NULL;
-	//remove(s_outputName);
+	remove(s_outputName);
 	exit(code);
 }
