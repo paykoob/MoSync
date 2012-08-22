@@ -147,7 +147,7 @@ bool readSegments(const DebuggingData& data, Array0<byte>& textBytes, Array0<byt
 		Elf32_Phdr phdr;
 		TEST(file.seek(Seek::Start, ehdr.e_phoff + i * sizeof(Elf32_Phdr)));
 		TEST(file.readObject(phdr));
-#if 1
+#if 0
 		LOG("Type: 0x%X, Offset: 0x%X, VAddress: %08X, PAddress: %08X, Filesize: 0x%X",
 			phdr.p_type, phdr.p_offset, phdr.p_vaddr, (phdr.p_paddr), phdr.p_filesz);
 		LOG(", Memsize: 0x%X, Flags: %08X, Align: %i\n",
@@ -301,6 +301,7 @@ static void streamFunctionContents(const DebuggingData& data,
 }
 
 static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool first) {
+	os << dec;
 	if(first)
 		os << '(';
 	for(unsigned j=0; j<ci.intParams; j++) {
@@ -318,13 +319,14 @@ static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool 
 		os << "double f" << (8+j);
 	}
 	os << ')';
+	os << hex;
 }
 
 static void streamFunctionPrototype(ostream& os, const Function& f) {
 	if(strcmp(f.name, "crt0_startup") != 0)
 		os << "static ";
 	os << returnTypeStrings[f.ci.returnType] << " ";
-	streamFunctionName(os, f.name);
+	streamFunctionName(os, f);
 	streamFunctionPrototypeParams(os, f.ci);
 }
 
@@ -332,8 +334,8 @@ static bool isctype(int c) {
 	return isalnum(c) || c == '_';
 }
 
-void streamFunctionName(ostream& os, const char* name) {
-	const char* ptr = name;
+void streamFunctionName(ostream& os, const Function& f, bool syscall) {
+	const char* ptr = f.name;
 	while(*ptr) {
 		if(isctype(*ptr))
 			os << *ptr;
@@ -341,6 +343,8 @@ void streamFunctionName(ostream& os, const char* name) {
 			os << '_';
 		ptr++;
 	}
+	if(!syscall)
+		os << dec << '_' << f.scope << hex;
 }
 
 static void parseFunctionInfo(Function& f) {

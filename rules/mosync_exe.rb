@@ -72,7 +72,12 @@ class Mapip2CppTask < MultiFileTask
 		sh "#{mosyncdir}/bin/elfStabSld -cpp #{@elfTask} rebuild.build.cpp"
 		FileUtils.mv('rebuild.build.cpp', @targetDir + '/rebuild.build.cpp')
 		sh "gcc -O2 -S #{@targetDir}/rebuild.build.cpp -I #{mosyncdir}/include-rebuild -o #{@targetDir}/rebuild.build.s"+
-			' -fno-exceptions -fno-rtti'
+			' -fno-exceptions -fno-rtti'+
+			' -Wall -Wextra -Werror'+
+			' -Wno-unused-label -Wno-unused-but-set-variable -Wno-return-type -Wno-unused-function'+
+			' -Wno-error=uninitialized'+
+			' -Wno-unused-parameter'+
+			''
 		FileUtils.mv('data_section.bin', @targetDir + '/data_section.bin')
 	end
 end

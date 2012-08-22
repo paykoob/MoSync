@@ -149,9 +149,9 @@ struct SIData {
 };
 
 void streamFunctionInstructions(SIData& data, const Function& f);
-void streamFunctionName(ostream& os, const char* name);
+void streamFunctionName(ostream& os, const Function& f, bool syscall = false);
 void streamCallRegName(ostream& os, const CallInfo& ci);
-void streamFunctionCall(ostream& os, const Function& cf);
+void streamFunctionCall(ostream& os, const Function& cf, bool syscall = false);
 
 CallInfo parseCallInfoStab(const char* stab);
 

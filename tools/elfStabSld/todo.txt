@@ -1,0 +1,1 @@
+* Change callReg values from the original symbol values to single-increment ordered integers, to optimize target switch statements.

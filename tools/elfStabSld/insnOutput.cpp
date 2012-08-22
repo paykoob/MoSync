@@ -144,8 +144,8 @@ static void streamParameters(ostream& os, const CallInfo& ci, bool first = true)
 	os << ")";
 }
 
-void streamFunctionCall(ostream& os, const Function& cf) {
-	streamFunctionName(os, cf.name);
+void streamFunctionCall(ostream& os, const Function& cf, bool syscall) {
+	streamFunctionName(os, cf, syscall);
 	os << "(";
 	streamParameters(os, cf.ci);
 }
@@ -361,7 +361,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			FETCH_RD_FRS_CONST
 			os << "{ MA_FV fv; "
 			"fv.f = (float)" << FRS << "; "
-			"WINT(" << RD << " + " << IMM << ", fv.i; }";
+			"WINT(" << RD << " + " << IMM << ", fv.i); }";
 		EOP;
 
 		OPC(FSTD)
@@ -438,7 +438,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			os << "(" << RD;
 			streamParameters(os, ci, false);
 			os << ";";
-			if(ci.returnType == eLong) os << " }";
+			if(ci.returnType == eLong) os << "r0 = temp.i[0]; r1 = temp.i[1]; }";
 		}
 		EOP;
 		OPC(CALLI)
@@ -457,7 +457,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			streamReturnType(cf.ci.returnType);
 			streamFunctionCall(os, cf);
 			os << ";";
-			if(cf.ci.returnType == eLong) os << " }";
+			if(cf.ci.returnType == eLong) os << "r0 = temp.i[0]; r1 = temp.i[1]; }";
 		}
 		EOP;
 
@@ -522,7 +522,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 				os << "return ";
 			}
 			os << "SYSCALL(";
-			streamFunctionCall(os, f);
+			streamFunctionCall(os, f, true);
 			os << ");\n";
 			// skip return instruction
 			DEBUG_ASSERT(IB == OP_RET);

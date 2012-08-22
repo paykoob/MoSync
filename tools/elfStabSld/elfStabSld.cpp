@@ -107,21 +107,12 @@ typedef struct
 
 static bool isFunction(const Elf32_Sym& sym) {
 	// assuming here that section 1 is .text
-	unsigned bind = ELF32_ST_BIND(sym.st_info);
+	/*unsigned bind = ELF32_ST_BIND(sym.st_info);
 	if(ELF32_ST_TYPE(sym.st_info) == STT_FUNC)
-		printf("STT_FUNC: %x\n", sym.st_value);
-	return (ELF32_ST_TYPE(sym.st_info) == STT_FUNC) ||
-		(ELF32_ST_TYPE(sym.st_info) == STT_NOTYPE && sym.st_shndx == 1 &&
-		(bind == STB_GLOBAL || bind == STB_WEAK));
-}
-
-static void insertFunction(const Function& f) {
-	//printf("insertFunction %s 0x%x\n", f.name, f.start);
-	pair<set<Function>::iterator, bool> res = functions.insert(f);
-	if(!res.second) {	// duplicate
-		printf("Duplicate address 0x%x. Names: %s, %s\n", f.start, res.first->name, f.name);
-		//MoSyncErrorExit(1);
-	}
+		printf("STT_FUNC: %x\n", sym.st_value);*/
+	return (ELF32_ST_TYPE(sym.st_info) == STT_FUNC);// ||
+		/*(ELF32_ST_TYPE(sym.st_info) == STT_NOTYPE && sym.st_shndx == 1 &&
+		(bind == STB_GLOBAL || bind == STB_WEAK));*/
 }
 
 static void parseSymbols(const DebuggingData& data) {
@@ -136,24 +127,42 @@ static void parseSymbols(const DebuggingData& data) {
 			Function f;
 			f.name = name;
 			f.start = start;
+			f.end = start + sym.st_size - 1;
 			f.info = NULL;
-			insertFunction(f);
+			pair<set<Function>::iterator, bool> res = functions.insert(f);
+			if(!res.second) {	// duplicate
+				//printf("Duplicate address 0x%x. Names: %s, %s\n", f.start, res.first->name, f.name);
+				if(ELF32_ST_BIND(sym.st_info) != STB_WEAK) {
+					//printf("New name is not weak. Replacing with %s\n", f.name);
+					((Function&)*res.first).name = f.name;
+				}
+			}
+			DEBUG_ASSERT(sym.st_size > 0);
+			//printf("sym: %02x %02x %i %x %x %s\n", sym.st_info, sym.st_other, sym.st_shndx, sym.st_value, sym.st_size, name);
 		} else {
 			//const char* name = data.strtab + sym.st_name;
 			//printf("sym: %02x %02x %i %x %x %s\n", sym.st_info, sym.st_other, sym.st_shndx, sym.st_value, sym.st_size, name);
 		}
 	}
+#if 0
 	// the symbol table is not sorted, so we have to calculate the length after populating the set.
 	set<Function>::iterator itr = functions.begin();
 	Function* f = &(Function&)*itr;
 	++itr;
 	for(; itr != functions.end(); ++itr) {
 		// assume the previous function ends just before this one starts.
-		f->end = itr->start - 1;
+		unsigned end = itr->start - 1;
+		if(end != f->end)
+			printf("Warning: unused space between %s and %s: %x < %x\n",
+				f->name, itr->name, f->end, end);
 		f = &(Function&)*itr;
 	}
 	// the last function can be assumed to end at the end of the text segment.
-	f->end = data.textSectionEndAddress - 1;
+	unsigned end = data.textSectionEndAddress - 1;
+	if(end != f->end)
+		printf("Warning: unused space between %s and textSectionEndAddress: %x < %x\n",
+			f->name, f->end, end);
+#endif
 }
 
 static void parseStabs(const DebuggingData& data, bool cOutput) {
@@ -215,7 +224,7 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 				//DEBUG_ASSERT(s.n_desc < 128);
 				const char* name = stabstr + s.n_strx;
 				unsigned address = s.n_value;
-				printf("%s 0x%02x 0x%x\n", name, s.n_desc, address);
+				//printf("%s 0x%02x 0x%x\n", name, s.n_desc, address);
 
 #if HAVE_EMPTY_NFUN
 				if(*name) {
@@ -234,17 +243,19 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 					// We must find out which one is real.
 					set<Function>::iterator res = functions.find(f);
 					if(res == functions.end()) {
-						printf("Warning: function without symbol!\n");
+						printf("Warning: function without symbol: (%s %i %x %x)\n",
+							f.name, f.scope, f.start, f.end);
 					} else {
 						// de-const'd. we must be careful and not modify the key value of the Function.
 						Function& o((Function&)*res);
 						if(o.end != f.end) {
-							printf("Warning: duplicate variant function: (%s %i %x %x) (%s %i %x %x)\n",
+							printf("Warning: %s variant function: (%s %i %x %x) (%s %i %x %x)\n",
+								(o.info ? "duplicate " : ""),
 								o.name, o.scope, o.start, o.end,
 								f.name, f.scope, f.start, f.end);
 						} else {
 							if(o.info) {
-								printf("Notice: duplicate identical function @ %x: %s %s\n", f.start, o.name, f.name);
+								//printf("Notice: duplicate identical function @ %x: %s %s\n", f.start, o.name, f.name);
 								DEBUG_ASSERT(o.info == f.info);
 							}
 							o.info = f.info;
@@ -474,7 +485,7 @@ DEBIG_PHAT_ERROR; }
 				DEBIG_PHAT_ERROR;
 			}
 			const char* name = (shdr.sh_name == 0) ? "" : (&strings[shdr.sh_name]);
-#if 1
+#if 0
 			LOG("Name: %s(%i), Type: 0x%X, Flags: %08X, Address: %08X, Offset: 0x%X",
 				name, shdr.sh_name,
 				(shdr.sh_type), (shdr.sh_flags),

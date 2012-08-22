@@ -831,9 +831,11 @@ static void outputSyscallMapip2Asm(const Interface& maapi) {
 			".stabs \"_"<<f.name<<"\",36,0,0,_"<<f.name<<"\n"	// N_FUN, start
 			".stabs \""<<stabReturnType(f)<<","<<ni<<","<<nf<<"\",250,0,0,0\n"	// N_MOSYNC
 			".global _"<<f.name<<"\n"
+			".type _"<<f.name<<", @function\n"
 			"_"<<f.name<<":\n"
 			"\tsyscall "<<f.number<<"\n"
 			"\tret\n"
+			".size _"<<f.name<<", .-_"<<f.name<<"\n"
 			"Lscope"<<f.number<<":\n"
 			".stabs \"\",36,0,0,Lscope"<<f.number<<"-_"<<f.name<<"\n"	// N_FUN, end (empty string)
 		;

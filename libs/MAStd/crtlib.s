@@ -30,6 +30,7 @@ ___CTOR_LIST__:
 
 	.text
 	.global crt0_startup
+	.type crt0_startup, @function
 
 .stabs "crt0_startup",36,0,0,crt0_startup
 .stabs "void,4,0",250,0,0,0
@@ -69,6 +70,7 @@ crt_exit:
 	ld	p0, [sp,0]	// restore return value
 	call &_maExit
 
+.size crt0_startup, .-crt0_startup
 Lscope1:
 .stabs "",36,0,0,Lscope1-crt0_startup
 
