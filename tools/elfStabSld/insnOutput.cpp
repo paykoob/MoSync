@@ -431,7 +431,18 @@ unsigned CCore::printInstruction(unsigned ip) {
 			const CallInfo& ci(itr->second);
 
 			// ensure that we will get a handler, even if it's empty.
-			gFunctionPointerMap[f.ci];
+			if(gFunctionPointerMap[ci].size() == 0)// ||
+				//(ci.returnType == eVoid && ci.intParams == 4 && ci.floatParams == 2))
+			{
+				const char* type = NULL;
+				switch(ci.returnType) {
+				case eVoid: type = "V"; break;
+				case eInt: type = "I"; break;
+				case eFloat: type = "F"; break;
+				case eLong: type = "L"; break;
+				}
+				printf("empty callReg%s%i%i\n", type, ci.intParams, ci.floatParams);
+			}
 
 			streamReturnType(ci.returnType);
 			streamCallRegName(os, ci);
