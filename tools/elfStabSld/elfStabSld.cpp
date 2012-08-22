@@ -108,13 +108,15 @@ typedef struct
 static bool isFunction(const Elf32_Sym& sym) {
 	// assuming here that section 1 is .text
 	unsigned bind = ELF32_ST_BIND(sym.st_info);
+	if(ELF32_ST_TYPE(sym.st_info) == STT_FUNC)
+		printf("STT_FUNC: %x\n", sym.st_value);
 	return (ELF32_ST_TYPE(sym.st_info) == STT_FUNC) ||
 		(ELF32_ST_TYPE(sym.st_info) == STT_NOTYPE && sym.st_shndx == 1 &&
 		(bind == STB_GLOBAL || bind == STB_WEAK));
 }
 
 static void insertFunction(const Function& f) {
-	printf("insertFunction %s 0x%x\n", f.name, f.start);
+	//printf("insertFunction %s 0x%x\n", f.name, f.start);
 	pair<set<Function>::iterator, bool> res = functions.insert(f);
 	if(!res.second) {	// duplicate
 		printf("Duplicate address 0x%x. Names: %s, %s\n", f.start, res.first->name, f.name);
@@ -125,32 +127,33 @@ static void insertFunction(const Function& f) {
 static void parseSymbols(const DebuggingData& data) {
 	// get functions' name, address and length from symbol table;
 	// it should be more reliable than the stabs.
-	Function f;
-	f.name = NULL;
-	f.info = NULL;
 	for(size_t i=0; i<data.symbols.size(); i++) {
 		const Elf32_Sym& sym(data.symbols[i]);
 		if(isFunction(sym)) {
 			const char* name = data.strtab + sym.st_name;
 			unsigned start = sym.st_value;
-			// if there was a function before this one, assume it ends just before this one starts.
-			if(f.name) {
-				f.end = start - 1;
-				insertFunction(f);
-			}
 			// store the info of this function.
+			Function f;
 			f.name = name;
 			f.start = start;
+			f.info = NULL;
+			insertFunction(f);
 		} else {
 			//const char* name = data.strtab + sym.st_name;
 			//printf("sym: %02x %02x %i %x %x %s\n", sym.st_info, sym.st_other, sym.st_shndx, sym.st_value, sym.st_size, name);
 		}
 	}
-	// the last function can be assumed to end at the end of the text segment.
-	if(f.name) {
-		f.end = data.textSectionEndAddress - 1;
-		insertFunction(f);
+	// the symbol table is not sorted, so we have to calculate the length after populating the set.
+	set<Function>::iterator itr = functions.begin();
+	Function* f = &(Function&)*itr;
+	++itr;
+	for(; itr != functions.end(); ++itr) {
+		// assume the previous function ends just before this one starts.
+		f->end = itr->start - 1;
+		f = &(Function&)*itr;
 	}
+	// the last function can be assumed to end at the end of the text segment.
+	f->end = data.textSectionEndAddress - 1;
 }
 
 static void parseStabs(const DebuggingData& data, bool cOutput) {
@@ -230,20 +233,23 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 					// Only one of these functions are real; the others have been removed by the linker.
 					// We must find out which one is real.
 					set<Function>::iterator res = functions.find(f);
-					DEBUG_ASSERT(res != functions.end());
-					// de-const'd. we must be careful and not modify the key value of the Function.
-					Function& o((Function&)*res);
-					if(o.end != f.end) {
-						printf("Warning: duplicate variant function: (%s %i %x %x) (%s %i %x %x)\n",
-							o.name, o.scope, o.start, o.end,
-							f.name, f.scope, f.start, f.end);
+					if(res == functions.end()) {
+						printf("Warning: function without symbol!\n");
 					} else {
-						if(o.info) {
-							printf("Notice: duplicate identical function @ %x: %s %s\n", f.start, o.name, f.name);
-							DEBUG_ASSERT(o.info == f.info);
+						// de-const'd. we must be careful and not modify the key value of the Function.
+						Function& o((Function&)*res);
+						if(o.end != f.end) {
+							printf("Warning: duplicate variant function: (%s %i %x %x) (%s %i %x %x)\n",
+								o.name, o.scope, o.start, o.end,
+								f.name, f.scope, f.start, f.end);
+						} else {
+							if(o.info) {
+								printf("Notice: duplicate identical function @ %x: %s %s\n", f.start, o.name, f.name);
+								DEBUG_ASSERT(o.info == f.info);
+							}
+							o.info = f.info;
+							o.scope = f.scope;
 						}
-						o.info = f.info;
-						o.scope = f.scope;
 					}
 					f.name = NULL;
 				}
