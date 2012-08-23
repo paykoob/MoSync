@@ -174,26 +174,31 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 	f.info = "";
 	f.scope = fileNum;
 	f.start = 0;
-	for(size_t i=0; i<data.stabs.size(); i++) {
+	for(size_t i=0; i<data.stabs.size(); ) {
 		// file-header stab
 		size_t stabEnd;
 		size_t strTabFragSize;
 		//if(s.n_type == N_UNDF)
+		const char* stabstr = data.stabstr + strOffset;
 		{
 			const Stab& s(data.stabs[i]);
+			printf("0x%" PRIxPTR ": strx: 0x%08x (%s) type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+				i, s.n_strx, stabstr + s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
 			DEBUG_ASSERT(s.n_type == N_UNDF);
-			//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
-				//i, s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
 			DEBUG_ASSERT(s.n_other == 0);
 			//strOffset += s.n_strx;
 			stabEnd = i + s.n_desc;
 			strTabFragSize = s.n_value;
 			DEBUG_ASSERT(stabEnd <= data.stabs.size());
 			DEBUG_ASSERT(strOffset + strTabFragSize <= data.stabstr.size());
+			i++;
 		}
-		const char* stabstr = data.stabstr + strOffset;
-		for(; i<stabEnd; i++) {
+		for(; i<data.stabs.size(); i++) {
 			const Stab& s(data.stabs[i]);
+			if(s.n_type == N_UNDF)
+				break;
+			//printf("0x%" PRIxPTR ": strx: 0x%08x (%s) type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+				//i, s.n_strx, stabstr + s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
 			// source file
 			if(s.n_type == N_SO) {
 				//printf("0x%" PRIxPTR ": strx: 0x%08x type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
