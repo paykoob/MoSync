@@ -132,6 +132,7 @@ class Work < TaskBase
 			end
 			args << ' RELOAD=' if(RELOAD)
 			args << " PACK=#{PACK}" if(defined?(PACK))
+			args << " MODE=#{MODE}" if(defined?(MODE))
 			cmd = "workfile.rb #{args} CONFIG=\"#{CONFIG}\""
 			if(HOST == :win32)
 				sh "ruby #{cmd}"

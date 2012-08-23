@@ -198,6 +198,11 @@ module MoSyncExeModule
 		return (defined?(PACK) && @PACK_MODEL.beginsWith('Apple/'))
 	end
 	def pipeTaskClass
+		if(defined?(MODE))
+			raise hell if(defined?(PACK))
+			raise hell if(MODE != 'cpp')
+			return Mapip2CppTask
+		end
 		return (isPackingForIOS ? Mapip2CppTask : super)
 	end
 	def libTask(lib)
