@@ -23,7 +23,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "helpers/cpp_defs.h"
 #include "helpers/helpers.h"
 #include "net_errors.h"
+#ifdef __GNUC__
 #include <unistd.h>
+#endif
 
 using namespace MoSyncError;
 

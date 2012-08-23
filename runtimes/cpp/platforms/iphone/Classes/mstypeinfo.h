@@ -22,7 +22,11 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define memcpy __memcpy
 #define strcpy __strcpy
 #define strcmp __strcmp
+#ifdef __GNUC__
 #define SYSCALL(type, nargs) type nargs __attribute__((visibility("default")))
+#else
+#define SYSCALL(type, nargs) type nargs
+#endif
 #define __IPHONE__
 #include <helpers/cpp_defs.h>
 #include <helpers/cpp_maapi.h>

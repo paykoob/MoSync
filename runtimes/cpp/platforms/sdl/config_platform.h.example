@@ -12,6 +12,7 @@
 
 #define LOGGING_ENABLED
 
+#ifndef _USE_REBUILDER_
 #define UPDATE_IP
 
 #define FAKE_CALL_STACK
@@ -19,12 +20,11 @@
 #define INSTRUCTION_PROFILING
 #define FUNCTION_PROFILING
 
-#define RESOURCE_MEMORY_LIMIT
+#define GDB_DEBUG
+#endif	//_USE_REBUILDER_
 
 #define SUPPORT_OPENGL_ES
 #define MA_PROF_SUPPORT_WIDGETAPI
-
-#define GDB_DEBUG
 
 //#define DEBUGGING_MODE
 

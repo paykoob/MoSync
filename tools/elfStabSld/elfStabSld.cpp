@@ -466,7 +466,8 @@ DEBIG_PHAT_ERROR; }
 	}
 
 	// entry point
-	//LOG("Entry point: 0x%x\n", ehdr.e_entry);
+	LOG("entry point: 0x%x\n", ehdr.e_entry);
+	data.entryPoint = ehdr.e_entry;
 
 	{ //Read Section Table
 		// this is the ELF string table.

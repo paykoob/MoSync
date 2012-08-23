@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\intlibs\helpers\intutil.cpp" />
+    <ClCompile Include="rebuilt.cpp" />
+    <ClCompile Include="rebuild.build.cpp" />
+    <ClCompile Include="..\mosynclib\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\intlibs\helpers\intutil.h" />
+    <ClInclude Include="rebuilt.h" />
+    <ClInclude Include="..\..\iphone\Classes\mstypeinfo.h" />
+    <ClInclude Include="..\..\iphone\Classes\syscall_static_cpp.h" />
+    <ClInclude Include="..\..\iphone\Classes\converters.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\sdl.rc" />
+  </ItemGroup>
+</Project>

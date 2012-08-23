@@ -1135,6 +1135,8 @@ static void outputSyscallStaticCpp(const Interface& maapi) {
 #endif
 			if(isPointerType(maapi, a.type )) {
 				staticCppInvokeStream << "convertPointerArg<"<<ctype<<">("<<a.name<<")";
+			} else if(sjType == "double") {
+				staticCppInvokeStream << a.name;
 			} else {
 				staticCppInvokeStream << "convertSingleArg<"<<ctype<<">("<<a.name<<")";
 			}

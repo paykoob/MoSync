@@ -14,6 +14,7 @@ static void setCallRegDataRefs(const DebuggingData& data, CallRegs& cr);
 static void parseStabParams(const char* comma, unsigned& intParams, unsigned& floatParams);
 static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool first = true);
 static void streamCallRegPrototype(ostream& os, const CallInfo& ci);
+static const Function& getFunction(unsigned address);
 
 // warning: must match enum ReturnType!
 static const char* returnTypeStrings[] = {
@@ -104,12 +105,7 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 			file << "\tcase " << *jtr << ": ";
 			if(ci.returnType != eVoid)
 				file << "return ";
-			Function dummy;
-			dummy.start = *jtr;
-			set<Function>::const_iterator ftr = functions.find(dummy);
-			DEBUG_ASSERT(ftr != functions.end());
-			const Function& cf(*ftr);
-			streamFunctionCall(file, cf);
+			streamFunctionCall(file, getFunction(*jtr));
 			if(ci.returnType == eVoid)
 				file << "; return";
 			file << ";\n";
@@ -118,11 +114,31 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 		"\t}\n"
 		"}\n";
 	}
+
+	// entry point
+	file << "\n"
+	"void entryPoint() {\n"
+	"\tint p0 = 64*1024*1024;\n"
+	"\tint p1 = 1024*1024;\n"
+	"\tint p2 = 32*(1024*1024);\n"
+	"\tint p3 = 0;\n"
+	"\t";
+	streamFunctionName(file, getFunction(data.entryPoint));
+	file << "(p0, p1, p2, p3);\n"
+	"}\n";
 }
 
 void writeCs(const DebuggingData& data, const char* csName) {
 	printf("Not implemented!\n");
 	DEBIG_PHAT_ERROR;
+}
+
+static const Function& getFunction(unsigned address) {
+	Function dummy;
+	dummy.start = address;
+	set<Function>::const_iterator itr = functions.find(dummy);
+	DEBUG_ASSERT(itr != functions.end());
+	return *itr;
 }
 
 static void streamCallRegPrototype(ostream& os, const CallInfo& ci) {
@@ -323,8 +339,6 @@ static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool 
 }
 
 static void streamFunctionPrototype(ostream& os, const Function& f) {
-	if(strcmp(f.name, "crt0_startup") != 0)
-		os << "static ";
 	os << returnTypeStrings[f.ci.returnType] << " ";
 	streamFunctionName(os, f);
 	streamFunctionPrototypeParams(os, f.ci);

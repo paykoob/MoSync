@@ -98,9 +98,9 @@ struct DebuggingData {
 	Stream& elfFile;
 	Elf32_Ehdr ehdr;
 	Array0<Stab> stabs;
-	// this is the .stabstr section
 	Array0<char> stabstr;
 	bfd_vma textSectionEndAddress;
+	bfd_vma entryPoint;
 	// these are valid only in cOutput mode.
 	Array0<Elf32_Rela> textRela, rodataRela, dataRela;
 	Array0<Elf32_Sym> symbols;

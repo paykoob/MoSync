@@ -57,7 +57,7 @@ extern "C" {
 #   endif
 #endif
 
-#   ifdef __GL_EXPORTS
+#   if defined(__GL_EXPORTS) && __GNUC__
 #       define GL_APIENTRY __attribute__ ((visibility ("default")))
 #   else
 #       define GL_APIENTRY

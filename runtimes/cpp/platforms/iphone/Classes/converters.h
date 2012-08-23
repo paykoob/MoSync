@@ -30,13 +30,6 @@ inline T convertSingleArg(int arg) {
 	return (T)arg;
 }
 
-template <>
-inline float convertSingleArg<float>(int arg) {
-	MA_FV fv;
-	fv.i = arg;
-	return fv.f;
-}
-
 inline double convertDoubleArg(int arg1, int arg2) {
 	MA_DV dv;
 	dv.hi = arg1;

@@ -32,6 +32,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "Skinning/SkinManager.h"
 #include "Skinning/GenericSkin.h"
 
+#ifdef _USE_REBUILDER_
+#include "rebuilt.h"
+#endif
+
 #ifdef _MSC_VER
 extern "C" int MAMain();
 int main(int argc, char** argv) {
@@ -118,9 +122,15 @@ extern "C" int mosyncLibMain(int argc, char** argv, mainfunc MAMain) {
 	Base::FileStream file(resourceFile);
 	TEST(syscall->loadResources(file, resourceFile));
 
+#ifdef _USE_REBUILDER_
+	runRebuiltCode();
+	// should be unreachable.
+	DEBIG_PHAT_ERROR;
+#else
 	int i = MAMain();
 	LOG("MAMain() returned %i\n", i);
 	MoSyncExit(i);
+#endif
 }
 
 void* Base::Syscall::GetValidatedMemRange(int address, int size) {
