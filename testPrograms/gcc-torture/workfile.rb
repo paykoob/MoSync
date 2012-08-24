@@ -53,10 +53,8 @@ end
 
 # allowed modes: run, compile, dejaGnu (parse the source file to find compile or run).
 SETTINGS[:source_paths] =
-	dgSub('gcc.dg', :compile)+
-	#dgSub('g++.dg', :run)+
-	#dgSub('g++.old-deja', :run)+
 [
+	sp('', BASE + 'gcc.c-torture/execute'),
 	#dg('c-c++-common/dfp'),	# decimal floating point is not supported.
 	dg('c-c++-common/torture', :run),
 	dg('c-c++-common', :run),
@@ -64,8 +62,10 @@ SETTINGS[:source_paths] =
 	sp('unsorted/', BASE + 'gcc.c-torture/unsorted', :compile),
 	sp('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
 	sp('compat/', BASE + 'gcc.c-torture/compat'),
-	sp('', BASE + 'gcc.c-torture/execute'),
 ]+
+	dgSub('gcc.dg', :compile)+
+	#dgSub('g++.dg', :run)+
+	#dgSub('g++.old-deja', :run)+
 []
 
 NEEDS_HEAP = [
@@ -471,7 +471,7 @@ files.each do |f|
 	sldFile = ofn.ext('.sld' + suffix)
 	force_rebuild = SETTINGS[:rebuild_failed] && File.exists?(failFile)
 
-	next if(SETTINGS[:retry_failed] && File.exists?(failFile))
+	next if(!SETTINGS[:retry_failed] && File.exists?(failFile))
 
 	if(SETTINGS[:strict_prerequisites])
 		if(!work)
