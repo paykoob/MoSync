@@ -36,13 +36,17 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "rebuilt.h"
 #endif
 
+#ifdef _USE_REBUILDER_
+int main(int argc, const char** argv) {
+#else
 #ifdef _MSC_VER
 extern "C" int MAMain();
 int main(int argc, char** argv) {
 #else
 #include "mosynclibmain.h"
 extern "C" int mosyncLibMain(int argc, char** argv, mainfunc MAMain) {
-#endif
+#endif	//_MSC_VER
+#endif	//_USE_REBUILDER_
 
 #ifdef _MSC_VER
 	_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_CHECK_ALWAYS_DF);
