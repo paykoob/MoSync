@@ -37,6 +37,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #endif
 
 #ifdef _USE_REBUILDER_
+#undef main
 int main(int argc, const char** argv) {
 #else
 #ifdef _MSC_VER
@@ -114,7 +115,7 @@ extern "C" int mosyncLibMain(int argc, char** argv, mainfunc MAMain) {
 	}
 
 #ifdef __USE_FULLSCREEN__
-        settings.haveSkin = false;
+  settings.haveSkin = false;
 #endif
 
 	Base::Syscall *syscall;
@@ -137,6 +138,7 @@ extern "C" int mosyncLibMain(int argc, char** argv, mainfunc MAMain) {
 #endif
 }
 
+#ifndef _USE_REBUILDER_
 void* Base::Syscall::GetValidatedMemRange(int address, int size) {
 	return (void*)(size_t)address;
 }
@@ -158,6 +160,7 @@ const char* Base::Syscall::GetValidatedStr(int address) {
 const wchar* Base::Syscall::GetValidatedWStr(int address) {
 	return (const wchar*)(size_t)address;
 }
+#endif	//_USE_REBUILDER_
 
 void Base::Syscall::VM_Yield() {
 }

@@ -767,10 +767,10 @@ public:
 #endif
 
 		// hard-coded size for now
-		// ARM has only one memory segment; data and code are one.
-		CODE_SEGMENT_SIZE = DATA_SEGMENT_SIZE = 64*1024*1024;
-		mem_cs = (byte*)(mem_ds = new int[DATA_SEGMENT_SIZE / sizeof(int)]);
+		DATA_SEGMENT_SIZE = 64*1024*1024;
+		mem_ds = new int[DATA_SEGMENT_SIZE / sizeof(int)];
 		DEBUG_ASSERT(mem_ds != NULL);
+		memset(mem_ds, 0, DATA_SEGMENT_SIZE);	// bss. todo: zero only the bss section.
 
 		int maxCustomEventSize = getMaxCustomEventSize();
 		customEventPointer = ((char*)mem_ds) + (DATA_SEGMENT_SIZE - maxCustomEventSize);
@@ -794,13 +794,6 @@ public:
 
 		// some programs have no ctor section.
 		regs[REG_p3] = 0;
-
-#ifdef INSTRUCTION_PROFILING
-			SAFE_DELETE(instruction_count);
-			instruction_count = new int[CODE_SEGMENT_SIZE];
-			if(!instruction_count) BIG_PHAT_ERROR(ERR_OOM);
-			ZEROMEM(instruction_count, sizeof(int)*CODE_SEGMENT_SIZE);
-#endif
 
 #ifdef MEMORY_PROTECTION
 		protectionSet = new byte[(DATA_SEGMENT_SIZE+7)>>3];
@@ -937,9 +930,20 @@ public:
 						ArenaLo = phdr.p_vaddr + phdr.p_filesz;
 #endif
 					TEST(file.seek(Seek::Start, phdr.p_offset));
-					void* dst = mem_ds;
-					if(phdr.p_vaddr != 0)
-						dst = this->GetValidatedMemRange(phdr.p_vaddr, phdr.p_filesz);
+					void* dst;
+					if(text) {
+						DEBUG_ASSERT(!mem_cs);
+						CODE_SEGMENT_SIZE = nextPowerOf2(2, phdr.p_filesz);
+						DUMPHEX(CODE_SEGMENT_SIZE);
+						mem_cs = new byte[CODE_SEGMENT_SIZE];
+						if(!mem_cs) BIG_PHAT_ERROR(ERR_OOM);
+						dst = mem_cs + phdr.p_vaddr;
+					} else {
+						if(phdr.p_vaddr == 0)
+							dst = mem_ds;
+						else
+							dst = this->GetValidatedMemRange(phdr.p_vaddr, phdr.p_filesz);
+					}
 					LOG("Reading 0x%x bytes to %p...\n", phdr.p_filesz, dst);
 					TEST(file.read(dst, phdr.p_filesz));
 					if(!text) {
@@ -952,6 +956,15 @@ public:
 
 			}	//if
 		}	//for
+
+		DEBUG_ASSERT(mem_cs);
+
+#ifdef INSTRUCTION_PROFILING
+		SAFE_DELETE(instruction_count);
+		instruction_count = new int[CODE_SEGMENT_SIZE];
+		if(!instruction_count) BIG_PHAT_ERROR(ERR_OOM);
+		ZEROMEM(instruction_count, sizeof(int)*CODE_SEGMENT_SIZE);
+#endif
 
 		rIP = mem_cs + IP;
 		return 1;

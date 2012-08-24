@@ -522,7 +522,7 @@ namespace Base {
 				}
 				break;
 		default:
-			LOG("Cannot load resource type %d.", type);
+			LOG("Cannot load resource type %d.\n", type);
 		}
 		return true;
 	}
