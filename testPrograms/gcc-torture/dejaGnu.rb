@@ -22,6 +22,7 @@ EFFECTIVE_TARGETS = [
 	'freorder',
 	'hard_float',
 	'int32plus',
+	'large_double',
 	'lto',
 	'mempcpy',
 	'nonpic',
@@ -99,6 +100,7 @@ UNACCEPTABLE_TARGETS = [
 	'lp64',
 	'pcc_bitfield_type_matters',
 	'powerpc_hard_double',
+	'short_enums',
 	'vmx_hw',
 	#'No Inf support',
 	#'No NaN support',
@@ -109,6 +111,10 @@ UNACCEPTABLE_TARGETS = [
 	#'SPU float rounds towards zero',
 	'-m*nofpu*',
 	'-m4al*',
+	/-mcpu=m32/,
+	'-mflip-mips16',
+	'-mlp64',
+	/-aix/,
 	/-cygwin/,
 	/-darwin/,
 	/-interix/,
@@ -136,6 +142,7 @@ UNACCEPTABLE_TARGETS = [
 	/mmix.*-/,
 	/moxie-/,
 	/-msx/,
+	/-m2a/,
 	/pdp11-/,
 	/powerpc.*-/,
 	'powerpc_altivec_ok',
@@ -143,6 +150,7 @@ UNACCEPTABLE_TARGETS = [
 	/rx-/,
 	/s390.*-/,
 	/sh-/,
+	/sh2a\*-/,
 	/sh\*-/,
 	/sh4.*-/,
 	/sh\[.*-/,
@@ -178,15 +186,18 @@ def parseDejaGnu
 			if(!start)
 				start = line.index('/*')
 				if(start)
-					multilineComment = !line.include?('*/')
+					multilineComment = line if(!line.include?('*/'))
 					#puts "mlc start #{@lineNum}" if(multilineComment)
 				end
 			end
 			next if(!start && !multilineComment)
 			if(multilineComment)
 				if(line.include?('*/'))
+					line = multilineComment
 					multilineComment = false
 					#puts "mlc stop #{@lineNum}"
+				else
+					multilineComment << line
 				end
 				start = 0
 			end
@@ -209,11 +220,11 @@ def parseDejaGnu
 			@pos = start
 			a = tokenize()
 
+			#p a
 			# pr43002.c
 			next if(!a[0].start_with?('dg-'))
 
 			# parse the results.
-			#p a
 			case(a[0])
 			when 'dg-do',
 				'dg-lto-do'
@@ -274,9 +285,10 @@ def parseDejaGnu
 					if(aa.is_an?(Array) && aa.size == 1)
 						aa = aa[0]
 					end
-					op = aa.join(' ')
+					op = aa
+					op = aa.join(' ') if(aa.is_an?(Array))
 				end
-				raise "Invalid option #{op.inspect}" if(!op.is_a?(String))
+				raise "Invalid option #{op.inspect} #{op.class.name}" if(!op.is_a?(String))
 				# if we don't have a target, set both flags.
 				# if target is c, set c flags.
 				# if target is c++, set c++ flags.
@@ -353,6 +365,7 @@ def parseDejaGnu
 				'dg-require-linker-plugin',
 				'dg-require-compat-dfp',
 				'dg-error'
+				#puts "Error detected"
 				@mode = :skip
 				return
 			when 'dg-bogus',

@@ -32,28 +32,69 @@ SKIPPED = [
 '20101011-1.c',	# integer division by zero
 'align-3.c',	# illegal alignment
 'pr47237.c',	# __builtin_apply() not supported yet.
+'20030501-1.c', #no.trampolines
+'20040302-1.c',	# indirect jump
+'20040520-1.c', #no.trampolines
+'20041214-1.c',	# nested function
+'20061220-1.c',	# nested function
+'20071210-1.c',	# indirect jump
+'20071220-1.c',	# indirect jump
+'20090219-1.c', # nested function
+'920302-1.c', # indirect jump
+'920415-1.c', # indirect jump
+'921017-1.c',#nf
+'980526-1.c',#ij
+'built-in-setjmp.c',#ij
+'nest-align-1.c',#nf
+'nestfunc-7.c',#nf
+'pr22061-3.c',#nf
+'pr22061-4.c',#nf
+'compile/20010903-2.c',	# trampolines
 'compile/20010226-1.c',	# trampolines
+'compile/20011029-1.c',	# setjmp
+'compile/20031011-1.c',	# trampolines
+'compile/20040310-1.c',	# trampolines
+'compile/20040317-3.c',	# trampolines
 'compile/20040323-1.c',	# alias
+'compile/20050119-1.c',	# trampolines
 'compile/20050122-1.c',	# trampolines
 'compile/20050122-2.c',	# trampolines
+'compile/20050510-1.c',	# trampolines
+'compile/920502-1.c',	#ij
 'compile/920520-1.c',	# broken inline assembly
 'compile/920521-1.c',	# broken inline assembly
+'compile/920826-1.c',#ij
+'compile/920831-1.c',#ij
 'compile/930506-2.c',	# trampolines
 'compile/930623-1.c',	# __builtin_apply
+'compile/991213-3.c',#ij
 'compile/calls.c',	# broken calls to immediate non-function addresses
+'compile/complex-6.c',#setjmp
 'compile/dll.c',	# DLL
+'compile/labels-3.c',#ij
 'compile/mipscop-1.c',	# MIPS
 'compile/mipscop-2.c',	# MIPS
 'compile/mipscop-3.c',	# MIPS
 'compile/mipscop-4.c',	# MIPS
 'compile/nested-1.c',	# trampolines
 'compile/nested-2.c',	# trampolines
+'compile/pr17913.c',#ij
+'compile/pr21356.c',#ij
+'compile/pr21728.c',#ij
 'compile/pr23237.c',	# section attributes are not supported for this target
+'compile/pr25224.c',#ij
+'compile/pr27863.c',#ij
 'compile/pr27889.c',	# trampolines
+'compile/pr28489.c',#ij
+'compile/pr29128.c',#ij
 'compile/pr30311.c',	# x86
+'compile/pr30984.c',#ij
+'compile/pr32919.c',#ij
+'compile/pr35006.c',#nf
 'compile/pr38789.c',	# broken inline assembly
 'compile/pr42956.c',	# weird. not valid C, as far as I can tell.
 'compile/pr44197.c',	# alias
+'compile/pr46107.c',#ij
 'unsorted/dump-noaddr.c',	# .x file, too complicated.
 #'c-c++-common/asmgoto-2.c',	# fails on purpose
 #'c-c++-common/builtin-offsetof.c',	# fails on purpose
@@ -68,6 +109,7 @@ SKIPPED = [
 'c-c++-common/torture/complex-sign-mul-minus-one.c',	# complex builtins
 'c-c++-common/torture/complex-sign-mul-one.c',	# complex builtins
 'c-c++-common/torture/complex-sign-mul.c',	# complex builtins
+'c-c++-common/Wunused-var-13.c',#ij
 'g++.old-deja/g++.abi/cxa_vec.C',	# setjmp
 'g++.old-deja/g++.abi/ptrflags.C',	# typeinfo
 'g++.old-deja/g++.abi/vmihint.C',	# typeinfo
@@ -111,8 +153,11 @@ SKIPPED = [
 'g++.old-deja/g++.robertl/eb17.C',	# dynamic_cast
 'g++.old-deja/g++.robertl/eb50.C',	# exceptions
 'g++.old-deja/g++.robertl/eb88.C',	# exceptions
+'gcc.dg/20020312-2.c',#ij
+'gcc.dg/20031218-3.c',#nf
 'gcc.dg/20081223-1.c',	# fails on purpose
 'gcc.dg/Walways-true-2.c',  # gas says: redefined symbol cannot be used on reloc
+'gcc.dg/Wunused-var-1.c',#nf
 'gcc.dg/alias-5.c',	# require-alias
 'gcc.dg/alias-6.c',	# require-alias
 'gcc.dg/alias-7.c',	# require-alias
@@ -133,13 +178,30 @@ SKIPPED = [
 'gcc.dg/builtins-20.c',	# fails on purpose
 'gcc.dg/builtins-57.c',	# fails on purpose
 'gcc.dg/builtins-65.c',	# fails on purpose
+'gcc.dg/comp-goto-1.c',#ij
+'gcc.dg/comp-goto-2.c',#ij
 'gcc.dg/cproj-fails-with-broken-glibc.c',	# fails on purpose
+'gcc.dg/inline-28.c',#nf
+'gcc.dg/inline-29.c',#nf
+'gcc.dg/inline-30.c',#nf
+'gcc.dg/nested-func-8.c',#nf
+'gcc.dg/non-local-goto-1.c',#ij
+'gcc.dg/non-local-goto-2.c',#nf+ij
 'gcc.dg/old-style-asm-1.c',	# broken inline assembly
+'gcc.dg/pr18963-1.c',#nf
+'gcc.dg/pr26983.c',#setjmp
+'gcc.dg/pr30045.c',#nf
 'gcc.dg/pr38338.c',	# __builtin_apply
+'gcc.dg/pr43379.c',#ij
 'gcc.dg/pr43564.c',	# broken inline assembly
+'gcc.dg/pr45259.c',#ij
 'gcc.dg/pr47276.c',	# require-alias
+'gcc.dg/pr52139.c',#ij
 'gcc.dg/pragma-isr-trapa2.c',	# sh-* only
 'gcc.dg/charset/asm1.c',	# broken inline assembly
+'gcc.dg/charset/asm4.c',	# broken inline assembly
+'gcc.dg/charset/asm5.c',	# broken inline assembly
+'gcc.dg/charset/asm6.c',	# broken inline assembly
 'gcc.dg/compat/scalar-by-value-5.c',	# not meant to be compiled on its own
 'gcc.dg/compat/scalar-by-value-6.c',	# not meant to be compiled on its own
 'gcc.dg/compat/scalar-by-value-dfp_x.c',	# DFP not supported
@@ -147,6 +209,8 @@ SKIPPED = [
 'gcc.dg/compat/scalar-return-dfp_x.c',	# DFP not supported
 'gcc.dg/compat/scalar-return-dfp_y.c',	# DFP not supported
 'gcc.dg/compat/struct-layout-1_generate.c',	# not meant to be compiled on its own
+'gcc.dg/cpp/dir-only-6.c', # unterminated comment
+'gcc.dg/cpp/error-1.c', # unterminated comment
 'gcc.dg/lto/20081120-1_0.c',	# lacks main()
 'gcc.dg/lto/20081120-2_0.c',	# lacks main()
 'gcc.dg/lto/20081204-1_0.c',	# lacks main()
@@ -161,8 +225,10 @@ SKIPPED = [
 'gcc.dg/special/wkali-2a.c',	# main
 'gcc.dg/special/wkali-2b.c',	# alias
 'gcc.dg/torture/builtin-math-7.c',	# complex
+'gcc.dg/torture/pr46216.c',#ij
 'gcc.dg/torture/pr47473.c',	# complex
 'gcc.dg/torture/pr48044.c',	# alias
+'gcc.dg/tree-prof/pr34999.c',#setjmp
 'gcc.dg/vect/pr32224.c',	# broken inline assembly
 
 #bugs below
@@ -254,6 +320,17 @@ if(CONFIG == "")
 	#SKIPPED << 'pr41239.c'	# mapip2 bug, incorrect vararg stack pointer offset in normal function.
 	SKIPPED << 'compile/limits-structnest.c'	# gcc bug, eats 2+ GB RAM in a few seconds. todo: test on Windows.
 	SKIPPED << 'compile/pr21840.c'	# illegal call
+	SKIPPED << 'gcc.dg/opts-2.c'	# not designed for -O2
+	SKIPPED << 'gcc.dg/torture/pr24626-1.c' # call 0
+
+	# strange. seems that if there are no builtins for a certain function, there are link errors.
+	SKIPPED << 'gcc.dg/torture/builtin-convert-1.c'
+	SKIPPED << 'gcc.dg/torture/builtin-convert-2.c'
+	SKIPPED << 'gcc.dg/torture/builtin-convert-3.c'
+	SKIPPED << 'gcc.dg/torture/builtin-power-1.c'
+
+	if(!USE_NEWLIB)
+	end
 else
 	SKIPPED << 'pr17377.c'	# mapip2 bug, __builtin_return_address
 	SKIPPED << 'c-c++-common/Wunused-var-8.c'	# mapip2 bug, find_valid_class(DI, SI)

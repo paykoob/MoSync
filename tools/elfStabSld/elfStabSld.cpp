@@ -182,8 +182,8 @@ static void parseStabs(const DebuggingData& data, bool cOutput) {
 		const char* stabstr = data.stabstr + strOffset;
 		{
 			const Stab& s(data.stabs[i]);
-			printf("0x%" PRIxPTR ": strx: 0x%08x (%s) type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
-				i, s.n_strx, stabstr + s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
+			//printf("0x%" PRIxPTR ": strx: 0x%08x (%s) type: 0x%02x (%s) other: 0x%02x desc: 0x%04x value: 0x%x\n",
+				//i, s.n_strx, stabstr + s.n_strx, s.n_type, stabName(s.n_type), s.n_other, s.n_desc, s.n_value);
 			DEBUG_ASSERT(s.n_type == N_UNDF);
 			DEBUG_ASSERT(s.n_other == 0);
 			//strOffset += s.n_strx;
@@ -466,7 +466,7 @@ DEBIG_PHAT_ERROR; }
 	}
 
 	// entry point
-	LOG("entry point: 0x%x\n", ehdr.e_entry);
+	//LOG("entry point: 0x%x\n", ehdr.e_entry);
 	data.entryPoint = ehdr.e_entry;
 
 	{ //Read Section Table
@@ -549,7 +549,7 @@ DEBIG_PHAT_ERROR; }
 				data.symbols.resize(shdr.sh_size / sizeof(Elf32_Sym));
 				TEST(file.seek(Seek::Start, shdr.sh_offset));
 				TEST(file.read(data.symbols, shdr.sh_size));
-				printf("%s: %" PRIuPTR " symbols.\n", name, data.symbols.size());
+				//printf("%s: %" PRIuPTR " symbols.\n", name, data.symbols.size());
 			}
 			if(strcmp(name, ".strtab") == 0) {
 				data.strtab.resize(shdr.sh_size);

@@ -47,6 +47,8 @@ mod.class_eval do
 			@EXTRA_SOURCEFILES << '../MAStd/crtlib.s'
 			@EXTRA_SOURCEFILES << '../MAStd/mapip2_builtins.s'
 			@EXTRA_SOURCEFILES << '../MAStd/mastack.s'
+			@EXTRA_SOURCEFILES << '../MAStd/intrinsics.c'
+			@EXTRA_SOURCEFILES << '../MAStd/madmath.c'
 		else
 			@EXTRA_OBJECTS = [FileTask.new(self, 'libc/sys/mosync/crtlib.s')]
 		end
@@ -77,6 +79,9 @@ mod.class_eval do
 			"impure.c" => " -Wno-extra",
 			"madmath.c" => " -Wno-missing-prototypes -Wno-missing-declarations",
 			"maint.c" => " -Wno-missing-prototypes -Wno-missing-declarations",
+			"intrinsics.c" => " -Wno-missing-prototypes -Wno-missing-declarations",
+			"logbl.c" => " -Wno-missing-prototypes -Wno-missing-declarations",
+			"log2l.c" => " -Wno-missing-prototypes -Wno-missing-declarations",
 			"machine.c" => " -Wno-missing-noreturn -D_COMPILING_NEWLIB",
 			"gdtoa-gethex.c" => " -Wno-shadow",
 			"strtod.c" => " -Wno-shadow",

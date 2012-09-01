@@ -11,3 +11,5 @@
 #define _WANT_IO_C99_FORMATS
 #define _WANT_IO_LONG_LONG	// without this, printf("%jd %s") crashes.
 #define _WANT_IO_POS_ARGS
+#define _HAVE_LONG_DOUBLE
+#define _LDBL_EQ_DBL

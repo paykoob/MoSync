@@ -34,9 +34,9 @@ POSSIBILITY OF SUCH DAMAGE.
 /* On platforms where long double is as wide as double.  */
 #ifdef _LDBL_EQ_DBL
 long double
-ldexpl (long double value, int _exp)
+log2l (long double x)
 {
-  return ldexp(value, _exp);
+  return log2(x);
 }
 #endif
 

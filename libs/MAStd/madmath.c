@@ -20,108 +20,29 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #ifdef MAPIP
 
+#include "math_private.h"
+
 // Functions are intrinsic no prototypes needed
 // See http://gcc.gnu.org/onlinedocs/gccint/Soft-float-library-routines.html
 // for documentation
 
-#if 0	// hardware float support
-
-// ** if a greater than b
-
-int __gtsf2(float a, float b)
+static int
+_isnan(double x)
 {
-	return fcmp(a,b);
+	int32_t hx,lx;
+	EXTRACT_WORDS(hx,lx,x);
+	hx &= 0x7fffffff;
+	hx |= (u_int32_t)(lx|(-lx))>>31;
+	hx = 0x7ff00000 - hx;
+	return (int)((u_int32_t)(hx))>>31;
 }
-
-// ** if a less than or equal to b
-
-int __lesf2(float a, float b)
-{
-	return fcmp(a,b);
-}
-
-// ** if a less than  b
-
-int __ltsf2(float a, float b)
-{
-	return fcmp(a,b);
-}
-
-// ** if a greater than or equal to b
-
-int __gesf2(float a, float b)
-{
-	return fcmp(a,b);
-}
-
-// ** if a is equal to b
-
-int __eqsf2(float a, float b)
-{
-	return fcmp(a,b);
-}
-
-// ** if a is not equal to b
-
-int __nesf2(float a, float b)
-{
-	return fcmp(a,b);
-}
-
-
-// ** if a greater than b
-
-int __gtdf2(double a, double b)
-{
-	return dcmp(a,b);
-}
-
-// ** if a less than or equal to b
-
-int __ledf2(double a, double b)
-{
-	return dcmp(a,b);
-}
-
-// ** if a less than  b
-
-int __ltdf2(double a, double b)
-{
-	return dcmp(a,b);
-}
-
-// ** if a greater than or equal to b
-
-int __gedf2(double a, double b)
-{
-	return dcmp(a,b);
-}
-
-// ** if a is equal to b
-
-int __eqdf2(double a, double b)
-{
-	return dcmp(a,b);
-}
-
-// ** if a is not equal to b
-
-int __nedf2(double a, double b)
-{
-	return dcmp(a,b);
-}
-#endif	//0
 
 int __unorddf2(double a, double b) {
-	return isnan(a) || isnan(b);
+	return _isnan(a) | _isnan(b);
 }
 
 int __unordsf2(float a, float b) {
-	return isnan(a) || isnan(b);
-}
-
-float __floatundisf(unsigned long long a) {
-	return (float)(double)a;
+	return _isnan(a) | _isnan(b);
 }
 
 float __powisf2(float a, int b) {
@@ -132,57 +53,7 @@ double __powidf2(double a, int b) {
 	return pow(a, (double)b);
 }
 
-float sqrtf(float f) {
-	return (float)sqrt(f);
-}
-
-/* the following deal with IEEE single-precision numbers */
-
-#define EXCESS		126
-#define SIGNBIT		0x80000000
-#define HIDDEN		(1 << 23)
-#define FSIGN(fp)	((fp) & SIGNBIT)
-#define EXP(fp)		(((fp) >> 23) & 0xFF)
-#define MANT(fp)	(((fp) & 0x7FFFFF) | HIDDEN)
-#define PACK(s,e,m)	((s) | ((e) << 23) | (m))
-
-/* the following deal with IEEE double-precision numbers */
-
-#define EXCESSD		1022
-#define HIDDEND		(1 << 20)
-#define EXPD(fp)	(((fp.l.upper) >> 20) & 0x7FF)
-#define SIGND(fp)	((fp.l.upper) & SIGNBIT)
-#define MANTD(fp)	(((((fp.l.upper) & 0xFFFFF) | HIDDEND) << 10) | \
-				(fp.l.lower >> 22))
-#define HIDDEND_LL	((long long)1 << 52)
-#define MANTD_LL(fp)	((fp.ll & (HIDDEND_LL-1)) | HIDDEND_LL)
-#define PACKD_LL(s,e,m)	(((long long)((s)+((e)<<20))<<32)|(m))
-
-union double_long
-{
-    double d;
-#ifdef SWAP
-    struct
-    {
-      unsigned long lower;
-      long upper;
-    } l;
-#else
-    struct
-    {
-      long upper;
-      unsigned long lower;
-    } l;
-#endif
-    long long ll;
-};
-
-union float_long
-{
-	float f;
-	long l;
-};
-
+#ifndef USE_NEWLIB
 double fabs(double d) {
 	return d > 0 ? d : -d;
 }
@@ -197,16 +68,6 @@ double fmod(double numerator, double denominator) {
 		res = res - denominator;
 	return res;
 }
+#endif	//USE_NEWLIB
 
 #endif	//MAPIP
-
-#if 0
-//This function is not intrinsic
-double modf(double x, double* intptr)
-{
-	//WILL BREAK if x > MAX_INT
-  int i = (int) x;
-  *intptr = i;
-  return (x - *intptr);
-}
-#endif

@@ -54,13 +54,13 @@ end
 # allowed modes: run, compile, dejaGnu (parse the source file to find compile or run).
 SETTINGS[:source_paths] =
 [
+	sp('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
 	sp('', BASE + 'gcc.c-torture/execute'),
 	#dg('c-c++-common/dfp'),	# decimal floating point is not supported.
 	dg('c-c++-common/torture', :run),
 	dg('c-c++-common', :run),
 	sp('compile/', BASE + 'gcc.c-torture/compile', :compile),
 	sp('unsorted/', BASE + 'gcc.c-torture/unsorted', :compile),
-	sp('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
 	sp('compat/', BASE + 'gcc.c-torture/compat'),
 ]+
 	dgSub('gcc.dg', :compile)+
@@ -199,6 +199,7 @@ class TTWork < PipeExeWork
 		include_dirs = @EXTRA_INCLUDES
 		include_flags = include_dirs.collect {|dir| " -I \""+File.expand_path_fix(dir)+'"'}.join
 		flags = ' -g -w -DSIGNAL_SUPPRESS'
+		flags << ' -DNO_TRAMPOLINES -DNO_LABEL_VALUES'
 		flags << ' -O2 -fomit-frame-pointer' if(CONFIG == "")
 		flags << ' -ffloat-store -fno-inline' if(@sourcefile.sourcePath.base == 'ieee/')
 		flags << include_flags
@@ -233,7 +234,7 @@ class TTWork < PipeExeWork
 			else
 				raise "Unknown mode in #{@sourcepath}: #{@mode.inspect}"
 			end
-		elsif(@sourcefile.sourcePath.mode == :compileOnly)
+		elsif(@sourcefile.sourcePath.mode == :compile)
 			compile
 		else
 			super
@@ -241,8 +242,8 @@ class TTWork < PipeExeWork
 		rescue => e
 			puts "#{@sourcepath}:#{@lineNum}:"
 			p e
-			#raise
-			exit(1)
+			exit(1) if(EXIT_ON_ERROR)
+			raise
 		end
 	end
 
