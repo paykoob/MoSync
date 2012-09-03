@@ -11,11 +11,26 @@ work.instance_eval do
 	setup_common
 
 	BD = '../../../../..'
-	@SOURCES = ['.']
+	@SOURCES = []
 	@EXTRA_SOURCEFILES = [
+		'rebuilt.cpp',
 		"#{BD}/intlibs/helpers/intutil.cpp",
 		'../mosynclib/main.cpp',
 		]
+	if(defined?(REBUILD_CPP))
+		@EXTRA_SOURCEFILES << REBUILD_CPP
+		@TARGETDIR = File.dirname(REBUILD_CPP)
+
+		def run
+			Dir.chdir(@TARGETDIR)
+			cmd = @TARGET.to_s
+			cmd << " -resource #{RESOURCE}" if(defined?(RESOURCE))
+			sh cmd
+		end
+
+	else
+		@EXTRA_SOURCEFILES << 'rebuild.build.cpp'
+	end
 	@EXTRA_INCLUDES += ['.', '../../..']
 	@EXTRA_CPPFLAGS = ' -D_USE_REBUILDER_'
 	@SPECIFIC_CFLAGS = {

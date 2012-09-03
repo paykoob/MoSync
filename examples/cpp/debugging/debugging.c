@@ -36,7 +36,7 @@ int MAMain(void) {
 		lprintfln("Number %i", i);
 		if(i > 3) {
 			//maPanic() works similarly to maExit(), but also displays an alert to the user.
-			maPanic(0, "i became greater than 3!");
+			maPanic(1, "i became greater than 3!");
 		}
 	}
 

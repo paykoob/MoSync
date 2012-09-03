@@ -62,9 +62,9 @@ class Mapip2CppTask < MultiFileTask
 	def initialize(work, name, objects, libs, linkflags)
 		@elfTask = Mapip2LinkTask.new(work, name, objects, libs, linkflags)
 		@targetDir = File.dirname(name)
-		super(work, name, [@targetDir + '/rebuild.build.cpp',
+		super(work, @targetDir + '/rebuild.build.cpp', [
 			@targetDir + '/data_section.bin',
-			@targetDir + '/rebuild.build.s',
+			#@targetDir + '/rebuild.build.s',
 		])
 		@prerequisites << Mapip2SldTask.new(work, @elfTask)
 		@prerequisites << FileTask.new(work, "#{mosyncdir}/bin/elfStabSld#{EXE_FILE_ENDING}")
@@ -72,6 +72,7 @@ class Mapip2CppTask < MultiFileTask
 	def execute
 		sh "#{mosyncdir}/bin/elfStabSld -cpp #{@elfTask} rebuild.build.cpp"
 		FileUtils.mv('rebuild.build.cpp', @targetDir + '/rebuild.build.cpp')
+		if(false)
 		sh "gcc -O2 -S #{@targetDir}/rebuild.build.cpp -I #{mosyncdir}/include-rebuild -o #{@targetDir}/rebuild.build.s"+
 			' -fno-exceptions -fno-rtti'+
 			' -Wall -Wextra -Werror'+
@@ -79,7 +80,46 @@ class Mapip2CppTask < MultiFileTask
 			' -Wno-error=uninitialized'+
 			' -Wno-unused-parameter'+
 			''
+		end
 		FileUtils.mv('data_section.bin', @targetDir + '/data_section.bin')
+	end
+end
+
+class RebuildCompileTask < FileTask
+	def initialize(work, cppTask)
+		targetDir = File.dirname(cppTask.to_s)
+		name = targetDir + '/rebuild.build.o'
+		super(work, name)
+		@cppTask = cppTask
+		@prerequisites << cppTask
+	end
+	def execute
+		sh 'gcc -O2 -fomit-frame-pointer'+
+			" -c #{@cppTask} -I #{mosyncdir}/include-rebuild -o #{@NAME}"+
+			' -fno-exceptions -fno-rtti'+
+			' -Wall -Wextra -Werror'+
+			' -Wno-unused-label -Wno-unused-but-set-variable -Wno-return-type -Wno-unused-function'+
+			' -Wno-error=uninitialized'+
+			' -Wno-unused-parameter'+
+			''
+	end
+end
+
+class Mapip2RebuildTask < Task
+	def initialize(work, name, objects, libs, linkflags)
+		super(work)
+		@cppTask = Mapip2CppTask.new(work, name, objects, libs, linkflags)
+		@prerequisites << @cppTask
+	end
+	def execute
+		args = Targets.goals.collect do |g|
+			g.to_s
+		end
+		args << "REBUILD_CPP=\"#{File.expand_path(@cppTask)}\""
+		args << "RESOURCE=\"#{File.expand_path(@work.resourceTask)}\"" if(@work.resourceTask)
+		Work.invoke_subdir_ex(true, MOSYNC_SOURCEDIR + '/runtimes/cpp/platforms/sdl/Rebuild',
+			*args)
+		exit 0
 	end
 end
 
@@ -198,11 +238,15 @@ module MoSyncExeModule
 	def isPackingForIOS
 		return (defined?(PACK) && @PACK_MODEL.beginsWith('Apple/'))
 	end
+	def resourceTask
+		@resourceTask
+	end
 	def pipeTaskClass
 		if(defined?(MODE))
 			raise hell if(defined?(PACK))
-			raise hell if(MODE != 'cpp')
-			return Mapip2CppTask
+			return Mapip2CppTask if(MODE == 'cpp')
+			return Mapip2RebuildTask if(MODE == 'rebuild')
+			raise hell
 		end
 		return (isPackingForIOS ? Mapip2CppTask : super)
 	end
@@ -263,7 +307,11 @@ module MoSyncExeModule
 
 		super
 
-		@prerequisites << Mapip2SldTask.new(self, @TARGET) if(USE_GNU_BINUTILS)
+		if(USE_GNU_BINUTILS)
+			if(!defined?(MODE))
+				@prerequisites << Mapip2SldTask.new(self, @TARGET)
+			end
+		end
 
 		if(ELIM)
 			@TARGET.extend(PipeElimTask)

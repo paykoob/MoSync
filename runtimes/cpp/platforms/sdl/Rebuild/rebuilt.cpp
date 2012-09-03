@@ -8,11 +8,13 @@ int sp;
 unsigned char* mem_ds;
 unsigned char* customEventPointer;
 static unsigned DATA_SEGMENT_SIZE;
+static unsigned DATA_SEGMENT_MASK;
 static unsigned STACK_TOP;
 static unsigned STACK_BOTTOM;
 
 void runRebuiltCode() {
 	DATA_SEGMENT_SIZE = 64*1024*1024;
+	DATA_SEGMENT_MASK = DATA_SEGMENT_SIZE - 1;
 	mem_ds = new unsigned char[DATA_SEGMENT_SIZE];
 	memset(mem_ds, 0, DATA_SEGMENT_SIZE);	// bss. todo: zero only the bss section.
 
@@ -61,6 +63,8 @@ namespace Base {
 	(addr) & DATA_SEGMENT_MASK & ~(sizeof(type) - 1))
 
 #ifdef MEMORY_DEBUG
+	template<class T, bool write> T& getValidatedMemRefBase(uint address);
+
 #define MEM(type, addr, write) getValidatedMemRef##write<type>(addr)
 	template<class T> const T& getValidatedMemRefREAD(uint address) {
 		return getValidatedMemRefBase<T, 0>(address);
@@ -96,6 +100,7 @@ namespace Base {
 	//Memory validation
 	//****************************************
 #define PTR2ADDRESS(ptr) ((unsigned)((char*)ptr - (char*)mem_ds))
+#if 0
 	void ValidateMemStringAddress(unsigned address) {
 		do {
 			if(address >= DATA_SEGMENT_SIZE)
@@ -110,6 +115,7 @@ namespace Base {
 				BIG_PHAT_ERROR(ERR_MEMORY_OOB);
 		} while(RAW_MEMREF(short, address) != 0);
 	}
+#endif
 	int Syscall::ValidatedStrLen(const char* ptr) {
 		unsigned address = PTR2ADDRESS(ptr);
 		do {
@@ -144,12 +150,14 @@ namespace Base {
 		return mem_ds[address];
 	}
 
+#if 0
 	int TranslateNativePointerToMoSyncPointer(void *nativePointer) {
 	    if(nativePointer == NULL)
 	        return 0;
 	    else
 	        return (int)PTR2ADDRESS(nativePointer);
 	}
+#endif
 
 	const char* Syscall::GetValidatedStr(int a) {
 		unsigned address = a;

@@ -902,12 +902,12 @@ namespace Base {
 			"The application failed to respond to the Close Event and will be terminated.",
 			"MoSync Panic");
 		TerminateProcess(GetCurrentProcess(), 0);
-		exit(0);	//unreachable, but the compiler doesn't know.
+		exit(1);	//unreachable, but the compiler doesn't know.
 #else
 		MoSyncMessageBox(
 			"The application failed to respond to the Close Event and will be terminated.",
 			"Big Phat Error");
-		exit(0);
+		exit(1);
 #endif
 	}
 

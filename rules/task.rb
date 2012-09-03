@@ -85,7 +85,9 @@ class Work < TaskBase
 		@prerequisites.each do |p| p.invoke end
 
 		if(doRun)
-			if(!self.respond_to?(:run))
+			if(self.respond_to?(:run))
+				run
+			else
 				sh @TARGET
 			end
 		end
