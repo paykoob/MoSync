@@ -382,7 +382,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			FETCH_FRD_RS_CONST
 			os << "{ FREG temp; "
 			"temp.i[0] = RINT(" << RS << " + " << IMM << "); "
-			"temp.i[0] = RINT(" << RS << " + " << IMM + 4 << "); "
+			"temp.i[1] = RINT(" << RS << " + " << IMM + 4 << "); "
 			<< FRD << " = temp.d; }";
 		EOP;
 
