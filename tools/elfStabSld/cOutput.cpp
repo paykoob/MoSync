@@ -110,7 +110,7 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 				file << "; return";
 			file << ";\n";
 		}
-		file << "\tdefault: maPanic(pointer, \"Invalid callReg\");\n"
+		file << "\tdefault: maPanic(1, \"Invalid callReg\");\n"
 		"\t}\n"
 		"}\n";
 	}

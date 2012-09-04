@@ -163,6 +163,7 @@ class TTWork < PipeExeWork
 		@sourcepath = "#{f.sourcePath.path}/#{name}"
 		@sourcefile = f
 		@BUILDDIR_PREFIX = String.new(f.sourcePath.base)
+		@BUILDDIR_PREFIX << 'rebuild_' if(defined?(MODE) && MODE == 'rebuild')
 		@EXTRA_INCLUDES = ['.'] if(!USE_NEWLIB)
 		@EXTRA_INCLUDES = [mosync_include + '/stlport'] if(USE_NEWLIB)
 		@EXTRA_SOURCEFILES = [
@@ -214,13 +215,24 @@ class TTWork < PipeExeWork
 		FileUtils.mkdir_p(@BUILDDIR)
 		makeGccTask(FileTask.new(self, @sourcepath), '.o').invoke
 	end
-	def invoke
-		begin
+	def setMode
+		return if(@mode)
 		if(@sourcefile.sourcePath.mode == :dejaGnu)
 			@EXTRA_CFLAGS = ''
 			@mode = @sourcefile.sourcePath.defaultMode
 			parseDejaGnu
 			#puts "Mode #{@mode} for #{@NAME}"
+		else
+			@mode = @sourcefile.sourcePath.mode
+		end
+	end
+	def shouldRun
+		setMode
+		return @mode == :run
+	end
+	def invoke
+		begin
+			setMode
 			if(@mode == :run || @mode == :link)
 				super
 			elsif(@mode == :compile)
@@ -234,11 +246,6 @@ class TTWork < PipeExeWork
 			else
 				raise "Unknown mode in #{@sourcepath}: #{@mode.inspect}"
 			end
-		elsif(@sourcefile.sourcePath.mode == :compile)
-			compile
-		else
-			super
-		end
 		rescue => e
 			puts "#{@sourcepath}:#{@lineNum}:"
 			p e

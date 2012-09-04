@@ -112,14 +112,21 @@ class Mapip2RebuildTask < Task
 		@prerequisites << @cppTask
 	end
 	def execute
-		args = Targets.goals.collect do |g|
-			g.to_s
+		#puts @work.class.name
+		if(@work.respond_to?(:shouldRun) && @work.shouldRun)
+		#puts "shouldRun: #{@work.shouldRun}"
+		#if(@work.shouldRun)
+			args = ["run", 'EXTRA_RUNPARAMS=-noscreen']
+		else
+			args = Targets.goals.collect do |g|
+				g.to_s
+			end
 		end
 		args << "REBUILD_CPP=\"#{File.expand_path(@cppTask)}\""
 		args << "RESOURCE=\"#{File.expand_path(@work.resourceTask)}\"" if(@work.resourceTask)
+		args << "CONFIG=debug" #if(CONFIG != 'debug')	# todo: make optional
 		Work.invoke_subdir_ex(true, MOSYNC_SOURCEDIR + '/runtimes/cpp/platforms/sdl/Rebuild',
 			*args)
-		exit 0
 	end
 end
 
@@ -242,6 +249,7 @@ module MoSyncExeModule
 		@resourceTask
 	end
 	def pipeTaskClass
+		puts "pipeTaskClass MODE=#{MODE}"
 		if(defined?(MODE))
 			raise hell if(defined?(PACK))
 			return Mapip2CppTask if(MODE == 'cpp')
@@ -354,8 +362,10 @@ module MoSyncExeModule
 		return "#{mosyncdir}/bin/MoRE -program \"#{@TARGET}\"#{sldArg}#{resArg}#{extArg}#{@EXTRA_EMUFLAGS}"
 	end
 	def run
-		# run the emulator
-		sh emuCommandLine
+		if(!defined?(MODE))
+			# run the emulator
+			sh emuCommandLine
+		end
 	end
 	def gdb
 		# debug the emulator

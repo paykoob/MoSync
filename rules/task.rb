@@ -88,7 +88,11 @@ class Work < TaskBase
 			if(self.respond_to?(:run))
 				run
 			else
-				sh @TARGET
+				cmd = @TARGET.to_s
+				if(defined?(EXTRA_RUNPARAMS))
+					cmd << EXTRA_RUNPARAMS
+				end
+				sh cmd
 			end
 		end
 	end
@@ -135,7 +139,8 @@ class Work < TaskBase
 			args << ' RELOAD=' if(RELOAD)
 			args << " PACK=#{PACK}" if(defined?(PACK))
 			args << " MODE=#{MODE}" if(defined?(MODE))
-			cmd = "workfile.rb #{args} CONFIG=\"#{CONFIG}\""
+			args << " CONFIG=#{CONFIG}" if(!args.include?('CONFIG'))
+			cmd = "workfile.rb #{args}"
 			if(HOST == :win32)
 				sh "ruby #{cmd}"
 			else
