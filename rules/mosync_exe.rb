@@ -249,7 +249,6 @@ module MoSyncExeModule
 		@resourceTask
 	end
 	def pipeTaskClass
-		puts "pipeTaskClass MODE=#{MODE}"
 		if(defined?(MODE))
 			raise hell if(defined?(PACK))
 			return Mapip2CppTask if(MODE == 'cpp')

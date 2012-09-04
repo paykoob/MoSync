@@ -181,6 +181,17 @@ target :clean_examples do
 	Work.invoke_subdirs_ex(true, EXAM_DIRS, "clean")
 end
 
+target :check_libs => :base do
+	Work.invoke_subdirs(PIPE_DIRS)
+	Work.invoke_subdir_ex(true, 'libs/MAStd') unless(USE_NEWLIB)
+	Work.invoke_subdir_ex(true, 'libs/newlib') if(USE_NEWLIB)
+	Work.invoke_subdir_ex(true, 'libs/MAUtil')
+end
+
+target :check => :check_libs do
+	Work.invoke_subdirs(MORE_DIRS)
+	Work.invoke_subdir_ex(true, 'testPrograms/gcc-torture')
+end
 
 def all_configs(target)
 	sh "ruby workfile.rb #{target}"
@@ -195,6 +206,11 @@ end
 
 target :all_libs do
 	all_configs('libs')
+end
+
+target :all_check do
+	all_configs('check_libs')
+	all_configs('check')
 end
 
 target :all_libs_arm do
