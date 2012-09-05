@@ -36,11 +36,13 @@ struct SLD {
 	size_t address, line, filenum;
 };
 
+// warning: must match returnTypeStrings[]!
 enum ReturnType {
 	eVoid,
 	eInt,
 	eFloat,
 	eLong,
+	eComplexFloat,
 };
 
 struct CallInfo {

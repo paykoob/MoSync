@@ -60,6 +60,8 @@ const size_t nIntRegs = ARRAY_SIZE(mapip2_register_names), nFloatRegs = ARRAY_SI
 #define FETCH_FRD rd = IB; USE_F(rd);
 #define FETCH_FRS rs = IB; USE_F(rs);
 
+#define FETCH_RD_RS_UNUSED rd = IB; rs = IB;
+
 #define FETCH_FRD_RS FETCH_FRD FETCH_RS
 #define FETCH_FRD_CONST FETCH_FRD FETCH_CONST
 #define FETCH_FRD_RS_CONST FETCH_FRD FETCH_RS FETCH_CONST
@@ -107,9 +109,10 @@ std::basic_ostream<charT, Traits>&
 void CCore::streamReturnType(ReturnType returnType) {
 	switch(returnType) {
 	case eVoid: break;
-	case eInt: os << "r0 = "; data.regUsage.i |= (1 << REG_r0); break;
-	case eFloat: os << "f8 = "; data.regUsage.f |= (1 << 8); break;
-	case eLong: os << "{ FREG temp; temp.ll = "; data.regUsage.i |= (3 << REG_r0); break;
+	case eInt: os << "r0 = "; USE_I(REG_r0); break;
+	case eFloat: os << "f8 = "; USE_F(8); break;
+	case eLong: os << "{ FREG temp; temp.ll = "; USE_I(REG_r0); USE_I(REG_r1); break;
+	case eComplexFloat: os << "{ __complex__ double temp; temp = "; USE_F(8); USE_F(9); break;
 	}
 }
 
@@ -120,6 +123,7 @@ void streamCallRegName(ostream& os, const CallInfo& ci) {
 	case eInt: os << "I"; break;
 	case eFloat: os << "F"; break;
 	case eLong: os << "L"; break;
+	case eComplexFloat: os << "CF"; break;
 	}
 	os << noshowbase;
 	os << ci.intParams << ci.floatParams;
@@ -186,7 +190,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 		OPC(NOT)	FETCH_RD_RS	os << RD << " = ~" << RS << ";";	EOP;
 		OPC(NEG)	FETCH_RD_RS	os << RD << " = -" << RS << ";";	EOP;
 
-		OPC(PUSH)	FETCH_RD_RS
+		OPC(PUSH)	FETCH_RD_RS_UNUSED
 		{
 			byte n = (rs - rd) + 1;
 			if(rd < 2 || int(rd) + n > 32 || n == 0) {
@@ -200,7 +204,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 		}
 		EOP;
 
-		OPC(POP) FETCH_RD_RS
+		OPC(POP) FETCH_RD_RS_UNUSED
 		{
 			byte n = (rs - rd) + 1;
 			if(rd > 31 || int(rs) - n < 1 || n == 0) {
@@ -420,7 +424,16 @@ unsigned CCore::printInstruction(unsigned ip) {
 			case eVoid: os << "return;"; break;
 			case eInt: os << "return r0;"; USE_I(REG_r0); break;
 			case eFloat: os << "return f8;"; USE_F(8); break;
-			case eLong: os << "{ FREG temp; temp.i[0] = r0; temp.i[1] = r1; return temp.ll; }"; USE_I(REG_r0); USE_I(REG_r1); break;
+			case eLong:
+				os << "{ FREG temp; temp.i[0] = r0; temp.i[1] = r1; return temp.ll; }";
+				USE_I(REG_r0);
+				USE_I(REG_r1);
+			break;
+			case eComplexFloat:
+				os << "{ __complex__ double cd; __real__ cd = f8; __imag__ cd = f9; return cd; }";
+				USE_F(8);
+				USE_F(9);
+			break;
 			}
 		EOP;
 
@@ -445,6 +458,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 				case eInt: type = "I"; break;
 				case eFloat: type = "F"; break;
 				case eLong: type = "L"; break;
+				case eComplexFloat: type = "CF"; break;
 				}
 				printf("empty callReg%s%i%i\n", type, ci.intParams, ci.floatParams);
 #endif
@@ -456,6 +470,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			streamParameters(os, ci, false);
 			os << ";";
 			if(ci.returnType == eLong) os << "r0 = temp.i[0]; r1 = temp.i[1]; }";
+			if(ci.returnType == eComplexFloat) os << "f8 = __real__ temp; f9 = __imag__ temp; }";
 		}
 		EOP;
 		OPC(CALLI)
@@ -475,6 +490,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			streamFunctionCall(os, cf);
 			os << ";";
 			if(cf.ci.returnType == eLong) os << "r0 = temp.i[0]; r1 = temp.i[1]; }";
+			if(cf.ci.returnType == eComplexFloat) os << "f8 = __real__ temp; f9 = __imag__ temp; }";
 		}
 		EOP;
 

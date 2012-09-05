@@ -22,6 +22,7 @@ static const char* returnTypeStrings[] = {
 	"int",
 	"double",
 	"int64_t",
+	"__complex__ double",
 };
 
 void writeCpp(const DebuggingData& data, const char* cppName) {
@@ -394,8 +395,12 @@ static void parseFunctionInfo(Function& f) {
 		f.ci.returnType = eFloat;
 	else if(strncmp(type, "long", tlen) == 0)
 		f.ci.returnType = eLong;
-	else
+	else if(strncmp(type, "complexFloat", tlen) == 0)
+		f.ci.returnType = eComplexFloat;
+	else {
+		printf("Unknown function return type: %s %s\n", f.name, f.info);
 		DEBIG_PHAT_ERROR;
+	}
 
 	parseStabParams(comma, f.ci.intParams, f.ci.floatParams);
 }
