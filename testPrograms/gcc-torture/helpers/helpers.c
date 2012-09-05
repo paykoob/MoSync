@@ -33,8 +33,8 @@ int resource_selector(void)
 	return 0;
 }
 
-int main(int argc, char** argv);
+int main(int argc, char** argv, char** envp);
 
 int MAMain(void) {
-	return main(0, 0);
+	return main(0, 0, 0);
 }

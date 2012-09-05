@@ -74,6 +74,7 @@ union FREG {
 	int i[2];
 };
 
+void entryPoint();
 
 unsigned char* CppInitReadData(const char* file, int fileSize, int mallocSize);
 

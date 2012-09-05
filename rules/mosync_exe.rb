@@ -128,8 +128,10 @@ class Mapip2RebuildTask < Task
 		args << "DATA_SECTION=\"#{File.expand_path(@cppTask.dataSectionName)}\""
 		args << "RESOURCE=\"#{File.expand_path(@work.resourceTask)}\"" if(@work.resourceTask)
 		args << "CONFIG=debug" #if(CONFIG != 'debug')	# todo: make optional
+		puts "Mapip2RebuildTask: invoke_subdir_ex"
 		Work.invoke_subdir_ex(true, MOSYNC_SOURCEDIR + '/runtimes/cpp/platforms/sdl/Rebuild',
 			*args)
+		puts "Mapip2RebuildTask complete"
 	end
 end
 

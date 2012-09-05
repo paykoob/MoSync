@@ -119,10 +119,6 @@ class Work < TaskBase
 			error "No workfile found in #{dir}"
 		end
 
-		if(defined?(Targets))
-			Targets.reset(args)
-		end
-
 		oldDir = Dir.getwd
 		Dir.chdir(dir)
 		if(RELOAD || reload)
@@ -147,6 +143,9 @@ class Work < TaskBase
 				sh "./#{cmd}"
 			end
 		else
+			if(defined?(Targets))
+				Targets.reset(args)
+			end
 			load(File.expand_path('workfile.rb'), true)
 		end
 		Dir.chdir(oldDir)
