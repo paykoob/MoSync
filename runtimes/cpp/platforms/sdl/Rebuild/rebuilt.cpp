@@ -12,7 +12,7 @@ static unsigned DATA_SEGMENT_MASK;
 static unsigned STACK_TOP;
 static unsigned STACK_BOTTOM;
 
-void runRebuiltCode() {
+void runRebuiltCode(const char* dataSectionFile) {
 	DATA_SEGMENT_SIZE = 64*1024*1024;
 	DATA_SEGMENT_MASK = DATA_SEGMENT_SIZE - 1;
 	mem_ds = new unsigned char[DATA_SEGMENT_SIZE];
@@ -20,7 +20,7 @@ void runRebuiltCode() {
 
 	// read data section from file
 	//memset(mem_ds, 0, mallocSize);
-	FileStream file("data_section.bin");
+	FileStream file(dataSectionFile);
 	bool res;
 	int size;
 	res = file.length(size);

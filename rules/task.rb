@@ -90,7 +90,7 @@ class Work < TaskBase
 			else
 				cmd = @TARGET.to_s
 				if(defined?(EXTRA_RUNPARAMS))
-					cmd << EXTRA_RUNPARAMS
+					cmd << " #{EXTRA_RUNPARAMS}"
 				end
 				sh cmd
 			end

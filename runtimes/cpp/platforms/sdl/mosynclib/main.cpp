@@ -59,6 +59,9 @@ extern "C" int mosyncLibMain(int argc, char** argv, mainfunc MAMain) {
 	MoRE::SkinManager::getInstance()->addSkinFactory(new MoRE::GenericSkinFactory());
 
 	const char *resourceFile = "resources";
+#ifdef _USE_REBUILDER_
+	const char* dataSectionFile = "data_section.bin";
+#endif
 	bool resChanged = false;
 	Syscall::STARTUP_SETTINGS settings;
 
@@ -82,6 +85,17 @@ extern "C" int mosyncLibMain(int argc, char** argv, mainfunc MAMain) {
 			}
 			resourceFile = argv[i];
 		}
+#ifdef _USE_REBUILDER_
+		else
+		if(strcmp(argv[i], "-ds")==0) {
+			i++;
+			if(i>=argc) {
+				LOG("not enough parameters for -ds");
+				return 1;
+			}
+			dataSectionFile = argv[i];
+		}
+#endif
 		else if(strcmp(argv[i], "-size")==0) {
 			i++;
 			if(i>=argc) {
@@ -128,7 +142,7 @@ extern "C" int mosyncLibMain(int argc, char** argv, mainfunc MAMain) {
 	TEST(syscall->loadResources(file, resourceFile));
 
 #ifdef _USE_REBUILDER_
-	runRebuiltCode();
+	runRebuiltCode(dataSectionFile);
 	// should be unreachable.
 	DEBIG_PHAT_ERROR;
 #else

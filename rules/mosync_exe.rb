@@ -61,19 +61,21 @@ end
 class Mapip2CppTask < MultiFileTask
 	def initialize(work, name, objects, libs, linkflags)
 		@elfTask = Mapip2LinkTask.new(work, name, objects, libs, linkflags)
-		@targetDir = File.dirname(name)
-		super(work, @targetDir + '/rebuild.build.cpp', [
-			@targetDir + '/data_section.bin',
-			#@targetDir + '/rebuild.build.s',
+		@name = name
+		@dataSectionName = name + '.data_section.bin'
+		super(work, name + '.rebuild.cpp', [
+			@dataSectionName,
+			#name + '.rebuild.s',
 		])
 		@prerequisites << Mapip2SldTask.new(work, @elfTask)
 		@prerequisites << FileTask.new(work, "#{mosyncdir}/bin/elfStabSld#{EXE_FILE_ENDING}")
 	end
+	def dataSectionName; @dataSectionName; end
 	def execute
 		sh "#{mosyncdir}/bin/elfStabSld -cpp #{@elfTask} rebuild.build.cpp"
-		FileUtils.mv('rebuild.build.cpp', @targetDir + '/rebuild.build.cpp')
+		FileUtils.mv('rebuild.build.cpp', @NAME)
 		if(false)
-		sh "gcc -O2 -S #{@targetDir}/rebuild.build.cpp -I #{mosyncdir}/include-rebuild -o #{@targetDir}/rebuild.build.s"+
+		sh "gcc -O2 -S #{@NAME} -I #{mosyncdir}/include-rebuild -o #{@name}.rebuild.s"+
 			' -fno-exceptions -fno-rtti'+
 			' -Wall -Wextra -Werror'+
 			' -Wno-unused-label -Wno-unused-but-set-variable -Wno-return-type -Wno-unused-function'+
@@ -81,7 +83,7 @@ class Mapip2CppTask < MultiFileTask
 			' -Wno-unused-parameter'+
 			''
 		end
-		FileUtils.mv('data_section.bin', @targetDir + '/data_section.bin')
+		FileUtils.mv('data_section.bin', @dataSectionName)
 	end
 end
 
@@ -123,6 +125,7 @@ class Mapip2RebuildTask < Task
 			end
 		end
 		args << "REBUILD_CPP=\"#{File.expand_path(@cppTask)}\""
+		args << "DATA_SECTION=\"#{File.expand_path(@cppTask.dataSectionName)}\""
 		args << "RESOURCE=\"#{File.expand_path(@work.resourceTask)}\"" if(@work.resourceTask)
 		args << "CONFIG=debug" #if(CONFIG != 'debug')	# todo: make optional
 		Work.invoke_subdir_ex(true, MOSYNC_SOURCEDIR + '/runtimes/cpp/platforms/sdl/Rebuild',
@@ -373,13 +376,9 @@ module MoSyncExeModule
 	def invoke
 		super
 		# If you invoke a work without setting up any targets,
-		# we will check for the "run" goal here.
+		# we will check for the "gdb" goal here.
 		if(Targets.size == 0)
 			Targets.setup
-			if(Targets.goals.include?(:run))
-				self.run
-				return
-			end
 			if(Targets.goals.include?(:gdb))
 				self.gdb
 				return
