@@ -234,24 +234,40 @@ typedef struct
 
 void setCallRegDataRef(const Array0<Elf32_Sym>& symbols, const Array0<char>& strtab, const Elf32_Rela& r, CallRegs& cr) {
 	const Elf32_Sym& sym(symbols[ELF32_R_SYM(r.r_info)]);
-	//printf("stt: %i, val: %i, section %i\n", ELF32_ST_TYPE(sym.st_info), sym.st_value, sym.st_shndx);
+	const char* symName = strtab + sym.st_name;
+#if 0
+	printf("stt: %i, val: %i, section %i, name %s, ro %x, ra %x\n",
+		ELF32_ST_TYPE(sym.st_info), sym.st_value, sym.st_shndx, symName,
+		r.r_offset, r.r_addend);
 	fflush(stdout);
+#endif
 	// assuming here that section 1 is .text
+	Function dummy;
+	set<Function>::const_iterator itr = functions.end();
+	// static function reference; no function symbol, just .text section + addend.
+	if(ELF32_ST_TYPE(sym.st_info) == STT_SECTION && sym.st_shndx == 1)
+	{
+		dummy.start = sym.st_value + r.r_addend;
+		itr = functions.find(dummy);
+	}
+	else
+	// standard function reference
 	if(ELF32_ST_TYPE(sym.st_info) == STT_FUNC ||
 		(ELF32_ST_TYPE(sym.st_info) == STT_NOTYPE && sym.st_shndx == 1))
 	{
-		Function dummy;
 		dummy.start = sym.st_value;
-		set<Function>::const_iterator itr = functions.find(dummy);
+		itr = functions.find(dummy);
 		if(itr == functions.end()) {
-			const char* symName = strtab + sym.st_name;
 			printf("Invalid function pointer @ 0x%x to %s (0x%x) + 0x%x.\n",
 				r.r_offset, symName, sym.st_info, r.r_addend);
 			DEBIG_PHAT_ERROR;
 		}
+	}
+	if(itr != functions.end())
+	{
 		const Function& f(*itr);
-		//printf("Found function pointer to: %s, type %i\n", f.name, f.ci.returnType);
-		gFunctionPointerMap[f.ci].insert(sym.st_value);
+		//printf("Found function pointer to: %s, type %s\n", f.name, returnTypeStrings[f.ci.returnType]);
+		gFunctionPointerMap[f.ci].insert(dummy.start);
 	}
 }
 
