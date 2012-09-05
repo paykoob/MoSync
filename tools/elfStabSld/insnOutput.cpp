@@ -195,6 +195,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 				DEBIG_PHAT_ERROR; //raise hell
 			}
 
+			os << "sp -= " << (4 * n) << ";\t";
 			os << "// push " << RD << ", " << RS << ";";
 		}
 		EOP;
@@ -209,6 +210,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 				DEBIG_PHAT_ERROR; //raise hell
 			}
 
+			os << "sp += " << (4 * n) << ";\t";
 			os << "// pop " << RD << ", " << RS << ";";
 		}
 		EOP;
@@ -222,6 +224,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 				DEBIG_PHAT_ERROR; //raise hell
 			}
 
+			os << "sp -= " << (8 * n) << ";\t";
 			os << "// fpush " << FRD << ", " << FRS << ";";
 		}
 		EOP;
@@ -236,6 +239,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 				DEBIG_PHAT_ERROR; //raise hell
 			}
 
+			os << "sp += " << (8 * n) << ";\t";
 			os << "// fpop " << FRD << ", " << FRS << ";";
 		}
 		EOP;
@@ -414,9 +418,9 @@ unsigned CCore::printInstruction(unsigned ip) {
 		OPC(RET)
 			switch(f.ci.returnType) {
 			case eVoid: os << "return;"; break;
-			case eInt: os << "return r0;"; break;
-			case eFloat: os << "return f8;"; break;
-			case eLong: os << "{ FREG temp; temp.i[0] = r0; temp.i[1] = r1; return temp.ll; }"; break;
+			case eInt: os << "return r0;"; USE_I(REG_r0); break;
+			case eFloat: os << "return f8;"; USE_F(8); break;
+			case eLong: os << "{ FREG temp; temp.i[0] = r0; temp.i[1] = r1; return temp.ll; }"; USE_I(REG_r0); USE_I(REG_r1); break;
 			}
 		EOP;
 
@@ -434,6 +438,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			if(gFunctionPointerMap[ci].size() == 0)// ||
 				//(ci.returnType == eVoid && ci.intParams == 4 && ci.floatParams == 2))
 			{
+#if 0	// debug
 				const char* type = NULL;
 				switch(ci.returnType) {
 				case eVoid: type = "V"; break;
@@ -442,6 +447,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 				case eLong: type = "L"; break;
 				}
 				printf("empty callReg%s%i%i\n", type, ci.intParams, ci.floatParams);
+#endif
 			}
 
 			streamReturnType(ci.returnType);
