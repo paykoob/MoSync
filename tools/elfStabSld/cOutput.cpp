@@ -434,6 +434,8 @@ static const char* parseReturnType(const char* stab, ReturnType& type) {
 		{ "DI", eLong },
 		{ "SF", eFloat },
 		{ "DF", eFloat },
+		{ "SC", eComplexFloat },
+		{ "DC", eComplexFloat },
 	};
 
 	const char* comma = strchr(stab, ',');
@@ -446,6 +448,7 @@ static const char* parseReturnType(const char* stab, ReturnType& type) {
 			return comma;
 		}
 	}
+	printf("parseReturnType: %s\n", stab);
 	DEBIG_PHAT_ERROR;
 }
 
