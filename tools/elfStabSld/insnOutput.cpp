@@ -409,8 +409,10 @@ unsigned CCore::printInstruction(unsigned ip) {
 
 		OPC(LDD)
 			FETCH_RD_RS_CONST
-			WRITE_REG(rd, "RINT(" << RS << " + " << IMM << ")"); os << " ";
-			WRITE_REG(rd+1, "RINT(" << RS << " + " << IMM + 4 << ")");
+			os << "{ int addr = "<<RS<<" + "<<IMM<<"; ";
+			WRITE_REG(rd, "RINT(addr)"); os << " ";
+			WRITE_REG(rd+1, "RINT(addr + 4)");
+			os << " }";
 		EOP;
 
 		OPC(STD)
@@ -469,8 +471,8 @@ unsigned CCore::printInstruction(unsigned ip) {
 			os << "(" << RD;
 			streamParameters(os, ci, false);
 			os << ";";
-			if(ci.returnType == eLong) os << "r0 = temp.i[0]; r1 = temp.i[1]; }";
-			if(ci.returnType == eComplexFloat) os << "f8 = __real__ temp; f9 = __imag__ temp; }";
+			if(ci.returnType == eLong) os << " r0 = temp.i[0]; r1 = temp.i[1]; }";
+			if(ci.returnType == eComplexFloat) os << " f8 = __real__ temp; f9 = __imag__ temp; }";
 		}
 		EOP;
 		OPC(CALLI)
@@ -489,8 +491,8 @@ unsigned CCore::printInstruction(unsigned ip) {
 			streamReturnType(cf.ci.returnType);
 			streamFunctionCall(os, cf);
 			os << ";";
-			if(cf.ci.returnType == eLong) os << "r0 = temp.i[0]; r1 = temp.i[1]; }";
-			if(cf.ci.returnType == eComplexFloat) os << "f8 = __real__ temp; f9 = __imag__ temp; }";
+			if(cf.ci.returnType == eLong) os << " r0 = temp.i[0]; r1 = temp.i[1]; }";
+			if(cf.ci.returnType == eComplexFloat) os << " f8 = __real__ temp; f9 = __imag__ temp; }";
 		}
 		EOP;
 
