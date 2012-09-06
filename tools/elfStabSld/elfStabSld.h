@@ -43,6 +43,7 @@ enum ReturnType {
 	eFloat,
 	eLong,
 	eComplexFloat,
+	eComplexInt,
 };
 
 struct CallInfo {

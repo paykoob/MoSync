@@ -113,6 +113,7 @@ void CCore::streamReturnType(ReturnType returnType) {
 	case eFloat: os << "f8 = "; USE_F(8); break;
 	case eLong: os << "{ FREG temp; temp.ll = "; USE_I(REG_r0); USE_I(REG_r1); break;
 	case eComplexFloat: os << "{ __complex__ double temp; temp = "; USE_F(8); USE_F(9); break;
+	case eComplexInt: os << "{ __complex__ int temp; temp = "; USE_I(REG_r0); USE_I(REG_r1); break;
 	}
 }
 
@@ -124,6 +125,7 @@ void streamCallRegName(ostream& os, const CallInfo& ci) {
 	case eFloat: os << "F"; break;
 	case eLong: os << "L"; break;
 	case eComplexFloat: os << "CF"; break;
+	case eComplexInt: os << "CI"; break;
 	}
 	os << noshowbase;
 	os << ci.intParams << ci.floatParams;
@@ -436,6 +438,11 @@ unsigned CCore::printInstruction(unsigned ip) {
 				USE_F(8);
 				USE_F(9);
 			break;
+			case eComplexInt:
+				os << "{ __complex__ int temp; __real__ temp = r0; __imag__ temp = r1; return temp; }";
+				USE_I(REG_r0);
+				USE_I(REG_r1);
+			break;
 			}
 		EOP;
 
@@ -461,6 +468,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 				case eFloat: type = "F"; break;
 				case eLong: type = "L"; break;
 				case eComplexFloat: type = "CF"; break;
+				case eComplexInt: type = "CI"; break;
 				}
 				printf("empty callReg%s%i%i\n", type, ci.intParams, ci.floatParams);
 #endif
@@ -473,6 +481,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			os << ";";
 			if(ci.returnType == eLong) os << " r0 = temp.i[0]; r1 = temp.i[1]; }";
 			if(ci.returnType == eComplexFloat) os << " f8 = __real__ temp; f9 = __imag__ temp; }";
+			if(ci.returnType == eComplexInt) os << " r0 = __real__ temp; r1 = __imag__ temp; }";
 		}
 		EOP;
 		OPC(CALLI)
@@ -493,6 +502,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 			os << ";";
 			if(cf.ci.returnType == eLong) os << " r0 = temp.i[0]; r1 = temp.i[1]; }";
 			if(cf.ci.returnType == eComplexFloat) os << " f8 = __real__ temp; f9 = __imag__ temp; }";
+			if(cf.ci.returnType == eComplexInt) os << " r0 = __real__ temp; r1 = __imag__ temp; }";
 		}
 		EOP;
 

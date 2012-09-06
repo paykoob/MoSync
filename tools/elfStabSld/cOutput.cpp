@@ -23,6 +23,7 @@ static const char* returnTypeStrings[] = {
 	"double",
 	"int64_t",
 	"__complex__ double",
+	"__complex__ int",
 };
 
 void writeCpp(const DebuggingData& data, const char* cppName) {
@@ -397,6 +398,12 @@ static void parseFunctionInfo(Function& f) {
 		f.ci.returnType = eLong;
 	else if(strncmp(type, "complexFloat", tlen) == 0)
 		f.ci.returnType = eComplexFloat;
+	else if(strncmp(type, "CSI", tlen) == 0)
+		f.ci.returnType = eComplexInt;
+	else if(strncmp(type, "CHI", tlen) == 0)
+		f.ci.returnType = eComplexInt;
+	else if(strncmp(type, "CQI", tlen) == 0)
+		f.ci.returnType = eComplexInt;
 	else {
 		printf("Unknown function return type: %s %s\n", f.name, f.info);
 		DEBIG_PHAT_ERROR;
@@ -436,6 +443,9 @@ static const char* parseReturnType(const char* stab, ReturnType& type) {
 		{ "DF", eFloat },
 		{ "SC", eComplexFloat },
 		{ "DC", eComplexFloat },
+		{ "CSI", eComplexInt },
+		{ "CHI", eComplexInt },
+		{ "CQI", eComplexInt },
 	};
 
 	const char* comma = strchr(stab, ',');
