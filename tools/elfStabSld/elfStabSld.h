@@ -163,3 +163,5 @@ void setCallRegDataRef(const Array0<Elf32_Sym>& symbols, const Array0<char>& str
 const char* getIntRegName(size_t r);
 const char* getFloatRegName(size_t r);
 extern const size_t nIntRegs, nFloatRegs;
+
+bool readSegments(const DebuggingData& data, Array0<byte>& textBytes, Array0<byte>& dataBytes);

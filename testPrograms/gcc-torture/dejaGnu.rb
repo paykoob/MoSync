@@ -16,6 +16,10 @@ BAD_OPTIONS = [
 	'-fopenmp',
 ]
 
+if(defined?(MODE) && MODE == 'rebuild')
+	BAD_OPTIONS << '-finstrument-functions'
+end
+
 EFFECTIVE_TARGETS = [
 	'c99_runtime',
 	'double64plus',

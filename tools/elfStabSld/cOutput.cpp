@@ -9,12 +9,12 @@ static void streamFunctionContents(const DebuggingData& data,
 	const Array0<byte>& textBytes, const Array0<byte>& dataBytes,
 	ostream& os, const Function& f, CallRegs& cr, const Array0<Elf32_Rela>& textRela);
 static void parseFunctionInfo(Function& f);
-static bool readSegments(const DebuggingData& data, Array0<byte>& textBytes, Array0<byte>& dataBytes);
 static void setCallRegDataRefs(const DebuggingData& data, CallRegs& cr);
 static void parseStabParams(const char* comma, unsigned& intParams, unsigned& floatParams);
 static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool first = true);
 static void streamCallRegPrototype(ostream& os, const CallInfo& ci);
 static const Function& getFunction(unsigned address);
+static void streamCallRegSet(ostream& file, const CallInfo& ci, const FunctionPointerSet& fps);
 
 // warning: must match enum ReturnType!
 static const char* returnTypeStrings[] = {
@@ -103,14 +103,19 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 		streamCallRegPrototype(file, ci);
 		file << " {\n"
 		"\tswitch(pointer) {\n";
-		for(FunctionPointerSet::const_iterator jtr = fps.begin(); jtr != fps.end(); ++jtr) {
-			file << "\tcase " << *jtr << ": ";
-			if(ci.returnType != eVoid)
-				file << "return ";
-			streamFunctionCall(file, getFunction(*jtr));
-			if(ci.returnType == eVoid)
-				file << "; return";
-			file << ";\n";
+		streamCallRegSet(file, ci, fps);
+		if(ci.returnType == eVoid) {
+			// Certain function calls are Void even though their target function is not.
+			// Thus, all FPs with identical parameters must be listed here.
+			// Known examples thus far:
+			// Calls that return structs, but whose return value is ignored. (ex struct-ret-1.c)
+			for(FunctionPointerMap::const_iterator jtr = gFunctionPointerMap.begin();
+				jtr != gFunctionPointerMap.end(); ++jtr)
+			{
+				const CallInfo& jci(jtr->first);
+				if(jci.intParams == ci.intParams && jci.floatParams == ci.floatParams && jci.returnType != eVoid)
+					streamCallRegSet(file, ci, jtr->second);
+			}
 		}
 		file << "\tdefault: maPanic(1, \"Invalid callReg\");\n"
 		"\t}\n"
@@ -133,6 +138,18 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 void writeCs(const DebuggingData& data, const char* csName) {
 	printf("Not implemented!\n");
 	DEBIG_PHAT_ERROR;
+}
+
+static void streamCallRegSet(ostream& file, const CallInfo& ci, const FunctionPointerSet& fps) {
+	for(FunctionPointerSet::const_iterator jtr = fps.begin(); jtr != fps.end(); ++jtr) {
+		file << "\tcase " << *jtr << ": ";
+		if(ci.returnType != eVoid)
+			file << "return ";
+		streamFunctionCall(file, getFunction(*jtr));
+		if(ci.returnType == eVoid)
+			file << "; return";
+		file << ";\n";
+	}
 }
 
 static const Function& getFunction(unsigned address) {

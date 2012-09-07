@@ -573,6 +573,10 @@ unsigned CCore::printInstruction(unsigned ip) {
 			DEBUG_ASSERT(IB == OP_RET);
 			return ip;
 		EOP;
+
+		OPC(NOP)
+			os << "//NOP";
+		EOP;
 	default:
 		printf("Unknown instruction 0x%x @ 0x%x!\n", op, ip);
 		DEBIG_PHAT_ERROR;
