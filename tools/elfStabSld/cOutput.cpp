@@ -58,10 +58,15 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 "\n";
 
 	ostringstream oss;
+	unsigned scope = -1;
 
 	// normal function declarations
 	for(set<Function>::iterator i = functions.begin(); i != functions.end(); ++i) {
 		Function& f((Function&)*i);
+		if(f.scope != scope) {
+			scope = f.scope;
+			oss << "// " << files[scope].name << "\n";
+		}
 		streamFunctionPrototype(oss, f);
 		oss << ";\n";
 	}
@@ -72,9 +77,14 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 
 	// normal function definitions.
 	// this also populates the callReg map.
+	scope = -1;
 	for(set<Function>::iterator i=functions.begin(); i!=functions.end(); ++i) {
 		const Function& f(*i);
 		oss << '\n';
+		if(f.scope != scope) {
+			scope = f.scope;
+			oss << "// " << files[scope].name << "\n";
+		}
 		streamFunctionPrototype(oss, f);
 		oss << " {\n";
 		streamFunctionContents(data, textBytes, dataBytes, oss, f, cr, data.textRela);
