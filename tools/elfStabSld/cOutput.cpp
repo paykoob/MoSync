@@ -201,8 +201,8 @@ bool readSegments(const DebuggingData& data, Array0<byte>& textBytes, Array0<byt
 		if(phdr.p_type == PT_NULL)
 			continue;
 		else if(phdr.p_type == PT_LOAD) {
-#if 1
 			bool text = (phdr.p_flags & PF_X);
+#if 0
 			LOG("%s segment: 0x%x, 0x%x bytes\n",
 				text ? "text" : "data",
 				phdr.p_vaddr, phdr.p_filesz);
@@ -233,7 +233,7 @@ bool readSegments(const DebuggingData& data, Array0<byte>& textBytes, Array0<byt
 			bool text = (phdr.p_flags & PF_X);
 			TEST(file.seek(Seek::Start, phdr.p_offset));
 			void* dst = (text ? textBytes : dataBytes) + phdr.p_vaddr;
-			LOG("Reading 0x%x bytes to %p...\n", phdr.p_filesz, dst);
+			//LOG("Reading 0x%x bytes to %p...\n", phdr.p_filesz, dst);
 			TEST(file.read(dst, phdr.p_filesz));
 		} else {
 			DEBIG_PHAT_ERROR;

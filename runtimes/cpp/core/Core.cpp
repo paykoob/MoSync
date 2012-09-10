@@ -983,8 +983,8 @@ public:
 			TEST(file.seek(Seek::Start, 0));
 			return LoadElfVM(file);
 		}
-		if(Head.Magic != 0x5844414d) {	//MADX, big-endian
-			LOG("Magic error: 0x%08x should be 0x5844414d\n", Head.Magic);
+		if(Head.Magic != MA_HEAD_MAGIC) {
+			LOG("Magic error: 0x%08x should be 0x%x\n", Head.Magic, MA_HEAD_MAGIC);
 			FAIL;
 		}
 
@@ -1005,9 +1005,11 @@ public:
 		regs[REG_p0] = Head.DataSize;
 		regs[REG_p1] = Head.StackSize;
 		regs[REG_p2] = Head.HeapSize;
+		regs[REG_p3] = Head.CtorAddress;
 		DUMPHEX(Head.DataSize);
 		DUMPHEX(Head.StackSize);
 		DUMPHEX(Head.HeapSize);
+		DUMPHEX(Head.CtorAddress);
 		DUMPHEX(Head.EntryPoint);
 		IP = Head.EntryPoint;
 

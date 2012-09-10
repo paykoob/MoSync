@@ -67,7 +67,7 @@ class Mapip2CppTask < MultiFileTask
 			@dataSectionName,
 			#name + '.rebuild.s',
 		])
-		@prerequisites << Mapip2SldTask.new(work, @elfTask)
+		@prerequisites << @elfTask
 		@prerequisites << FileTask.new(work, "#{mosyncdir}/bin/elfStabSld#{EXE_FILE_ENDING}")
 	end
 	def dataSectionName; @dataSectionName; end
@@ -127,7 +127,7 @@ class Mapip2RebuildTask < Task
 		args << "REBUILD_CPP=\"#{File.expand_path(@cppTask)}\""
 		args << "DATA_SECTION=\"#{File.expand_path(@cppTask.dataSectionName)}\""
 		args << "RESOURCE=\"#{File.expand_path(@work.resourceTask)}\"" if(@work.resourceTask)
-		args << "CONFIG=debug" #if(CONFIG != 'debug')	# todo: make optional
+		#args << "CONFIG=debug" #if(CONFIG != 'debug')	# todo: make optional
 		puts "Mapip2RebuildTask: invoke_subdir_ex"
 		Work.invoke_subdir_ex(true, MOSYNC_SOURCEDIR + '/runtimes/cpp/platforms/sdl/Rebuild',
 			*args)
@@ -210,23 +210,24 @@ module MoSyncMemorySettings
 	# it should minimize accidental memory waste.
 	def standardMemorySettings(pow2kb)
 		raise "Insufficient memory. Need at least 64 KiB." if(pow2kb < 6)
-		d = (1 << (pow2kb + 10))
+		d = (1 << (pow2kb))
 		h = d - (d >> 2)
-		#newlibStaticDataSize = 128*1024
-		#h -= newlibStaticDataSize if(USE_NEWLIB)
 		s = (d >> 4)
-		return " -datasize=#{d} -heapsize=#{h} -stacksize=#{s}"
+		return " -heapsize #{h} -stacksize #{s}"
 	end
 end
 
-class Mapip2SldTask < FileTask
-	def initialize(work, prereq)
+class Mapip2MxTask < MultiFileTask
+	def initialize(work, prereq, mxFlags)
 		@progName = prereq.to_s
-		super(work, @progName + '.sld')
+		@mxFlags = mxFlags
+		name = @progName.ext('')
+		@sldName = name + '.sld'
+		super(work, name, [@sldName])
 		@prerequisites << prereq
 	end
 	def execute
-		sh "#{mosyncdir}/bin/elfStabSld #{@progName} #{@NAME}"
+		sh "#{mosyncdir}/bin/elfStabSld -mx #{@NAME}#{@mxFlags} #{@progName} #{@sldName}"
 	end
 end
 
@@ -313,7 +314,7 @@ module MoSyncExeModule
 		end
 
 		pipeFlags = @FLAGS + @EXTRA_LINKFLAGS
-		if(!pipeFlags.include?(' -datasize') && USE_NEWLIB && !USE_ARM)
+		if(!pipeFlags.include?(' -heapsize') && USE_NEWLIB && !USE_ARM)
 			@EXTRA_LINKFLAGS << standardMemorySettings(10)
 		end
 
@@ -321,7 +322,8 @@ module MoSyncExeModule
 
 		if(USE_GNU_BINUTILS)
 			if(!defined?(MODE))
-				@prerequisites << Mapip2SldTask.new(self, @TARGET)
+				@TARGET = Mapip2MxTask.new(self, @TARGET, @EXTRA_LINKFLAGS)
+				@prerequisites << @TARGET
 			end
 		end
 

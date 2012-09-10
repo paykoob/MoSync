@@ -26,4 +26,20 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "gen-opcodes.h"
 
+typedef struct _MA_HEAD
+{
+	int Magic;
+	int CodeLen;
+	int DataLen;
+	int DataSize;
+	int StackSize;
+	int HeapSize;
+	int CtorAddress;
+	int BuildID;
+	int AppID;
+	int EntryPoint;
+} MA_HEAD;
+
+#define MA_HEAD_MAGIC 0x5944414d	//MADY
+
 #endif	//_CORE_COMMON_H_

@@ -68,21 +68,6 @@ namespace Core {
 	class VMCore {
 	public:
 
-		typedef struct _MA_HEAD
-		{
-			int Magic;
-			int CodeLen;
-			int DataLen;
-			int DataSize;
-			int StackSize;
-			int HeapSize;
-			int AppCode;
-			int AppID;
-			int EntryPoint;
-			int IntLen;
-		} MA_HEAD;
-
-
 		//****************************************
 		//			Static variables
 		//****************************************

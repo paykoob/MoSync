@@ -104,6 +104,8 @@ struct DebuggingData {
 	Array0<char> stabstr;
 	bfd_vma textSectionEndAddress;
 	bfd_vma entryPoint;
+	bfd_vma ctorAddress;
+	bfd_vma bssSize;
 	// these are valid only in cOutput mode.
 	Array0<Elf32_Rela> textRela, rodataRela, dataRela;
 	Array0<Elf32_Sym> symbols;

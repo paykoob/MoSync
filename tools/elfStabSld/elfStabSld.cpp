@@ -1,4 +1,6 @@
+#include <errno.h>
 #include "elfStabSld.h"
+#include "../../runtimes/cpp/core/CoreCommon.h"
 
 static bool readStabs(Stream& elfFile, DebuggingData& data, bool cOutput);
 #if DUMP_STABS
@@ -7,6 +9,9 @@ static void dumpStabs(const DebuggingData& data);
 static void writeSld(const DebuggingData& data, const char* sldName);
 static void parseSymbols(const DebuggingData& data);
 static void parseStabs(const DebuggingData& data, bool cOutput);
+static void writeMx(const DebuggingData& data, const char* mxName,
+	const char* dataSize, const char* stackSize, const char* heapSize,
+	const char* buildId);
 
 static const char* s_outputName;
 
@@ -35,15 +40,30 @@ int main(int argc, const char** argv) {
 	if(argc < 3) {
 		printf("Usage: elfStabSld [options] <input> <output>\n");
 		printf("\n");
-		printf("Reads the .stab section of an elf file and outputs a text file, depending on options:\n");
+		printf("Reads an elf file and outputs a text file, depending on options:\n");
 		printf(" Default: An sld file suitable for MoRE.\n");
 		printf(" -cpp\tC++ code suitable for the iOS runtime.\n");
-		printf(" -cs\tC# code suitable for the Windows Phone runtime.\n");
+		printf(" -cs\tC# code suitable for the Windows Phone 7 runtime.\n");
+		printf(" -mx <name>\tMoSync bytecode executable, suitable for all other runtimes.\n");
+		printf("\t\tAlso outputs the default sld file.\n");
+		printf("In -mx mode, the following options are available:\n");
+		printf(" -stacksize <KiB>\tStack size. Default: 128.\n");
+		printf(" -heapsize <KiB>\tHeap size. Default: 512.\n");
+		//printf(" -datasize <KiB>\tTotal size of data memory. Default: 1024.\n");
+		//printf("\t\tData memory contains the stack, the heap and static data.\n");
+		//printf("\t\tIt must be an exact power of 2.\n");
+		printf(" -buildid <code>\tBuild id. Must be 4 printable ASCII characters. Default: 'TEST'.\n");
+
 		return 1;
 	}
 
 	Mode mode = eSLD;
 	bool cOutput = false;
+	const char* mxName = NULL;
+	const char* dataSize = NULL;
+	const char* stackSize = "128";
+	const char* heapSize = "512";
+	const char* buildId = "TEST";
 
 	// parse options
 	int i = 1;
@@ -55,11 +75,32 @@ int main(int argc, const char** argv) {
 		} else if(strcmp(a, "-cs") == 0) {
 			mode = eCS;
 			cOutput = true;
+		} else if(strcmp(a, "-mx") == 0) {
+			i++;
+			mxName = argv[i];
+		//} else if(mxName && strcmp(a, "-datasize") == 0) {
+			//dataSize = argv[++i];
+		} else if(mxName && strcmp(a, "-stacksize") == 0) {
+			stackSize = argv[++i];
+		} else if(mxName && strcmp(a, "-heapsize") == 0) {
+			heapSize = argv[++i];
+		} else if(mxName && strcmp(a, "-buildid") == 0) {
+			buildId = argv[++i];
 		} else {
 			printf("Unrecognized option: %s\n", a);
 			exit(1);
 		}
 		i++;
+	}
+
+	if(cOutput && mxName) {
+		printf("Can't combine -cpp and -mx!\n");
+		exit(1);
+	}
+
+	if(i >= argc) {
+		printf("Insufficient arguments! (%i >= %i)\n", i, argc);
+		exit(1);
 	}
 
 	const char* elfName = argv[i];
@@ -81,6 +122,9 @@ int main(int argc, const char** argv) {
 	switch(mode) {
 	case eSLD:
 		writeSld(data, s_outputName);
+		if(mxName) {
+			writeMx(data, mxName, dataSize, stackSize, heapSize, buildId);
+		}
 		break;
 	case eCPP:
 		writeCpp(data, s_outputName);
@@ -91,6 +135,75 @@ int main(int argc, const char** argv) {
 	}
 
 	return 0;
+}
+
+#define PARSE_INT(name) parseInt(name, #name)
+
+static int parseInt(const char* arg, const char* name) {
+	char* end;
+	errno = 0;
+	int i = strtol(arg, &end, 10);
+	if(end != arg + strlen(arg) || errno) {
+		printf("Invalid %s (%s). Cause: %s\n", name, arg, (errno ? strerror(errno) : "non-integer data"));
+		exit(1);
+	}
+	return i;
+}
+
+static int parseBuildId(const char* arg) {
+	if(strlen(arg) != 4) {
+		printf("Bad buildId (%s), length %" PRIuPTR "\n", arg, strlen(arg));
+		exit(1);
+	}
+	for(int i=0; i<4; i++) {
+		if(!isalnum(arg[i])) {
+			printf("Bad character in buildId: %c\n", arg[i]);
+			exit(1);
+		}
+	}
+	int i;
+	memcpy(&i, arg, 4);
+	return i;
+}
+
+static void writeMx(const DebuggingData& data, const char* mxName,
+	const char* dataSize, const char* stackSize, const char* heapSize,
+	const char* buildId)
+{
+	Array0<byte> textBytes, dataBytes;
+	DEBUG_ASSERT(readSegments(data, textBytes, dataBytes));
+
+	MA_HEAD h;
+	h.Magic = MA_HEAD_MAGIC;
+	h.CodeLen = textBytes.size();
+	h.DataLen = dataBytes.size();
+	h.StackSize = PARSE_INT(stackSize) * 1024;
+	h.HeapSize = PARSE_INT(heapSize) * 1024;
+
+	// calculate data size
+	int ds = h.StackSize + h.HeapSize + h.DataLen;
+	ds += data.bssSize;
+	h.DataSize = nextPowerOf2(10, ds);
+	printf("Data size: %i KiB\n", h.DataSize >> 10);
+
+	h.CtorAddress =	data.ctorAddress;
+	h.BuildID = parseBuildId(buildId);
+	h.AppID = 0;
+	h.EntryPoint = data.entryPoint;
+
+	ofstream bin(mxName, ios_base::binary);
+	bin.write((const char*)&h, sizeof(h));
+	bin.write((const char*)textBytes.p(), textBytes.size());
+	bin.write((const char*)dataBytes.p(), dataBytes.size());
+	bin.close();
+	if(!bin.good()) {
+		printf("Failed writing file '%s'.\n", mxName);
+		int res = remove(mxName);
+		if(res != 0) {
+			printf(" remove() failed: %s\n", strerror(errno));
+		}
+		exit(1);
+	}
 }
 
 #if 0
@@ -468,6 +581,8 @@ DEBIG_PHAT_ERROR; }
 	// entry point
 	//LOG("entry point: 0x%x\n", ehdr.e_entry);
 	data.entryPoint = ehdr.e_entry;
+	data.ctorAddress = 0;
+	data.bssSize = 0;
 
 	{ //Read Section Table
 		// this is the ELF string table.
@@ -556,6 +671,10 @@ DEBIG_PHAT_ERROR; }
 				TEST(file.seek(Seek::Start, shdr.sh_offset));
 				TEST(file.read(data.strtab, shdr.sh_size));
 			}
+			if(strcmp(name, ".ctors") == 0)
+				data.ctorAddress = shdr.sh_addr;
+			if(strcmp(name, ".bss") == 0)
+				data.bssSize = shdr.sh_size;
 		}
 	}
 	return true;

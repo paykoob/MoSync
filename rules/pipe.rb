@@ -183,6 +183,7 @@ class PipeGccWork < GccWork
 			if(ELIM)
 				@TARGET_PATH += "e"
 			end
+			@TARGET_PATH << '.elf' if(USE_GNU_BINUTILS)
 		end
 		@TARGET = pipeTaskClass.new(self, @TARGET_PATH, (all_objects + llo), libTasks, @FLAGS + @EXTRA_LINKFLAGS)
 		@prerequisites << @TARGET
