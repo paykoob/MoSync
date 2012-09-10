@@ -295,9 +295,9 @@ module MoSyncExeModule
 			@prerequisites << @resourceTask
 		end
 		if(USE_NEWLIB)
-			default(:DEFAULT_LIBS, ['newlib', 'rescompiler'])
+			default(:DEFAULT_LIBS, ['newlib'])
 		else
-			default(:DEFAULT_LIBS, ['mastd', 'rescompiler'])
+			default(:DEFAULT_LIBS, ['mastd'])
 		end
 
 		if(defined?(PACK))

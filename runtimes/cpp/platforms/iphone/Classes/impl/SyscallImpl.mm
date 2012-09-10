@@ -36,6 +36,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "PimSyscall.h"
 #include "OptionsDialogView.h"
 #include <CoreMedia/CoreMedia.h>
+#include <sys/types.h> //
+#include <sys/sysctl.h>//to retrieve device model
 
 #include <helpers/CPP_IX_GUIDO.h>
 //#include <helpers/CPP_IX_ACCELEROMETER.h>
@@ -51,6 +53,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #import "Capture.h"
 #include "netImpl.h"
 #import "Reachability.h"
+#import "PurchaseManager.h"
 
 #define NETWORKING_H
 #include "networking.h"
@@ -1281,6 +1284,15 @@ namespace Base {
 		} else if (strcmp(key, "mosync.device.OS.version") == 0) {
 			[[[UIDevice currentDevice] systemVersion] getCString:buf maxLength:size encoding:NSASCIIStringEncoding];
 			res = size;
+		} else if (strcmp(key, "mosync.device") == 0) {
+			size_t responseSz;
+			sysctlbyname("hw.machine", NULL, &responseSz, NULL, 0);
+			char *machine = (char*)malloc(responseSz);
+			sysctlbyname("hw.machine", machine, &responseSz, NULL, 0);
+			NSString *platform = [NSString stringWithCString:machine encoding:NSASCIIStringEncoding];
+			[platform getCString:buf maxLength:size encoding:NSASCIIStringEncoding];
+			free(machine);
+			res = size;
 		} else if (strcmp(key, "mosync.network.type") == 0) {
 			NSString* networkType;
 			//Use Apples Reachability sample class for detecting the network type
@@ -1974,6 +1986,51 @@ namespace Base {
 
 	}
 
+    SYSCALL(int, maPurchaseSupported())
+	{
+        return [[PurchaseManager getInstance] isPurchaseSupported];
+	}
+
+    SYSCALL(void, maPurchaseCreate(MAHandle productHandle, const char* productID))
+	{
+        [[PurchaseManager getInstance] createProduct:productHandle productID:productID];
+	}
+
+    SYSCALL(int, maPurchaseDestroy(MAHandle productHandle))
+	{
+        return [[PurchaseManager getInstance] destroyProduct:productHandle];
+	}
+    SYSCALL(void, maPurchaseRequest(MAHandle productHandle, const int quantity))
+	{
+        [[PurchaseManager getInstance] requestProduct:productHandle quantity:quantity];
+	}
+    SYSCALL(int, maPurchaseGetName(MAHandle productHandle, char* buffer, const int bufferSize))
+	{
+        return [[PurchaseManager getInstance] productName:productHandle
+                                                   buffer:buffer
+                                               bufferSize:bufferSize];
+	}
+    SYSCALL(void, maPurchaseSetStoreURL(const char* url))
+	{
+        [[PurchaseManager getInstance] setStoreURL:url];
+	}
+    SYSCALL(void, maPurchaseVerifyReceipt(MAHandle productHandle))
+	{
+        [[PurchaseManager getInstance] verifyReceipt:productHandle];
+	}
+    SYSCALL(int, maPurchaseGetField(MAHandle productHandle, const char* fieldName,
+                                    char* buffer, const int bufferSize))
+	{
+        return [[PurchaseManager getInstance] getReceiptField:productHandle
+                                                    fieldName:fieldName
+                                                       buffer:buffer
+                                                   bufferSize:bufferSize];
+	}
+    SYSCALL(void, maPurchaseRestoreTransactions())
+	{
+        [[PurchaseManager getInstance] restoreTransactions];
+	}
+
 	SYSCALL(longlong, maIOCtl(int function, int a, int b, int c))
 	{
 		switch(function) {
@@ -2121,6 +2178,15 @@ namespace Base {
 		maIOCtl_case(maAudioSubmitBuffer);
 		maIOCtl_case(maExtensionModuleLoad);
         maIOCtl_case(maExtensionFunctionLoad);
+        maIOCtl_case(maPurchaseSupported);
+        maIOCtl_case(maPurchaseCreate);
+        maIOCtl_case(maPurchaseDestroy);
+        maIOCtl_case(maPurchaseRequest);
+        maIOCtl_case(maPurchaseGetName);
+        maIOCtl_case(maPurchaseSetStoreURL);
+        maIOCtl_case(maPurchaseVerifyReceipt);
+        maIOCtl_case(maPurchaseGetField);
+        maIOCtl_case(maPurchaseRestoreTransactions);
 		}
 
 		return IOCTL_UNAVAILABLE;

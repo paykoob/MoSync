@@ -8,7 +8,7 @@ work.instance_eval do
 	@EXTRA_INCLUDES = ['inc', '.']
 	@LSTFILES = ['resources.lst']
 	#@EXTRA_CPPFLAGS = ' -DBENCHMARK'
-	@EXTRA_LINKFLAGS = ' -datasize=512000 -heapsize=386000 -stacksize=16000'
+	@EXTRA_LINKFLAGS = ' -heapsize 386 -stacksize 16'
 	@NAME = 'QuakeMDL'
 end
 

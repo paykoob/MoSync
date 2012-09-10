@@ -79,11 +79,12 @@ namespace NativeUI
         Map();
 
 		/**
-		 * Constructor with the api key as a parameter (on the iOS platform the api key is not required but the
+		 * Constructor with the google maps and bing maps api key as parameters (on the iOS platform the api key is not required but the
 		 * developer must provide a google api key for Android and a bing key for the Windows Phone platform).
-		 * @param apiKey The api key.
+		 * @param googleApiKey The google maps api key.
+		 * @param bingApiKey The bing maps api key.
 		 */
-		Map(const MAUtil::String& apiKey);
+		Map(const MAUtil::String& googleApiKey, const MAUtil::String& bingApiKey);
 
         /**
          * Destructor.
@@ -190,6 +191,11 @@ namespace NativeUI
          * @param mapPin The map pin object that generated the event.
          */
 		virtual void mapPinClicked(MapPin* mapPin);
+	private:
+		/**
+		 * Checks if a pin is already on the map.
+		 */
+		bool containsPin(MapPin* mapPin);
 
     protected:
         /**

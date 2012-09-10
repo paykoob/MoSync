@@ -9,7 +9,7 @@ work.instance_eval do
 	@EXTRA_CPPFLAGS = " -Wno-shadow"
 	@LSTFILES = ["Res/res.lst"]
 	@LIBRARIES = ["mautil", "map", "maui"]
-	@EXTRA_LINKFLAGS = ' -datasize=1024000 -heapsize=386000 -stacksize=64000'
+	@EXTRA_LINKFLAGS = ' -heapsize 386 -stacksize 64'
 	@NAME = "MapDemo"
 end
 

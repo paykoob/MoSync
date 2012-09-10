@@ -7,7 +7,7 @@ work.instance_eval do
 	@SOURCES = ['.', 'GUI', 'Application']
 	#@EXTRA_CPPFLAGS = " -Wno-shadow"
 	@LIBRARIES = ['mautil', 'maui', 'Facebook', 'yajl', 'nativeui']
-	@EXTRA_LINKFLAGS = ' -datasize=1024000 -heapsize=386000 -stacksize=64000'
+	@EXTRA_LINKFLAGS = ' -heapsize 386 -stacksize 64'
 	@NAME = 'FacebookDemo'
 end
 

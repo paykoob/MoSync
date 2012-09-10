@@ -40,7 +40,8 @@ static void writePermissions(ostream& stream, const SETTINGS& s, const RuntimeIn
 static void writePermission(ostream& stream, bool flag, const char* nativePerm);
 static void writeNFCDirectives(ostream& stream, const SETTINGS& s);
 static void writeNFCResource(ostream& stream, const SETTINGS& s);
-static void writeC2DMReceiver(ostream& stream, const string& packageName);
+static void writeGCMReceiver(ostream& stream, const string& packageName);
+static void writeBillingReceiver(ostream& stream);
 static string packageNameToByteCodeName(const string& packageName);
 
 void packageAndroid(const SETTINGS& s, const RuntimeInfo& ri) {
@@ -271,6 +272,7 @@ static void writeManifest(const char* filename, const SETTINGS& s, const Runtime
 		// Use portrait orientation as default.
 		<<"\t\t\tandroid:screenOrientation=\"portrait\"\n"
 		<<"\t\t\tandroid:configChanges=\"keyboardHidden|orientation\"\n"
+		<<"\t\t\tandroid:launchMode=\"singleTask\"\n"
 		<<"\t\t\tandroid:label=\"@string/app_name\">\n"
 		<<"\t\t\t<intent-filter>\n"
 		<<"\t\t\t\t<action android:name=\"android.intent.action.MAIN\" />\n"
@@ -295,7 +297,10 @@ static void writeManifest(const char* filename, const SETTINGS& s, const Runtime
 	file <<"\t\t<service android:name=\"com.mosync.internal.android.notifications.LocalNotificationsService\" />\n";
 	file <<"\t\t<service android:name=\".MoSyncService\" />\n";
 
-	writeC2DMReceiver(file, packageName);
+	writeGCMReceiver(file, packageName);
+
+	file << "\t\t<service android:name=\"com.mosync.internal.android.billing.BillingService\" />\n";
+	writeBillingReceiver(file);
 
 	file <<"\t</application>\n"
 		<<"\t<uses-sdk android:minSdkVersion=\""<<ri.androidVersion<<"\" />\n"
@@ -392,6 +397,12 @@ static void writePermissions(ostream& stream, const SETTINGS& s, const RuntimeIn
 	string permMessage = packageName + ".permission.C2D_MESSAGE";
 	writePermission(stream, isPermissionSet(permissionSet, PUSH_NOTIFICATIONS), permMessage.c_str());
 	writePermission(stream, isPermissionSet(permissionSet, PUSH_NOTIFICATIONS), "com.google.android.c2dm.permission.RECEIVE");
+
+	// Add in-app billing only for android 1.6 and higher.
+	if (ri.androidVersion >= 4)
+	{
+		writePermission(stream, isPermissionSet(permissionSet, PURCHASE), "com.android.vending.BILLING");
+	}
 }
 static void writePermission(ostream& stream, bool flag, const char* nativePerm) {
 	if (flag) {
@@ -435,10 +446,10 @@ static void writeNFCResource(ostream& stream, const SETTINGS& s) {
 	//TODO: delete nfcInfo;
 }
 
-static void writeC2DMReceiver(ostream& stream, const string& packageName) {
+static void writeGCMReceiver(ostream& stream, const string& packageName) {
 	// Receiver for messages and registration responses.
-	stream << "\t\t<service android:name=\".C2DMReceiver\" />\n";
-	stream << "\t\t<receiver android:name=\"com.google.android.c2dm.C2DMBroadcastReceiver\"\n";
+	stream << "\t\t<service android:name=\".GCMIntentService\" />\n";
+	stream << "\t\t<receiver android:name=\"com.google.android.gcm.GCMBroadcastReceiver\"\n";
 	stream << "\t\t\tandroid:permission=\"com.google.android.c2dm.permission.SEND\">\n";
 	stream << "\t\t\t<intent-filter>\n";
 	stream << "\t\t\t\t<action android:name=\"com.google.android.c2dm.intent.RECEIVE\" />\n";
@@ -450,7 +461,17 @@ static void writeC2DMReceiver(ostream& stream, const string& packageName) {
 	stream << "\t\t\t</intent-filter>\n";
 	stream << "\t\t</receiver>\n";
 }
-//<<"\tpackage=\"" << packageName << "\"\n"
+
+static void writeBillingReceiver(ostream& stream) {
+	stream << "\t\t<receiver android:name=\"com.mosync.internal.android.billing.BillingReceiver\">\n";
+	stream << "\t\t\t<intent-filter>\n";
+	stream << "\t\t\t\t<action android:name=\"com.android.vending.billing.IN_APP_NOTIFY\" />\n";
+	stream << "\t\t\t\t<action android:name=\"com.android.vending.billing.RESPONSE_CODE\" />\n";
+	stream << "\t\t\t\t<action android:name=\"com.android.vending.billing.PURCHASE_STATE_CHANGED\" />\n";
+	stream << "\t\t\t</intent-filter>\n";
+	stream << "\t\t</receiver>\n";
+}
+
 static void writeMain(const char* filename, const SETTINGS& s, const RuntimeInfo& ri) {
 	ofstream file(filename, ios::binary);
 	file <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

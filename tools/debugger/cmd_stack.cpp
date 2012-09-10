@@ -379,7 +379,7 @@ void Callback::sll() {
 // select-frame
 //******************************************************************************
 void stack_select_frame(const string& args) {
-	if(sscanf(args.c_str(), "%" PFZT, &sFrameRequest) != 1) {
+	if(sscanf(args.c_str(), "%" PFZT "", &sFrameRequest) != 1) {
 		error("Not enough arg");
 		return;
 	}

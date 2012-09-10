@@ -39,13 +39,15 @@ namespace NativeUI
     }
 
 	/**
-	 * Constructor with the api key as a parameter (on the iOS platform the api key is not required but the
+	 * Constructor with the google maps and bing maps api key as parameters (on the iOS platform the api key is not required but the
 	 * developer must provide a google api key for Android and a bing key for the Windows Phone platform).
-	 * @param apiKey The api key.
+	 * @param googleApiKey The google maps api key.
+	 * @param bingApiKey The bing maps api key.
 	 */
-	Map::Map(const MAUtil::String& apiKey) : Widget(MAW_MAP)
+	Map::Map(const MAUtil::String& googleApiKey, const MAUtil::String& bingApiKey) : Widget(MAW_MAP)
 	{
-		this->setProperty(MAW_MAP_API_KEY, apiKey);
+		this->setProperty(MAW_MAP_API_KEY_GOOGLE, googleApiKey);
+		this->setProperty(MAW_MAP_API_KEY_BING, bingApiKey);
 	}
 
     /**
@@ -69,8 +71,12 @@ namespace NativeUI
 	 */
 	int Map::addMapPin(MapPin* pin)
 	{
-		pin->addMapPinListener(this);
-		return Widget::addChild(pin);
+		if (!containsPin(pin))
+		{
+			pin->addMapPinListener(this);
+			return Widget::addChild(pin);
+		}
+		return MAW_RES_ERROR;
 	}
 
 	/**
@@ -85,8 +91,28 @@ namespace NativeUI
 	 */
 	int Map::removeMapPin(MapPin* pin)
 	{
-		pin->removeMapPinListener(this);
-		return Widget::removeChild(pin);
+		if (containsPin(pin))
+		{
+			pin->removeMapPinListener(this);
+			return Widget::removeChild(pin);
+		}
+		return MAW_RES_ERROR;
+	}
+
+	/**
+	 * Checks if a pin is already on the map.
+	 */
+	bool Map::containsPin(MapPin* mapPin)
+	{
+		for (int i = 0; i < countChildWidgets(); i++)
+		{
+			MapPin* currentMapPin = (MapPin*)getChild(i);
+			if (*currentMapPin == *mapPin)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

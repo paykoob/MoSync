@@ -1316,6 +1316,7 @@ void WRITE_REG(int reg, int value) {
 			LOG("GetValidatedMemRange(address 0x%x, size 0x%x)\n", address, size);
 			BIG_PHAT_ERROR(ERR_MEMORY_OOB);
 		}
+
 #ifdef MEMORY_PROTECTION
 		checkProtection(address, size);
 #endif

@@ -7,7 +7,7 @@ work.instance_eval do
 	@SOURCES = [".", "Libs/MAUtil/automated_tests", "Libs/MAStd/automated_tests"]
 	@EXTRA_INCLUDES = ["."]
 	@EXTRA_CPPFLAGS = " -Wno-shadow"
-	@EXTRA_LINKFLAGS = " -datasize=1024000 -stacksize=128000 -heapsize=512000"
+	@EXTRA_LINKFLAGS = " -stacksize 128 -heapsize 512"
 	@LIBRARIES = ["mautil", "matest"]
 	@NAME = "unitTest"
 	@PACK_PARAMETERS = ' --permissions "Bluetooth,Calendar,Camera,Contacts,File Storage,Internet Access,Location,Power Management,SMS,Vibrate"'
