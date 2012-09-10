@@ -55,7 +55,6 @@ typedef off_t off64_t;
 
 #define __GNUC_PREREQ(major, minor) 1
 
-#define strtold strtod
 #define __strtod_internal(a,b,c) strtod(a,b)
 
 #define WORD_BIT 32
@@ -65,7 +64,7 @@ typedef off_t off64_t;
 #define timezone _timezone
 
 int *getdate_err(void);
-struct tm *	getdate(const char *); 
+struct tm *	getdate(const char *);
 
 const char *re_compile_pattern (const char *__pattern, size_t __length,
 	struct re_pattern_buffer *__buffer);

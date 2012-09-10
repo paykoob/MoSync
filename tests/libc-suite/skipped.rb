@@ -49,30 +49,40 @@ SKIPPED_UNRESOLVED = [
 	# Seems like a getc() causes the write position to jump to the end of the file,
 	# but it should be the same as the read position. Too tricky to fix.
 	'test_rdwr.c',
-	
+
 	'tst-sprintf.c',	# newlib's printf doesn't handle invalid formats the same way as glibc.
 	'bug14.c',	# apparently, sscanf() doesn't convert from UTF-8 to wchar_t.
 	'scanf13.c',	# 8 fails.
 	'tst-strtod.c',	# 2 regular fails, and no locale support.
-	
+
 	'tst-dirname.c',	# fails on multiple slashes ("//")
 	'tst-fnmatch.c',	# many fails, complicated function.
 	'stdio-common_tst-sscanf.c',	# 4 fails, pretty uncommon stuff.
 	'stdio-common_tst-swscanf.c',
-	
+
 	'tst-environ.c',	# half the tests fail.
 	'bug-strtok1.c',	# one or two tests fail.
 	'tst-posixtz.c',	# a few more obscurities.
-	
+
 	# Many fails, though they appear minor. Also, function's specification is so unclear that
 	# it's possible that newlib's implementation is still conformant.
 	'tst-strptime.c',
-	
+
 	'bug-mktime1.c',	# fails because sizeof(time_t) < 8. Too tricky to fix.
-	
+
 	# Fails because newlib's C locale isn't identical to its Unicode locale.
 	'test_wctype.c',
+
+	# Fails because mktime() doesn't properly return -1 on times outside its range.
+	# ex: bigtime_test(0), which is Jan 1 1900.
+	# Could also be fixed by making time_t 64-bit.
+	#'tst-mktime2.c',
 ]
+
+if(CONFIG == '')
+	# broken optimization. a printf call before the error line fixes the problem.
+	SKIPPED_UNRESOLVED << 'tst-insremque.c'
+end
 
 SKIPPED_FILES = SKIPPED_UNRESOLVED + [
 	'tst-atomic.c',
@@ -101,33 +111,33 @@ SKIPPED_FILES = SKIPPED_UNRESOLVED + [
 	'tst-statvfs.c',
 	'tst-widetext.c',	# todo, iconv
 	'tst-popen1.c',	# popen
-	
+
 	# locale
 	'tst-C-locale.c',
 	'tst-locname.c',
 	'tst-duplocale.c',
-	
+
 	'tst-valloc.c',	# valloc
 	'tst-obstack.c',	# obstack
 	'tst-mallocstate.c',	# malloc_get_state
 	'tst-mallocfork.c',
 	'test-matherr.c',	# todo, matherr
 	'test-fenv.c',	# complex.h
-	
+
 	# gmp.h
 	'atest-exp.c',
 	'atest-exp2.c',
 	'atest-sincos.c',
-	
+
 	'test-fpucw.c',	# fpu_control.h
-	
+
 	# tgmath.h
 	'test-tgmath.c',
 	'test-tgmath2.c',
 	'test-tgmath-int.c',
 	'test-tgmath-ret.c',
 	'bug-tgmath1.c',
-	
+
 	'tst-efgcvt.c',	# ecvt_r
 	'tst-mntent.c',	# mntent.h
 	'tst-mntent2.c',	# mntent.h
@@ -136,10 +146,10 @@ SKIPPED_FILES = SKIPPED_UNRESOLVED + [
 	'test-vfork.c',	# fork
 	'tst-getlogin.c',	# getlogin_r
 	'tst-mmap.c',	# mmap
-	
+
 	# todo, netinet
 	'tst-getaddrinfo.c',
-	
+
 	'tst-fork.c',	# fork
 
 	'tst-chmod.c',	# chmod
@@ -200,16 +210,16 @@ SKIPPED_FILES = SKIPPED_UNRESOLVED + [
 	'libio_tst-swscanf.c',	# Implementation-defined behaviour (%[a-c]). Also, an unsupported locale. See notes.
 	'bug-mmap-fflush.c',	# system
 	'tst-fopenloc2.c',	# GNU extension: fopen(ccs).
-	
+
 	# glibc doesn't implement open_wmemstream's sizep parameter according to the Open Group Base Specification,
 	# so these tests fail.
 	'bug-wmemstream1.c',
 	'tst-wmemstream2.c',
-	
+
 	# fp exceptions not supported by newlib.
 	'bug-nextafter.c',
 	'bug-nexttoward.c',
-	
+
 	# some of the glibc math types are unsupported.
 	'test-fenv.c',
 	'test-fpucw.c',
@@ -218,16 +228,16 @@ SKIPPED_FILES = SKIPPED_UNRESOLVED + [
 	'test-ildouble.c',
 	'test-ldouble.c',
 	#'test-matherr.c',
-	
+
 	'tst-error1.c',	# requires complex arguments and input files.
-	
+
 	'bug-glob3.c',	# GLOB_NOMATCH
 	'bug-getopt1.c',	# non-posix modifier: +
-	
+
 	'bug5.c',	# system()
-	
+
 	'tst-seekdir.c', # seekdir()
-	
+
 	'scanf12.c',	# test seems broken.
 	'tst-swprintf.c',	# locale ja_JP.EUC-JP
 	'tst-popen.c',	# popen()
@@ -236,7 +246,7 @@ SKIPPED_FILES = SKIPPED_UNRESOLVED + [
 	'scanf16.c',	# GNU extension: %as
 	'bug21.c',	# GNU extension: %as
 	'bug22.c',	# we don't support writing to /dev/null.
-	
+
 	'tst-random.c',	# initstate()
 	'tst-random2.c',	# initstate()
 	'tst-system.c',	# system()
@@ -245,12 +255,12 @@ SKIPPED_FILES = SKIPPED_UNRESOLVED + [
 	'tst-strtod6.c', # incorrect assumption about parsing of "NaN(foobar)"
 	'tst-makecontext3.c',	# ucontext.h
 	'tst-putenv.c',	# putenv from another process.
-	
+
 	'xbug.c',	# popen()
-	
+
 	'tst-timezone.c',	# non-standard TZ values.
 	'test-tz.c',	# apparently, newlib doesn't support zones like "MST"
-	
+
 	'tst-futimesat.c',	# mosync doesn't support *utime* functions.
 	'tst-fchownat.c',	# chown()
 	'tst-fchmodat.c',	# chmod()
@@ -266,7 +276,7 @@ SKIPPED_FILES = SKIPPED_UNRESOLVED + [
 	'tst-fopenloc.c',	# iconvdata
 	'tst-atime.c',	# atime
 	'tst-truncate64.c',	# mosync doesn't support 64-bit file ops.
-	
+
 	'tst-btowc.c',	# locale
 	'tst-mbrtowc2.c',	# locale
 ]

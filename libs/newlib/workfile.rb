@@ -62,6 +62,7 @@ mod.class_eval do
 
 		@IGNORED_FILES << 'engine.c'
 		@IGNORED_FILES << 'rename.c'
+		@IGNORED_FILES << 'memset.c'
 
 		@EXTRA_CFLAGS = " -DUSE_EXOTIC_MATH -Wno-float-equal -Wno-unreachable-code -Wno-sign-compare -Wno-old-style-definition"
 		if(CONFIG=="")
@@ -115,6 +116,7 @@ mod.class_eval do
 			"regexec.c" => " -Wno-char-subscripts",
 			"regcomp.c" => " -Wno-char-subscripts",
 			"mktemp.c" => " -DHAVE_MKDIR",
+			'libgcc2.c' => ' -Wno-declaration-after-statement',
 		}
 
 		# copy subdirs

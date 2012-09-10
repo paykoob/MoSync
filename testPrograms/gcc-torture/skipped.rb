@@ -281,6 +281,7 @@ SKIPPED_DIRS = [
 'g++.old-deja/g++.eh',
 'gcc.dg/dfp',
 'gcc.dg/fixed-point',
+'gcc.dg/graphite',
 'gcc.dg/lto',	# while we should theoretically support LTO, the tests are too tricky.
 'gcc.dg/pch',
 'gcc.dg/plugin',

@@ -3,40 +3,49 @@
 #include "mavsprintf.h"
 #include "maassert.h"
 #include <mastdlib.h>
+#include <maheap.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
+#include <math.h>
 #include <sys/fcntl.h>
 #include <sys/times.h>
+#include "skeleton.h"
 
-static void install_stdmalloc_hooks();
+static void install_stdmalloc_hooks(void);
 int main(int argc, const char** argv);
 extern const char* gArgv[];
 extern const int gArgc;
-extern void setup_stdin();
+extern void setup_stdin(void);
 static void exit_status_save(int, void*);
-extern void setup_filesystem();
+extern void setup_filesystem(void);
 
 #define WRITE_LOG(str) maWriteLog(str, sizeof(str)-1)
 
-int MAMain() GCCATTRIB(noreturn);
-int MAMain() {
+void __main(void);
+void __main(void) {
+}
+
+int MAMain(void) GCCATTRIB(noreturn);
+int MAMain(void) {
 	WRITE_LOG("MAMain() 1\n");
 	on_exit(exit_status_save, NULL);
 
 	// switch stdout from console to maWriteLog.
 	WRITE_LOG("open_maWriteLog\n");
-	int wlfd = open_maWriteLog();
-	dup2(wlfd, 1);
-	dup2(wlfd, 2);
-	close(wlfd);
-	
+	{
+		int wlfd = open_maWriteLog();
+		dup2(wlfd, 1);
+		dup2(wlfd, 2);
+		close(wlfd);
+	}
+
 	WRITE_LOG("setup_filesystem\n");
 	setup_filesystem();
 	chdir("/");
-	
+
 	WRITE_LOG("setup_stdin\n");
 	setup_stdin();
 	if(!stdin) {
@@ -46,22 +55,25 @@ int MAMain() {
 
 	printf("MAMain()\n");
 	install_stdmalloc_hooks();
-	int res = main(gArgc, gArgv);
-	printf("main returned. exit(%i)\n", res);
-	exit(res);
+	{
+		int res = main(gArgc, gArgv);
+		printf("main returned. exit(%i)\n", res);
+		exit(res);
+	}
 }
 
 // save status to a store, so the loader can read it.
 // if this store is not saved, the loader will assume something went
 // catastrophically wrong with the test.
 static void exit_status_save(int status, void* dummy) {
+	MAHandle data, store;
 	printf("exit_status_save\n");
 	// we don't check for errors here, because there can be no reasonable error handling at this stage.
 	// better then, to let the runtime's panic system deal with it.
-	MAHandle data = maCreatePlaceholder();
+	data = maCreatePlaceholder();
 	maCreateData(data, sizeof(int));
 	maWriteData(data, &status, 0, sizeof(int));
-	MAHandle store = maOpenStore("exit_status", MAS_CREATE_IF_NECESSARY);
+	store = maOpenStore("exit_status", MAS_CREATE_IF_NECESSARY);
 	maWriteStore(store, data);
 	maCloseStore(store, 0);
 }
@@ -71,16 +83,16 @@ static void std_malloc_handler(int size) {
 	lprintfln("malloc failed: %i", size);
 };
 
-static void install_stdmalloc_hooks() {
+static void install_stdmalloc_hooks(void) {
 	set_malloc_handler(std_malloc_handler);
 }
 
 void error(int __status, int __errnum, __const char* __format, ...) GCCATTRIB(noreturn);
 void error(int __status, int __errnum, __const char* __format, ...)
 {
+	char buffer[2048];
 	va_list args;
 	va_start(args, __format);
-	char buffer[2048];
 	vsprintf(buffer, __format, args);
 	va_end(args);
 	lprintfln("error(%i, %i, %s)\n", __status, __errnum, buffer);
@@ -115,9 +127,9 @@ const char* strsignal(int __signo) {
 }
 
 unsigned sleep(unsigned s) {
-	lprintfln("sleep(%i)", s);
 	const int start = maGetMilliSecondCount();
 	const int end = start + s * 1000;
+	lprintfln("sleep(%i)", s);
 	do {
 		int left = end - maGetMilliSecondCount();
 		MAEvent e;
@@ -131,8 +143,10 @@ unsigned sleep(unsigned s) {
 		}
 		maWait(left);
 	} while(1);
-	int passed = maGetMilliSecondCount() - start;
-	MAASSERT(passed >= (int)s*1000);
+	{
+		int passed = maGetMilliSecondCount() - start;
+		MAASSERT(passed >= (int)s*1000);
+	}
 	return 0;
 }
 
@@ -193,7 +207,7 @@ void re_set_syntax(int a) {
 }
 
 const char *re_compile_pattern (const char *__pattern, size_t __length,
-	struct re_pattern_buffer *__buffer)
+	regex_t *__buffer)
 {
 	int res = regcomp(__buffer, __pattern, __length);
 	if(res == 0)
@@ -292,7 +306,7 @@ wchar_t* wmempcpy (wchar_t* wto, const wchar_t* wfrom, size_t size) {
 	return (wchar_t *)mempcpy(wto, wfrom, size * sizeof(wchar_t));
 }
 
-int mknod() {
+int mknod(void) {
 	errno = ENOSYS;
 	return -1;
 }
@@ -314,4 +328,8 @@ int chmod(const char* name, mode_t mode) {
 unsigned alarm(unsigned __secs) {
 	// used for timeout (at least in tst-mktime2). we have our own timeout, so we can leave this empty.
 	return 0;
+}
+
+int malloc_trim(size_t __pad) {
+	return 1;
 }

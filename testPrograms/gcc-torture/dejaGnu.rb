@@ -277,7 +277,9 @@ def parseDejaGnu
 				end
 			when 'dg-additional-sources'
 				a[1..-1].each do |as|
-					@EXTRA_SOURCEFILES << File.dirname(@sourcepath)+'/'+as
+					as.split(' ').each do |s|
+						@EXTRA_SOURCEFILES << File.dirname(@sourcepath)+'/'+s
+					end
 				end
 			when 'dg-options',
 				'dg-lto-options',
@@ -307,6 +309,7 @@ def parseDejaGnu
 				end
 
 				options.gsub!('$srcdir', BASE)
+				options.gsub!("\\", '')
 
 				if(a[0] == 'dg-extra-ld-options')
 					@EXTRA_LINKFLAGS = options
@@ -361,6 +364,11 @@ def parseDejaGnu
 					@mode = :skip
 					return
 				end
+			when 'dg-require-iconv'
+				if(a[1] == 'IBM1047' && HOST == :win32)
+					@mode = :skip
+					return
+				end
 			when 'dg-require-named-sections',
 				'dg-require-ifunc',
 				'dg-require-profiling',
@@ -382,7 +390,6 @@ def parseDejaGnu
 				'dg-require-visibility',
 				'dg-add-options',
 				'xxdg-warning',
-				'dg-require-iconv',
 				'dg-suppress-ld-options',
 				'dg-final-use',
 				'dg-require-weak-override',

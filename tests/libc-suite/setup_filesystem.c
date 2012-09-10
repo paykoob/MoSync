@@ -4,8 +4,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
-#define MAX_PATH 256
+#define MAX_PATH 1024
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAT_CUSTOM(func, check) do { int _res = (func); if(check) { printf("Error %i @ %s:%i\n",\
 	_res, __FILE__, __LINE__); return false; } } while(0)
@@ -23,7 +24,7 @@ static bool writeFile(MAHandle fh, MAHandle data, int dataOffset, int dataLen);
 // char name[];	// null-terminated
 // byte data[];	// terminated by end of record.
 // }
-void setup_filesystem() {
+void setup_filesystem(void) {
 	printf("setup_filesystem\n");
 	// first, we must find a temporary directory which we can work out of.
 	// we'll probably want to chroot() to it, too.

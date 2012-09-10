@@ -192,8 +192,13 @@ class TTWork < PipeExeWork
 			'struct-layout-1_x.c' => ' -DSKIP_DECIMAL_FLOAT',
 			'struct-layout-1_y.c' => ' -DSKIP_DECIMAL_FLOAT',
 		}
+		@EXTRA_LINKFLAGS = standardMemorySettings(16)
 		@EXTRA_EMUFLAGS = ' -noscreen -allowdivzero'
 		@NAME = name
+	end
+	def rebuildArgs
+		# warning: this flag can expose or conceal bugs.
+		return ['CONFIG=debug']
 	end
 	def define_cflags
 		#puts 'define_cflags'
