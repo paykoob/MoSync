@@ -9,7 +9,8 @@
 #include <vector>
 #include <set>
 #include <fstream>
-#include <unordered_map>
+//#include <unordered_map>
+#include "helpers/hash_map.h"
 #include <map>
 
 #define Log printf
@@ -94,7 +95,7 @@ public:
 };
 
 // reloc address => rela index
-typedef unordered_map<unsigned, unsigned> RelocMap;
+typedef hash_map<unsigned, unsigned> RelocMap;
 
 struct DebuggingData {
 	DebuggingData(Stream& ef) : elfFile(ef) {}
@@ -118,7 +119,7 @@ struct DebuggingData {
 typedef set<unsigned> CallRegs;
 
 // key: return address
-typedef unordered_map<unsigned, CallInfo> CallMap;
+typedef hash_map<unsigned, CallInfo> CallMap;
 
 // function address, index to functions
 typedef set<unsigned> FunctionPointerSet;

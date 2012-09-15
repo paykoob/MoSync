@@ -1,20 +1,103 @@
-/*
- * mktm_r.c
- * Original Author:	Adapted from tzcode maintained by Arthur David Olson.
- * Modifications:       Changed to mktm_r and added __tzcalc_limits - 04/10/02, Jeff Johnston
- *                      Fixed bug in mday computations - 08/12/04, Alex Mogilnikov <alx@intellectronika.ru>
- *                      Fixed bug in __tzcalc_limits - 08/12/04, Alex Mogilnikov <alx@intellectronika.ru>
- *
- * Converts the calendar time pointed to by tim_p into a broken-down time
- * expressed as local time. Returns a pointer to a structure containing the
- * broken-down time.
- */
-
-#include <stdlib.h>
 #include <time.h>
-#include <errno.h>
+#include <limits.h>
+#include <stdio.h>
+#include <maassert.h>
 #include <assert.h>
-#include "local.h"
+#include <stdlib.h>
+#include <errno.h>
+#include "../../libs/newlib/libc/time/local.h"
+
+#define DIV(a, b) ((a) / (b) - ((a) % (b) < 0))
+#define LEAPS_THRU_END_OF(y) (DIV (y, 4) - DIV (y, 100) + DIV (y, 400))
+
+#define DUMPI(i) printf("%s: %lli\n", #i, i)
+#if 0
+static time_t test(time_t days, time_t y, time_t yg) {
+	days -= ((yg - y) * 365
+			+ LEAPS_THRU_END_OF (yg - 1)
+			- LEAPS_THRU_END_OF (y - 1));
+	return days;
+}
+
+static time_t test2(time_t days, time_t y, time_t yg) {
+	time_t diff;
+#if 0
+	days -= ((yg - y) * 365
+			+ LEAPS_THRU_END_OF (yg - 1)
+			- LEAPS_THRU_END_OF (y - 1));
+#endif
+	DUMP((yg - y) * 365);
+	DUMP(LEAPS_THRU_END_OF (yg - 1));
+	DUMP(LEAPS_THRU_END_OF (y - 1));
+	diff = ((yg - y) * 365
+			+ LEAPS_THRU_END_OF (yg - 1)
+			- LEAPS_THRU_END_OF (y - 1));
+	DUMP(diff);
+	DUMP(days - diff);
+	return days - diff;
+}
+#endif
+#if 0
+static time_t test3(time_t days, time_t y, time_t yg) {
+	DUMP((yg - y) * 365);
+	return days;
+}
+static time_t test4(time_t days, time_t y, time_t yg) {
+	DUMP((yg - y));
+	return days;
+}
+#if 0
+static time_t test5(time_t days, time_t y, time_t yg) {
+	DUMP(y * 365);
+	return days;
+}
+static time_t test6(time_t days, time_t y, time_t yg) {
+	DUMP(yg * 365);
+	return days;
+}
+#endif
+static time_t test7(time_t days, time_t y, time_t yg) {
+	return yg - y;
+}
+static time_t test8(time_t days, time_t y, time_t yg) {
+	return yg + y;
+}
+#endif
+
+#if 0
+#define _ISLEAP(y) (((y) % 4) == 0 && (((y) % 100) != 0 || (((y)+1900) % 400) == 0))
+static int isleap(time_t y) { return _ISLEAP(y); }
+#endif
+
+#if 1
+#define LOG printf
+#else
+#define LOG(...)
+#endif
+
+#if 0
+static time_t test0(time_t days, time_t y) {
+	while (days < 0 || days >= (isleap (y) ? 366 : 365))
+	{
+		/* Guess a corrected year, assuming 365 days per year.  */
+		time_t yg = y + days / 365 - (days % 365 < 0);
+		LOG("days: %llx, y: %llx, yg: %llx\n", days, y, yg);
+
+		/* Adjust DAYS and Y to match the guessed year.  */
+		days -= ((yg - y) * 365
+			+ LEAPS_THRU_END_OF (yg - 1)
+			- LEAPS_THRU_END_OF (y - 1));
+#define DUMPLLX(i) LOG("%s: 0x%llx\n", #i, (i))
+		DUMPLLX((yg - y) * 365);
+		DUMPLLX(LEAPS_THRU_END_OF (yg - 1));
+		DUMPLLX(LEAPS_THRU_END_OF (y - 1));
+		y = yg;
+	}
+	//DUMPI(y);
+	return days;
+}
+#endif
+
 
 static _CONST int mon_lengths[2][MONSPERYEAR] = {
   {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
@@ -26,11 +109,7 @@ static _CONST int year_lengths[2] = {
   366
 } ;
 
-struct tm *
-_DEFUN (_mktm_r, (tim_p, res, is_gmtime),
-	_CONST time_t * tim_p _AND
-	struct tm *res _AND
-	int is_gmtime)
+static struct tm* s_mktm_r(_CONST time_t * tim_p, struct tm *res, int is_gmtime)
 {
   time_t days, rem;
   time_t lcltime;
@@ -45,6 +124,7 @@ _DEFUN (_mktm_r, (tim_p, res, is_gmtime),
 
   days = (lcltime) / SECSPERDAY;
   rem = (lcltime) % SECSPERDAY;
+	LOG("mktm_r lcltime: 0x%llx, SECSPERDAY %li, days: 0x%llx, rem: 0x%llx\n", lcltime, SECSPERDAY, days, rem);
   while (rem < 0)
     {
       rem += SECSPERDAY;
@@ -102,11 +182,17 @@ _DEFUN (_mktm_r, (tim_p, res, is_gmtime),
 	{
 		/* Guess a corrected year, assuming 365 days per year.  */
 		time_t yg = y + days / 365 - (days % 365 < 0);
+		//LOG("days: %llx, y: %llx, yg: %llx\n", days, y, yg);
 
 		/* Adjust DAYS and Y to match the guessed year.  */
 		days -= ((yg - y) * 365
 			+ LEAPS_THRU_END_OF (yg - 1)
 			- LEAPS_THRU_END_OF (y - 1));
+		//printf("%s: 0x%llx\n", "foo", (yg - y) * 365);
+#define DUMPLLX(i) LOG("%s: 0x%llx\n", #i, (i))
+		DUMPLLX((yg - y) * 365);
+		DUMPLLX(LEAPS_THRU_END_OF (yg - 1));
+		//DUMPLLX(LEAPS_THRU_END_OF (y - 1));
 		y = yg;
 		loopCount++;
 		assert(loopCount < 100);
@@ -230,63 +316,44 @@ _DEFUN (_mktm_r, (tim_p, res, is_gmtime),
   return (res);
 }
 
-int
-_DEFUN (__tzcalc_limits, (year),
-	int year)
-{
-  int days, year_days, years;
-  int i, j;
-  __tzinfo_type *tz = __gettzinfo ();
 
-  if (year < EPOCH_YEAR)
-    return 0;
 
-  tz->__tzyear = year;
-
-  years = (year - EPOCH_YEAR);
-
-  year_days = years * 365 +
-    (years - 1 + EPOCH_YEARS_SINCE_LEAP) / 4 - (years - 1 + EPOCH_YEARS_SINCE_CENTURY) / 100 +
-    (years - 1 + EPOCH_YEARS_SINCE_LEAP_CENTURY) / 400;
-
-  for (i = 0; i < 2; ++i)
-    {
-      if (tz->__tzrule[i].ch == 'J')
-	days = year_days + tz->__tzrule[i].d +
-		(isleap(year) && tz->__tzrule[i].d >= 60);
-      else if (tz->__tzrule[i].ch == 'D')
-	days = year_days + tz->__tzrule[i].d;
-      else
-	{
-	  int yleap = isleap(year);
-	  int m_day, m_wday, wday_diff;
-	  _CONST int *ip = mon_lengths[yleap];
-
-	  days = year_days;
-
-	  for (j = 1; j < tz->__tzrule[i].m; ++j)
-	    days += ip[j-1];
-
-	  m_wday = (EPOCH_WDAY + days) % DAYSPERWEEK;
-
-	  wday_diff = tz->__tzrule[i].d - m_wday;
-	  if (wday_diff < 0)
-	    wday_diff += DAYSPERWEEK;
-	  m_day = (tz->__tzrule[i].n - 1) * DAYSPERWEEK + wday_diff;
-
-	  while (m_day >= ip[j-1])
-	    m_day -= DAYSPERWEEK;
-
-	  days += m_day;
+int MAMain(void) GCCATTRIB(noreturn);
+int MAMain(void) {
+	struct tm t;
+	time_t ti = LONG_LONG_MAX;
+	struct tm* tp;
+	tp = s_mktm_r(&ti, &t, 0);
+	printf("%p\n", tp);
+	if(tp) {
+		DUMPI((time_t)t.tm_year);
 	}
-
-      /* store the change-over time in GMT form by adding offset */
-      tz->__tzrule[i].change = days * SECSPERDAY +
-	      			tz->__tzrule[i].s + tz->__tzrule[i].offset;
-    }
-
-  tz->__tznorth = (tz->__tzrule[0].change < tz->__tzrule[1].change);
-
-  return 1;
+#if 0
+	time_t days = LONG_LONG_MAX / 365;
+	time_t y = 1970;
+	time_t yg = y + days / 365 - (days % 365 < 0);
+	DUMPI(days);
+	DUMPI(y);
+	DUMPI(yg);
+	DUMPI(test0(days, y));
+#endif
+#if 0
+	DUMP(test(days, y, yg));
+	DUMP(test2(days, y, yg));
+#endif
+#if 0
+	DUMP(test3(days, y, yg));
+	test4(days, y, yg);
+	DUMP(test7(days, y, yg));
+	DUMP(test7(days, 2, 4));
+	DUMP(test8(days, 2, 2));
+	DUMP(test7(days, 0x200000000, 0x400000000));
+	DUMP(test8(days, 0x200000000, 0x200000000));
+	DUMP(test7(days, 0x7b2, 0x3ef739672594));
+#endif
+#if 0
+	test5(days, yg, y);
+	test6(days, yg, y);
+#endif
+	FREEZE;
 }
-

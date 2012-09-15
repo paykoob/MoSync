@@ -16,6 +16,7 @@ end
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_exe.rb')
 require File.expand_path(ENV['MOSYNCDIR']+'/rules/mosync_lib.rb')
 require 'fileutils'
+require 'stringio'
 require './skipped.rb'
 
 if(target)
@@ -54,9 +55,8 @@ def input_files(filename)
 	end
 end
 
-def writeArgvFile(filename, argv, testSrcName)
+def writeArgvFile(file, argv, testSrcName)
 	argv = DEFAULT_ARGV if(!argv)
-	file = open(filename, 'w')
 	file.write("const char* gArgv[] = {\"#{File.basename(testSrcName, File.extname(testSrcName))}\", ")
 	argv.each do |arg|
 		file.write("\"#{arg}\",")
@@ -72,14 +72,25 @@ def writeArgvFile(filename, argv, testSrcName)
 		file.write("\tstdin = fopen(\"#{File.basename(inputs[0])}\", \"r\");\n")
 	end
 	file.write("}\n")
-	file.close
 end
 
 def doArgv(baseName, argv, testSrcName)
 	cName = "build/argv-#{baseName}.c"
 	FileUtils.mkdir_p('build')
-	writeArgvFile(cName, argv, testSrcName)
+	file = open(cName, 'w')
+	writeArgvFile(file, argv, testSrcName)
+	file.close
 	return cName
+end
+
+class ArgvTask < MemoryGeneratedFileTask
+	def initialize(work, baseName, argv, testSrcName)
+		cName = "build/argv-#{baseName}.c"
+		io = StringIO.new
+		writeArgvFile(io, argv, testSrcName)
+		@buf = io.string
+		super(work, cName)
+	end
 end
 
 def dos2unixInPlaceCommand
@@ -178,7 +189,9 @@ mod.class_eval do
 		@EXTRA_SOURCEFILES = [
 			'helpers.c',
 			'setup_filesystem.c',
-			doArgv('default', DEFAULT_ARGV, 'default'),
+		]
+		@EXTRA_SOURCETASKS = [
+			ArgvTask.new(self, 'default', DEFAULT_ARGV, 'default'),
 		]
 		@EXTRA_INCLUDES = ['.'] if(!USE_NEWLIB)
 		@EXTRA_CFLAGS = ' -Wno-missing-prototypes -Wno-missing-declarations'
@@ -210,8 +223,9 @@ class TTWork < PipeExeWork
 		bn = File.basename(f)
 		argv = SPECIFIC_ARGV.fetch(bn, nil)
 		inputs = input_files(f)
+		@EXTRA_SOURCETASKS = []
 		if(argv != nil || !inputs.empty?)
-			@EXTRA_SOURCEFILES << doArgv(bn, argv, f)
+			@EXTRA_SOURCETASKS << ArgvTask.new(self, bn, argv, f)
 		else
 			@EXTRA_OBJECTS << FileTask.new(self, Libdir.get()+'argv-default.o')
 		end

@@ -1686,12 +1686,12 @@ interface MAAPI {
 	* Returns the number of seconds that have passed since
 	* 00:00:00, Jan 1st, 1970, UTC, according to the device clock.
 	*/
-	int maTime();
+	longlong maTime();
 	/**
 	* Returns the number of seconds that have passed since
 	* 00:00:00, Jan 1st, 1970, local time, according to the device clock.
 	*/
-	int maLocalTime();
+	longlong maLocalTime();
 	/**
 	* Returns the number of milliseconds that has passed since some unknown point in time.
 	* Accuracy is platform-specific, but should be better than 20 ms.
@@ -1788,7 +1788,7 @@ interface MAAPI {
 		*/
 		int reportType;
 		/// The time the report was generated. The format is unix time. \see maTime()
-		int time;
+		longlong time;
 		/**
 		* The value of the MoSync instruction pointer at the time the report was generated.
 		* \< 0 if the MoSync core was inaccessible.
@@ -2351,7 +2351,7 @@ interface MAAPI {
 			* This is the number of seconds that have passed since
 			* 00:00:00, Jan 1st, 1970, local time.
 			*/
-			//int time;
+			//longlong time;
 			/*	//disabled
 			* The millisecond component of \a time.
 			*/
@@ -2557,7 +2557,7 @@ interface MAAPI {
 		* The time format is Unix UTC.
 		* \see maTime()
 		*/
-		int maFileDate(in MAHandle file);
+		longlong maFileDate(in MAHandle file);
 
 		/**
 		* Renames a file.
@@ -3301,7 +3301,7 @@ group PIMAPI "PIM API" {
 			BINARY = 0;
 			/// int
 			BOOLEAN = 1;
-			/// int
+			/// longlong
 			/// unix time.
 			DATE = 2;
 			/// int
@@ -10639,7 +10639,7 @@ group NotificationAPI "Notification API" {
 			/**
 			* @brief Set the date and time when the system should deliver the notification.
 			*
-			* @validvalue an int.
+			* @validvalue a longlong.
 			* The date is in seconds(UNIX time - seconds elapsed since January 1, 1970).
 			*
 			* @setandget

@@ -40,7 +40,7 @@ int lprintf(const char* fmt, ...) {
 	char buf[2048];
 	int len;
 	static int lastWLres = 0;
-	
+
 	if(lastWLres < 0)
 		return lastWLres;
 
@@ -147,7 +147,7 @@ static void dumpItem(MAHandle list, MAHandle item) {
 				LOG("%i", *(int*)buf);
 				break;
 			case MA_PIM_TYPE_DATE:
-				LOG("%i (date printing unsupported)", *(int*)buf);
+				LOG("%i (date printing unsupported)", *(time_t*)buf);
 				break;
 			case MA_PIM_TYPE_STRING_ARRAY:
 				{
@@ -248,14 +248,14 @@ static const int snSimpleFields = sizeof(sSimpleFields) / sizeof(SimpleField);
 
 static void addContacts() {
 	char buf[512];
-	
+
 	printf("Adding dummy contact...\n");
 	// open & create
 	MAHandle list = maPimListOpen(MA_PIM_CONTACTS);
 	TEST(list);
 	MA_PIM_ARGS args;
 	TEST(args.item = maPimItemCreate(list));
-	
+
 	// add values
 	for(int i=0; i<snSimpleFields; i++) {
 		const SimpleField& sf(sSimpleFields[i]);
@@ -269,7 +269,7 @@ static void addContacts() {
 	args.buf = buf;
 	args.bufSize = writeStringArray<5>(buf, sDummyName);
 	TEST(maPimItemAddValue(&args, 0));
-	
+
 #if 1
 	args.field = MA_PIM_FIELD_CONTACT_TEL;
 	args.buf = (void*)sDummyTelA;
@@ -280,19 +280,19 @@ static void addContacts() {
 	args.buf = buf;
 	args.bufSize = writeStringArray<7>(buf, sDummyAddr);
 	TEST(maPimItemAddValue(&args, 0));
-	
+
 	// try SetValue
 	args.field = MA_PIM_FIELD_CONTACT_TEL;
 	args.buf = (void*)sDummyTelB;
 	args.bufSize = sizeof(sDummyTelB);
 	TEST(maPimItemSetValue(&args, 0, MA_PIM_ATTR_WORK | MA_PIM_ATTR_PREFERRED));
-	
+
 	// try RemoveValue
 	args.field = MA_PIM_FIELD_CONTACT_EMAIL;
 	args.buf = (void*)sDummyEmail;
 	args.bufSize = sizeof(sDummyEmail);
 	TEST(maPimItemAddValue(&args, 0));
-	
+
 	TEST(maPimItemRemoveValue(args.item, args.field, 0));
 #endif
 
@@ -303,7 +303,7 @@ static void addContacts() {
 	if(count != supposedCount) {
 		printf("BAD ITEM COUNT! (%i)\n", supposedCount);
 	}
-	
+
 	// close it up real good at the top
 	TEST(maPimItemClose(args.item));
 	TEST(maPimListClose(list));

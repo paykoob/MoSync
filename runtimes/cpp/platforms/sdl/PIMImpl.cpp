@@ -146,6 +146,12 @@ struct StringArray {
 
 
 template<>
+void TContactValue<int>::setValue(void* buf, size_t bufSize) {
+	MYASSERT(bufSize == sizeof(int), ERR_INVALID_PIM_BUFFER_SIZE);
+	mValue = *(int*)buf;
+}
+
+template<>
 int TContactValue<int>::getValue(void* buf, size_t bufSize) const {
 	if(bufSize < sizeof(int))
 		return sizeof(int);
@@ -154,14 +160,21 @@ int TContactValue<int>::getValue(void* buf, size_t bufSize) const {
 }
 
 template<>
-void TContactValue<int>::setValue(void* buf, size_t bufSize) {
-	MYASSERT(bufSize = sizeof(int), ERR_INVALID_PIM_BUFFER_SIZE);
-	mValue = *(int*)buf;
+void TContactValue<time_t>::setValue(void* buf, size_t bufSize) {
+	MYASSERT(bufSize == sizeof(time_t), ERR_INVALID_PIM_BUFFER_SIZE);
+	mValue = *(time_t*)buf;
 }
 
-static void streamDateTime(ostream& stream, int time) {
+template<>
+int TContactValue<time_t>::getValue(void* buf, size_t bufSize) const {
+	if(bufSize < sizeof(time_t))
+		return sizeof(time_t);
+	*(time_t*)buf = mValue;
+	return sizeof(time_t);
+}
+
+static void streamDateTime(ostream& stream, time_t t) {
 	char buf[64];
-	time_t t = time;
 	strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", gmtime(&t));
 	stream << buf;
 }
@@ -173,6 +186,17 @@ void TContactValue<int>::saveValue(ostream& stream) const {
 	case MA_PIM_TYPE_INT:
 		stream << mValue;
 		break;
+	default:
+		DEBIG_PHAT_ERROR;
+	}
+
+	stream <<"\"";
+}
+
+template<>
+void TContactValue<time_t>::saveValue(ostream& stream) const {
+	stream << " value=\"";
+	switch(type) {
 	case MA_PIM_TYPE_DATE:
 		streamDateTime(stream, mValue);
 		break;
@@ -697,7 +721,7 @@ namespace ContactParser {
 	// this is not a proper W3C DTF parser; fractions of a second is not allowed.
 	// it's ok, though, because they'd be ignored anyway.
 	// Timezone information is ignored.
-	static void parseDate(int& d, const char* value) {
+	static void parseDate(time_t& d, const char* value) {
 		struct tm ctime;
 		memset(&ctime, 0, sizeof(struct tm));
 		const char* res = strptime(value, "%FT%T", &ctime);
@@ -711,7 +735,7 @@ namespace ContactParser {
 		time_t ttime = timegm(&ctime);
 		if(ttime > INT_MAX || ttime < 0)
 			error("date out of bounds");
-		d = (int)ttime;
+		d = ttime;
 	}
 
 	template<class T> static ContactValue* attrT(void (*parse)(T&, const char*),
@@ -912,9 +936,11 @@ static int createContactValue(ContactValue*& v, int field, void* buf, int bufSiz
 	int type = pimContactFieldType(field);
 	switch(type) {
 	case MA_PIM_TYPE_BOOLEAN:
-	case MA_PIM_TYPE_DATE:
 	case MA_PIM_TYPE_INT:
 		v = new TContactValue<int>(type);
+		break;
+	case MA_PIM_TYPE_DATE:
+		v = new TContactValue<time_t>(type);
 		break;
 	case MA_PIM_TYPE_STRING:
 		v = new TContactValue<wstring>(type);

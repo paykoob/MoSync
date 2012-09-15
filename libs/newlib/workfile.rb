@@ -63,6 +63,7 @@ mod.class_eval do
 		@IGNORED_FILES << 'engine.c'
 		@IGNORED_FILES << 'rename.c'
 		@IGNORED_FILES << 'memset.c'
+		@IGNORED_FILES << 'memcpy.c'
 
 		@EXTRA_CFLAGS = " -DUSE_EXOTIC_MATH -Wno-float-equal -Wno-unreachable-code -Wno-sign-compare -Wno-old-style-definition"
 		if(CONFIG=="")

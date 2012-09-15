@@ -1701,10 +1701,10 @@ namespace Base {
 		DEBUG_ASRTZERO(SDL_UnlockMutex(gTimerMutex));
 	}
 
-	SYSCALL(int, maTime()) {
-		return (int)time(NULL);
+	SYSCALL(longlong, maTime()) {
+		return time(NULL);
 	}
-	SYSCALL(int, maLocalTime()) {
+	SYSCALL(longlong, maLocalTime()) {
 #ifdef WIN32
 		TIME_ZONE_INFORMATION tzi;
 		DWORD res = GetTimeZoneInformation(&tzi);
@@ -1714,7 +1714,7 @@ namespace Base {
 			bias += tzi.DaylightBias;
 		if(res == TIME_ZONE_ID_STANDARD)
 			bias += tzi.StandardBias;
-		return (int)(time(NULL) - (bias * 60));
+		return (time(NULL) - (bias * 60));
 #else
 		time_t t = time(NULL);
 		tm* lt = localtime(&t);

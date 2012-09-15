@@ -38,7 +38,7 @@ extern "C" {
 #endif
 
 #ifndef _MSC_VER
-typedef int time_t;
+typedef long long time_t;
 #endif
 #endif	//_TIME_H
 

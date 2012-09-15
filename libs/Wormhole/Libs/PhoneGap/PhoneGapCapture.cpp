@@ -192,7 +192,7 @@ namespace Wormhole
 						sizeof(localPath));
 					sprintf(
 						pathBuffer,
-						"%simg%d.%s",
+						"%simg%lld.%s",
 						localPath,
 						maLocalTime(),
 						extension.c_str());
