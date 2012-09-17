@@ -241,6 +241,7 @@ class TTWork < PipeExeWork
 			if(@mode == :run || @mode == :link)
 				super
 			elsif(@mode == :compile)
+				@EXTRA_CFLAGS << ' -fexceptions -frtti'
 				compile
 			elsif(@mode == :skip)
 				puts "Skipped #{@sourcepath}"

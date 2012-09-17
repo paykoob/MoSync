@@ -3,7 +3,7 @@
 BAD_OPTIONS = [
 	'-fprofile',
 	'-fdump',
-	'-fexceptions',
+#	'-fexceptions',	# only bad if mode == :run
 	'-ftrapv',
 	'--dump=',
 	'-fno-foobar',
@@ -14,6 +14,7 @@ BAD_OPTIONS = [
 	'-std=iso9899:1990 -pedantic',
 	'-std=iso9899:199409 -pedantic',
 	'-fopenmp',
+	'-frepo',
 ]
 
 if(defined?(MODE) && MODE == 'rebuild')
@@ -51,6 +52,7 @@ EFFECTIVE_TARGETS = [
 
 INEFFECTIVE_TARGETS = [
 	'arm_eabi',
+	'arm_neon_ok',
 	'dfp',
 	'fpic',
 	'fstack_protector',
@@ -81,6 +83,7 @@ ACCEPTABLE_TARGETS = [
 	'native',
 	'nonpic',
 	'stdint_types',
+	'unwrapped',
 	'vect_cmdline_needed',
 	'vect_int',
 	'wchar',
@@ -96,16 +99,19 @@ UNACCEPTABLE_TARGETS = [
 	'-mlongcall',
 	'4byte_wchar_t',
 	'avx_runtime',
+	'arm_eabi',
 	'default_packed',
 	'dfp',
 	'fixed_point',
 	'fpic',
 	'ilp32',
 	'lp64',
+	'int128',
 	'pcc_bitfield_type_matters',
 	'powerpc_hard_double',
 	'short_enums',
 	'vmx_hw',
+	'vxworks_kernel',
 	#'No Inf support',
 	#'No NaN support',
 	#'No Inf/NaN support',
@@ -226,6 +232,7 @@ def parseDejaGnu
 
 			#p a
 			# pr43002.c
+			next if(a[0] == nil)
 			next if(!a[0].start_with?('dg-'))
 
 			# parse the results.
@@ -308,6 +315,7 @@ def parseDejaGnu
 					end
 				end
 
+				options.gsub!('${srcdir}', BASE)
 				options.gsub!('$srcdir', BASE)
 				options.gsub!("\\", '')
 
@@ -393,6 +401,7 @@ def parseDejaGnu
 				'dg-suppress-ld-options',
 				'dg-final-use',
 				'dg-require-weak-override',
+				'dg-require-host-local',
 				'dg-warning'
 				# ignored
 			else

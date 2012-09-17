@@ -121,38 +121,63 @@ SKIPPED = [
 'g++.old-deja/g++.jason/dcast3.C',	# dynamic_cast
 'g++.old-deja/g++.jason/thunk3.C',	# variadric thunk
 'g++.old-deja/g++.law/operators27.C',	# exceptions
-'g++.old-deja/g++.law/pr25000.C',	# exceptions
+#'g++.old-deja/g++.law/pr25000.C',	# exceptions
 'g++.old-deja/g++.law/profile1.C',	# profile mode not supported
 'g++.old-deja/g++.martin/new1.C',	# exceptions
-'g++.old-deja/g++.mike/dyncast3.C',	# dynamic_cast
+#'g++.old-deja/g++.mike/dyncast3.C',	# dynamic_cast
 'g++.old-deja/g++.mike/dyncast9.C',	# dynamic_cast
 'g++.old-deja/g++.mike/p16146.C',	# dynamic_cast
-'g++.old-deja/g++.mike/p7912.C',	# exceptions
-'g++.old-deja/g++.mike/p9706.C',	# exceptions
+#'g++.old-deja/g++.mike/p7912.C',	# exceptions
+#'g++.old-deja/g++.mike/p9706.C',	# exceptions
 'g++.old-deja/g++.oliva/delete3.C',	# exceptions
-'g++.old-deja/g++.oliva/new1.C',	# exceptions
-'g++.old-deja/g++.other/array1.C',	# exceptions
-'g++.old-deja/g++.other/crash15.C',	# exceptions
-'g++.old-deja/g++.other/dcast2.C',	# dynamic_cast
-'g++.old-deja/g++.other/delete3.C',	# exceptions
-'g++.old-deja/g++.other/eh3.C',	# exceptions
-'g++.old-deja/g++.other/eh5.C',	# exceptions
-'g++.old-deja/g++.other/init7.C',	# exceptions
-'g++.old-deja/g++.other/new7.C',	# exceptions
-'g++.old-deja/g++.other/singleton.C',	# exceptions
+#'g++.old-deja/g++.oliva/new1.C',	# exceptions
+'g++.old-deja/g++.oliva/expr1.C',	# error: could not convert '0' from 'void' to 'bool'
+'g++.old-deja/g++.oliva/linkage1.C',	# unfixed gcc bug
+'g++.old-deja/g++.oliva/ns2.C',	# unfixed gcc bug
+#'g++.old-deja/g++.other/array1.C',	# exceptions
+#'g++.old-deja/g++.other/crash15.C',	# exceptions
+#'g++.old-deja/g++.other/dcast2.C',	# dynamic_cast
+#'g++.old-deja/g++.other/delete3.C',	# exceptions
+#'g++.old-deja/g++.other/eh3.C',	# exceptions
+#'g++.old-deja/g++.other/eh5.C',	# exceptions
+#'g++.old-deja/g++.other/init7.C',	# exceptions
+#'g++.old-deja/g++.other/new7.C',	# exceptions
+#'g++.old-deja/g++.other/singleton.C',	# exceptions
 'g++.old-deja/g++.other/syntax1.C',	# -fsyntax-only
 'g++.old-deja/g++.other/syntax2.C',	# -fsyntax-only
-'g++.old-deja/g++.other/vbase2.C',	# exceptions
+#'g++.old-deja/g++.other/vbase2.C',	# exceptions
 'g++.old-deja/g++.pt/const2.C',	# fails on purpose, though it shouldn't. very weird.
 'g++.old-deja/g++.pt/crash20.C',	# fails on purpose?
-'g++.old-deja/g++.pt/fntry1.C',	# exceptions
+'g++.old-deja/g++.pt/explicit76.C', # fails on purpose?
+#'g++.old-deja/g++.pt/fntry1.C',	# exceptions
 'g++.old-deja/g++.pt/instantiate4.C',	# fails on purpose
-'g++.old-deja/g++.robertl/eb123.C',	# exceptions
-'g++.old-deja/g++.robertl/eb124.C',	# exceptions
+'g++.old-deja/g++.pt/instantiate6.C',	# fails on purpose
+'g++.old-deja/g++.pt/overload7.C',	# gcc bug
+'g++.old-deja/g++.pt/repo1.C',	# fails on purpose?
+#'g++.old-deja/g++.robertl/eb123.C',	# exceptions
+#'g++.old-deja/g++.robertl/eb124.C',	# exceptions
 'g++.old-deja/g++.robertl/eb130.C',	# requires GNU stl
 'g++.old-deja/g++.robertl/eb17.C',	# dynamic_cast
-'g++.old-deja/g++.robertl/eb50.C',	# exceptions
-'g++.old-deja/g++.robertl/eb88.C',	# exceptions
+#'g++.old-deja/g++.robertl/eb50.C',	# exceptions
+#'g++.old-deja/g++.robertl/eb88.C',	# exceptions
+#'g++.old-deja/g++.robertl/eh990323-1.C',	# exceptions
+#'g++.old-deja/g++.robertl/eh990323-2.C',	# exceptions
+#'g++.old-deja/g++.robertl/eh990323-3.C',	# exceptions
+#'g++.old-deja/g++.robertl/eh990323-4.C',	# exceptions
+#'g++.old-deja/g++.robertl/eh990323-5.C',	# exceptions
+#'g++.old-deja/g++.robertl/ice990323-2.C',	# exceptions
+
+'g++.dg/abi/dcast1.C', #rtti
+'g++.dg/abi/mangle60.C', # gcc bug
+'g++.dg/charset/asm1.c', # broken asm
+'g++.dg/charset/asm3.c', # broken asm
+'g++.dg/charset/asm4.c', # broken asm
+'g++.dg/charset/asm5.c', # broken asm
+'g++.dg/compat/struct-layout-1_generate.c', # not a test program
+#'g++.dg/cpp0x/constexpr-base3.C',	# exceptions
+#'g++.dg/cpp0x/constexpr-defarg2.C',	# exceptions
+#'g++.dg/cpp0x/constexpr-potential1.C',	# exceptions
+
 'gcc.dg/20020312-2.c',#ij
 'gcc.dg/20031218-3.c',#nf
 'gcc.dg/20081223-1.c',	# fails on purpose
@@ -240,6 +265,11 @@ SKIPPED = [
 'compile/limits-exprparen.c',	# gcc bug, segfault due to 27796 stack frames.
 #'g++.old-deja/g++.law/ctors18.C',	# emit_move_insn SImode -> QImode. This one's different.
 #'g++.old-deja/g++.law/cvt3.C',	# emit_move_insn SImode -> QImode.
+'g++.old-deja/g++.niklas/t140.C',	# mapip2 bug, missing function stab for constructor in struct nested in function.
+'g++.old-deja/g++.other/local1.C',	# mapip2 bug, missing function stab for constructor in struct nested in function.
+'g++.old-deja/g++.other/local3.C',	# mapip2 bug, missing function stab for constructor in struct nested in function.
+'g++.old-deja/g++.other/lookup6.C',	# mapip2 bug, missing function stab for constructor in struct nested in function.
+'g++.old-deja/g++.pt/local6.C',	# mapip2 bug, missing function stab for constructor in struct nested in function.
 
 'gcc.dg/initpri1.c',	# mapip2 bug, constructor priority.
 'gcc.dg/initpri3.c',	# mapip2 bug, constructor priority.
@@ -247,12 +277,12 @@ SKIPPED = [
 'gcc.dg/compat/scalar-return-4_y.c',	# mapip2 bug, emit_move_insn QCImode -> SImode
 '20050121-1.c', # mapip2 bug, emit_move_insn QCImode -> SImode
 'gcc.dg/cpp/trigraphs.c',	# does NOT like // comments.
-'gcc.dg/debug/pr41717.c',	# mapip2 bug, complex float
-'gcc.dg/graphite/id-2.c',	# mapip2 bug, complex float
-'gcc.dg/torture/fp-int-convert-float.c',	# mapip2 bug, floatdisf2
-'gcc.dg/torture/pr26869.c',	# mapip2 bug, complex float
-'gcc.dg/torture/pr27773.c',	# mapip2 bug, complex float
-'gcc.dg/torture/pr40328.c',	# mapip2 bug, complex float
+#'gcc.dg/debug/pr41717.c',	# mapip2 bug, complex float
+#'gcc.dg/graphite/id-2.c',	# mapip2 bug, complex float
+#'gcc.dg/torture/fp-int-convert-float.c',	# mapip2 bug, floatdisf2
+#'gcc.dg/torture/pr26869.c',	# mapip2 bug, complex float
+#'gcc.dg/torture/pr27773.c',	# mapip2 bug, complex float
+#'gcc.dg/torture/pr40328.c',	# mapip2 bug, complex float
 ]
 
 SKIPPED_REGEXP = [
@@ -275,6 +305,9 @@ SKIP_LINES = [
 '#include <setjmp.h>',
 '#include "tree-vect.h"',
 '#include <sys/mman.h>',
+'#include <initializer_list>',
+'#include <type_traits>',
+'#include <stdexcept>',
 ]
 
 SKIPPED_DIRS = [
@@ -334,7 +367,7 @@ if(CONFIG == "")
 	end
 else
 	SKIPPED << 'pr17377.c'	# mapip2 bug, __builtin_return_address
-	SKIPPED << 'c-c++-common/Wunused-var-8.c'	# mapip2 bug, find_valid_class(DI, SI)
+	#SKIPPED << 'c-c++-common/Wunused-var-8.c'	# mapip2 bug, find_valid_class(DI, SI)
 	SKIPPED << 'c-c++-common/restrict-1.c'	# fails on purpose
 	SKIPPED << 'gcc.dg/torture/builtin-power-1.c'	# fails on purpose
 end
