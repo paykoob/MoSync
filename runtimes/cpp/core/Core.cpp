@@ -794,6 +794,7 @@ public:
 
 		// some programs have no ctor section.
 		regs[REG_p3] = 0;
+		regs[REG_g0] = 0;
 
 #ifdef MEMORY_PROTECTION
 		protectionSet = new byte[(DATA_SEGMENT_SIZE+7)>>3];
@@ -897,6 +898,8 @@ public:
 				//no need to zero bss, memeory's already zeroed.
 				if(shdr.sh_name != 0) if(strcmp(&strings[shdr.sh_name], ".ctors") == 0)
 					regs[REG_p3] = shdr.sh_addr;
+				if(shdr.sh_name != 0) if(strcmp(&strings[shdr.sh_name], ".dtors") == 0)
+					regs[REG_g0] = shdr.sh_addr;
 			}
 		}
 
@@ -1006,10 +1009,12 @@ public:
 		regs[REG_p1] = Head.StackSize;
 		regs[REG_p2] = Head.HeapSize;
 		regs[REG_p3] = Head.CtorAddress;
+		regs[REG_g0] = Head.DtorAddress;
 		DUMPHEX(Head.DataSize);
 		DUMPHEX(Head.StackSize);
 		DUMPHEX(Head.HeapSize);
 		DUMPHEX(Head.CtorAddress);
+		DUMPHEX(Head.DtorAddress);
 		DUMPHEX(Head.EntryPoint);
 		IP = Head.EntryPoint;
 

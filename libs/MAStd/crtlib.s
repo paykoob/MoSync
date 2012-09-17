@@ -24,6 +24,10 @@ __stacktop:
 ___CTOR_LIST__:
 	.long	0
 
+	.globl	___DTOR_LIST__
+___DTOR_LIST__:
+	.long	0
+
 //****************************************
 //			Start up code
 //****************************************
@@ -33,16 +37,18 @@ ___CTOR_LIST__:
 	.type crt0_startup, @function
 
 .stabs "crt0_startup",36,0,0,crt0_startup
-.stabs "void,4,0",250,0,0,0
+.stabs "void,5,0",250,0,0,0
 
 	// sp: top of stack
 	// p0: memory size
 	// p1: stack size
 	// p2: heap size
 	// p3: ctor chain
+	// g0: dtor chain
 crt0_startup:
 
 	ld [&___CTOR_LIST__],p3	// save ctor chain
+	ld [&___DTOR_LIST__],g0	// save dtor chain
 
 	ld	[&__memtop],p0		// Save top of memory
 

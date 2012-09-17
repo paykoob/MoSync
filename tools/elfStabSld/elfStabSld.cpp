@@ -2,6 +2,8 @@
 #include "elfStabSld.h"
 #include "../../runtimes/cpp/core/CoreCommon.h"
 
+#define PARSE_INT(name) parseInt(name, #name)
+
 static bool readStabs(Stream& elfFile, DebuggingData& data, bool cOutput);
 #if DUMP_STABS
 static void dumpStabs(const DebuggingData& data);
@@ -9,6 +11,7 @@ static void dumpStabs(const DebuggingData& data);
 static void writeSld(const DebuggingData& data, const char* sldName);
 static void parseSymbols(const DebuggingData& data);
 static void parseStabs(const DebuggingData& data, bool cOutput);
+static int parseInt(const char* arg, const char* name);
 static void writeMx(const DebuggingData& data, const char* mxName,
 	const char* dataSize, const char* stackSize, const char* heapSize,
 	const char* buildId);
@@ -119,6 +122,9 @@ int main(int argc, const char** argv) {
 	parseSymbols(data);
 	parseStabs(data, cOutput);
 
+	data.stackSize = PARSE_INT(stackSize) * 1024;
+	data.heapSize = PARSE_INT(heapSize) * 1024;
+
 	switch(mode) {
 	case eSLD:
 		writeSld(data, s_outputName);
@@ -136,8 +142,6 @@ int main(int argc, const char** argv) {
 
 	return 0;
 }
-
-#define PARSE_INT(name) parseInt(name, #name)
 
 static int parseInt(const char* arg, const char* name) {
 	char* end;
@@ -166,6 +170,14 @@ static int parseBuildId(const char* arg) {
 	return i;
 }
 
+bfd_vma calculateDataSize(const DebuggingData& data, bfd_vma dataLen) {
+	bfd_vma ds = data.stackSize + data.heapSize + dataLen;
+	ds += data.bssSize;
+	ds = nextPowerOf2(10, ds);
+	printf("Data size: %i KiB\n", ds >> 10);
+	return ds;
+}
+
 static void writeMx(const DebuggingData& data, const char* mxName,
 	const char* dataSize, const char* stackSize, const char* heapSize,
 	const char* buildId)
@@ -177,16 +189,11 @@ static void writeMx(const DebuggingData& data, const char* mxName,
 	h.Magic = MA_HEAD_MAGIC;
 	h.CodeLen = textBytes.size();
 	h.DataLen = dataBytes.size();
-	h.StackSize = PARSE_INT(stackSize) * 1024;
-	h.HeapSize = PARSE_INT(heapSize) * 1024;
-
-	// calculate data size
-	int ds = h.StackSize + h.HeapSize + h.DataLen;
-	ds += data.bssSize;
-	h.DataSize = nextPowerOf2(10, ds);
-	printf("Data size: %i KiB\n", h.DataSize >> 10);
-
+	h.StackSize = data.stackSize;
+	h.HeapSize = data.heapSize;
+	h.DataSize = calculateDataSize(data, h.DataLen);
 	h.CtorAddress =	data.ctorAddress;
+	h.DtorAddress =	data.dtorAddress;
 	h.BuildID = parseBuildId(buildId);
 	h.AppID = 0;
 	h.EntryPoint = data.entryPoint;
@@ -582,6 +589,7 @@ DEBIG_PHAT_ERROR; }
 	//LOG("entry point: 0x%x\n", ehdr.e_entry);
 	data.entryPoint = ehdr.e_entry;
 	data.ctorAddress = 0;
+	data.dtorAddress = 0;
 	data.bssSize = 0;
 
 	{ //Read Section Table
@@ -673,6 +681,8 @@ DEBIG_PHAT_ERROR; }
 			}
 			if(strcmp(name, ".ctors") == 0)
 				data.ctorAddress = shdr.sh_addr;
+			if(strcmp(name, ".dtors") == 0)
+				data.dtorAddress = shdr.sh_addr;
 			if(strcmp(name, ".bss") == 0)
 				data.bssSize = shdr.sh_size;
 		}

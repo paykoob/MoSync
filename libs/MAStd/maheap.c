@@ -218,6 +218,7 @@ size_t heapFreeMemory(void) {
 typedef void (*VoidFunc)(void);
 
 extern VoidFunc* __CTOR_LIST__;
+extern VoidFunc* __DTOR_LIST__;
 
 void crt_ctor_chain(void);
 void crt_ctor_chain(void) {
@@ -229,13 +230,11 @@ void crt_ctor_chain(void) {
 		(*ctor)();
 		ctor++;
 	}
-	// store the dtor list.
-	__CTOR_LIST__ = ctor + 1;
 }
 
 void crt_dtor_chain(void);
 void crt_dtor_chain(void) {
-	VoidFunc* dtor = __CTOR_LIST__;
+	VoidFunc* dtor = __DTOR_LIST__;
 	if(!dtor)
 		return;
 	// run all dtors.

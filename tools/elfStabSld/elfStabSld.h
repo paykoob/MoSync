@@ -106,7 +106,10 @@ struct DebuggingData {
 	bfd_vma textSectionEndAddress;
 	bfd_vma entryPoint;
 	bfd_vma ctorAddress;
+	bfd_vma dtorAddress;
 	bfd_vma bssSize;
+	// user-defined
+	bfd_vma stackSize, heapSize;
 	// these are valid only in cOutput mode.
 	Array0<Elf32_Rela> textRela, rodataRela, dataRela;
 	Array0<Elf32_Sym> symbols;
@@ -168,3 +171,4 @@ const char* getFloatRegName(size_t r);
 extern const size_t nIntRegs, nFloatRegs;
 
 bool readSegments(const DebuggingData& data, Array0<byte>& textBytes, Array0<byte>& dataBytes);
+bfd_vma calculateDataSize(const DebuggingData& data, bfd_vma dataLen);

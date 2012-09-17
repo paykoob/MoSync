@@ -135,13 +135,14 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 	// entry point
 	file << "\n"
 	"void entryPoint() {\n"
-	"\tint p0 = 64*1024*1024;\n"
-	"\tint p1 = 1024*1024;\n"
-	"\tint p2 = 32*(1024*1024);\n"
-	"\tint p3 = 0;\n"
+	"\tint p0 = "<< calculateDataSize(data, dataBytes.size()) <<";\n"
+	"\tint p1 = "<< data.stackSize <<";\n"
+	"\tint p2 = "<< data.heapSize <<";\n"
+	"\tint p3 = "<< data.ctorAddress <<";\n"
+	"\tint g0 = "<< data.dtorAddress <<";\n"
 	"\t";
 	streamFunctionName(file, getFunction(data.entryPoint));
-	file << "(p0, p1, p2, p3);\n"
+	file << "(p0, p1, p2, p3, g0);\n"
 	"}\n";
 }
 
@@ -355,7 +356,8 @@ static void streamFunctionContents(const DebuggingData& data,
 	streamFunctionInstructions(pid, f);
 
 	// declare registers
-	streamRegisterDeclarations(os, "int ", pid.regUsage.i, nIntRegs, REG_fp, REG_p0, REG_p3, f.ci.intParams, getIntRegName);
+	streamRegisterDeclarations(os, "int ", pid.regUsage.i, nIntRegs, REG_fp,
+		REG_p0, REG_p0 + f.ci.intParams, f.ci.intParams, getIntRegName);
 	streamRegisterDeclarations(os, "double ", pid.regUsage.f, nFloatRegs, 0, 8, 15, f.ci.floatParams, getFloatRegName);
 
 	os << oss.str();
@@ -370,7 +372,7 @@ static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool 
 			first = false;
 		else
 			os << ", ";
-		os << "int p" << j;
+		os << "int " << getIntRegName(REG_p0 + j);
 	}
 	for(unsigned j=0; j<ci.floatParams; j++) {
 		if(first)

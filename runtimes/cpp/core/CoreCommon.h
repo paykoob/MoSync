@@ -35,6 +35,7 @@ typedef struct _MA_HEAD
 	int StackSize;
 	int HeapSize;
 	int CtorAddress;
+	int DtorAddress;
 	int BuildID;
 	int AppID;
 	int EntryPoint;
