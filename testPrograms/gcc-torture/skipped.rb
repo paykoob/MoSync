@@ -174,9 +174,25 @@ SKIPPED = [
 'g++.dg/charset/asm4.c', # broken asm
 'g++.dg/charset/asm5.c', # broken asm
 'g++.dg/compat/struct-layout-1_generate.c', # not a test program
-#'g++.dg/cpp0x/constexpr-base3.C',	# exceptions
+'g++.dg/cpp0x/constexpr-base3.C',	# exceptions
 #'g++.dg/cpp0x/constexpr-defarg2.C',	# exceptions
 #'g++.dg/cpp0x/constexpr-potential1.C',	# exceptions
+'g++.dg/cpp0x/implicit8.C', # fails on purpose
+'g++.dg/cpp0x/nullptr21.C',	# exceptions
+'g++.dg/cpp0x/variadic73.C', # exceptions
+'g++.dg/dfp/44473-1.C',	# unable to emulate 'SD'
+'g++.dg/expr/overflow1.C', # fails on purpose?
+'g++.dg/ext/alias-canon2.C', # fails assembly
+'g++.dg/ext/asm2.C', # x64 assembly
+'g++.dg/ext/asm3.C', # invalid inline asm?
+'g++.dg/ext/attrib6.C', # exceptions
+'g++.dg/ext/label3.C', # exceptions
+'g++.dg/ext/tmplattr9.C', # as: redefined symbol cannot be used on reloc
+'g++.dg/init/array16.C', # exceptions
+'g++.dg/init/array5.C', # exceptions
+'g++.dg/init/copy7.C', # implements memcpy()
+'g++.dg/init/ctor1.C',
+'g++.dg/init/placement2.C',
 
 'gcc.dg/20020312-2.c',#ij
 'gcc.dg/20031218-3.c',#nf
@@ -279,7 +295,7 @@ SKIPPED = [
 'gcc.dg/cpp/trigraphs.c',	# does NOT like // comments.
 #'gcc.dg/debug/pr41717.c',	# mapip2 bug, complex float
 #'gcc.dg/graphite/id-2.c',	# mapip2 bug, complex float
-#'gcc.dg/torture/fp-int-convert-float.c',	# mapip2 bug, floatdisf2
+'gcc.dg/torture/fp-int-convert-float.c',	# mapip2 bug, floatdisf2
 #'gcc.dg/torture/pr26869.c',	# mapip2 bug, complex float
 #'gcc.dg/torture/pr27773.c',	# mapip2 bug, complex float
 #'gcc.dg/torture/pr40328.c',	# mapip2 bug, complex float
@@ -312,6 +328,8 @@ SKIP_LINES = [
 
 SKIPPED_DIRS = [
 'g++.old-deja/g++.eh',
+'g++.dg/eh',
+'g++.dg/graphite',
 'gcc.dg/dfp',
 'gcc.dg/fixed-point',
 'gcc.dg/graphite',
@@ -331,6 +349,9 @@ if(!USE_NEWLIB)
 	SKIP_LINES << '#include <utility>'
 	SKIP_LINES << '#include <algorithm>'
 	SKIP_LINES << '#include <limits>'
+	SKIP_LINES << '#include <memory>'
+	SKIP_LINES << '#include <cstring>'
+	SKIP_LINES << '#include <cassert>'
 	SKIP_LINES << '#include "guality.h"'
 	SKIPPED << 'pr34456.c'	# qsort
 	SKIPPED << 'g++.old-deja/g++.jason/template44.C'	# qsort

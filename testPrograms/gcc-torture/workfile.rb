@@ -177,6 +177,8 @@ class TTWork < PipeExeWork
 			@EXTRA_OBJECTS << FileTask.new(self, Libdir.get()+'override_heap.o')
 		end
 
+		@EXTRA_CPPFLAGS = ''
+
 		@SPECIFIC_CFLAGS = {
 			# longlong to float conversion is not yet supported.
 			'conversion.c' => ' -U __GNUC__',
@@ -208,6 +210,7 @@ class TTWork < PipeExeWork
 		flags << ' -DNO_TRAMPOLINES -DNO_LABEL_VALUES'
 		flags << ' -O2 -fomit-frame-pointer' if(CONFIG == "")
 		flags << ' -ffloat-store -fno-inline' if(@sourcefile.sourcePath.base == 'ieee/')
+		flags << ' -ffloat-store' if("#{@sourcefile.sourcePath.base}#{@NAME}" == 'gcc.dg/torture/fp-int-convert-float.c') # doesn't help.
 		flags << include_flags
 		@CFLAGS = flags + @EXTRA_CFLAGS
 		@CPPFLAGS = flags + @EXTRA_CPPFLAGS
@@ -235,16 +238,20 @@ class TTWork < PipeExeWork
 		setMode
 		return @mode == :run
 	end
-	def invoke
+	def invoke(winFile)
 		begin
 			setMode
 			if(@mode == :run || @mode == :link)
-				super
+				super()
 			elsif(@mode == :compile)
-				@EXTRA_CFLAGS << ' -fexceptions -frtti'
+				@EXTRA_CPPFLAGS << ' -fexceptions -frtti'
 				compile
 			elsif(@mode == :skip)
 				puts "Skipped #{@sourcepath}"
+				puts "Reason: #{@skipReason}"
+				open(winFile, 'w') do |file|
+					file.puts @skipReason
+				end
 				return
 			elsif(@mode == :preprocess)
 				@EXTRA_CFLAGS << ' -E'
@@ -262,161 +269,6 @@ class TTWork < PipeExeWork
 
 	include DejaGnu
 
-	# scans a C file for { dg-do [compile|run] }
-	def parseMode
-		open(@sourcepath) do |file|
-			file.each do |line|
-				lineStrip = line.strip
-				SKIP_LINES.each do |sl|
-					if(lineStrip == sl)
-						@mode = :skip
-						return
-					end
-				end
-
-				dgdo = '{ dg-do '
-				ts = '{ target '
-				xfails = '{ xfail '
-				i = line.index(dgdo)
-				e = nil
-				if(i)
-					e = ti = line.index(ts)
-					if(ti)
-						ti += ts.length
-						te = line.index(' }', ti)
-						raise "Bad dg-do line!" if(!te)
-						target = line.slice(ti, te-ti).strip
-						if(target == 'inttypes_types' ||
-							target == 'fpic' ||
-							target == 'native' ||
-							target == '{ int32plus' ||
-							target == 'c99_runtime' ||
-							false)
-							# do nothing
-						elsif(target.start_with?('{ {') ||
-							target == 'alpha*-*-* cris-*-* crisv32-*-* i?86-*-* mmix-*-* powerpc*-*-* rs6000-*-* x86_64-*-*' ||
-							target == 'hppa*-*-*' ||
-							target == '{ *-*-darwin*' ||
-							target == 'm68k-*-* fido-*-* sparc-*-*' ||
-							target == 'ia64-*-* i?86-*-* x86_64-*-*' ||
-							target == 'arm*-*-pe*' ||
-							target.start_with?('i?86-*-*') ||
-							target.include?('pcc_bitfield_type_matters') ||
-							target.start_with?('i?86-*-linux') ||
-							target.start_with?('*-*-linux*') ||
-							target.start_with?('powerpc*-*-*') ||
-							target.start_with?('sh-*-*') ||
-							target.start_with?('*-*-interix*') ||
-							target.start_with?('*-*-solaris') ||
-							target.start_with?('hppa*-*-hpux*') ||
-							target.start_with?('*-*-darwin') ||
-							false)
-							@mode = :skip
-							return
-						else
-							$stderr.puts "#{@sourcepath}:1: Unknown target: #{target}"
-							exit(1)
-						end
-					end
-					if(!e)
-						# bad formatting; ignore
-						e = line.index('{target')
-					end
-					if(!e)
-						xi = line.index(xfails)
-						if(xi)
-							e = xi-1
-						else
-							e = line.index(' }', i)
-						end
-					end
-					raise "Bad dg-do line!" if(!e)
-					@mode = line.slice(i+dgdo.length, e-(i+dgdo.length)).strip.to_sym
-					@mode = :compile if(@mode == :assemble)
-					next
-				end
-
-				dgop = '{ dg-options "'
-				i = line.index(dgop)
-				if(i)
-					i += dgop.length
-					e = line.index('"', i)
-					raise "Bad dg-options line!" if(!e)
-					options = line.slice(i, e-i).split
-
-					# because we don't use collect2, -frepo will not work.
-					if(options.include?('-frepo') ||
-						options.include?('-fprofile-arcs') ||
-						options.include?('-fno-keep-inline-dllexport') ||
-						true)
-						@mode = :skip
-						return
-					end
-
-					# fdump options are bugged for source files that are not in cwd.
-					options.delete_if do |o| o.start_with?('-fdump-') end
-
-					options = ' '+options.join(' ')
-
-					ti = line.index(ts, e)
-					#raise "Bad dg-options line in #{@sourcepath}: #{line}" if(!ti)
-					if(ti)
-						ti += ts.length
-						te = line.index(' }', ti)
-						raise "Bad dg-options line!" if(!te)
-						target = line.slice(ti, te-ti)
-						#puts "Found options \"#{options}\" for target #{target}"
-						if(target == 'c')
-							@EXTRA_CFLAGS = options
-						end
-						if(target == 'c++')
-							@EXTRA_CPPFLAGS = options
-						end
-					else
-						@EXTRA_CFLAGS = options
-						@EXTRA_CPPFLAGS = options
-					end
-					next
-				end
-
-				dgop = '{ dg-additional-sources "'
-				i = line.index(dgop)
-				if(i)
-					i += dgop.length
-					e = line.index('"', i)
-					raise "Bad dg-additional-sources line!" if(!e)
-					line.slice(i, e-i).split.each do |a|
-						@EXTRA_SOURCEFILES << File.dirname(@sourcepath)+'/'+a
-					end
-					next
-				end
-
-				dgret = '{ dg-require-effective-target '
-				i = line.index(dgret)
-				if(i)
-					i += dgret.length
-					e = line.index(' }', i)
-					raise "Bad dg-require-effective-target line!" if(!e)
-					t = line.slice(i, e-i).strip
-					if(t == 'trampolines' ||
-						t == 'sync_char_short' ||
-						false)
-						@mode = :skip
-						return
-					end
-				end
-
-				if(line.index('{ dg-error ') ||
-					#line.index('{ dg-bogus ') ||
-					line.index('throw ') ||
-					false)
-					@mode = :skip
-					return
-				end
-			end
-		end
-		return nil
-	end
 	def mode
 		return @mode if(@mode)
 		m = @sourcefile.sourcePath.mode
@@ -518,7 +370,7 @@ files.each do |f|
 		if(work.mode == :compile)
 			work.compile
 		else
-			work.invoke
+			work.invoke(winFile)
 			work.run if(work.mode == :run)
 		end
 		FileUtils.touch(winFile)

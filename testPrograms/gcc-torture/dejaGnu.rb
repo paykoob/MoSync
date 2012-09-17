@@ -23,6 +23,7 @@ end
 
 EFFECTIVE_TARGETS = [
 	'c99_runtime',
+	'cxa_atexit',
 	'double64plus',
 	'freorder',
 	'hard_float',
@@ -53,6 +54,8 @@ EFFECTIVE_TARGETS = [
 INEFFECTIVE_TARGETS = [
 	'arm_eabi',
 	'arm_neon_ok',
+	'arm_thumb1_ok',
+	'arm32',
 	'dfp',
 	'fpic',
 	'fstack_protector',
@@ -75,6 +78,7 @@ INEFFECTIVE_TARGETS = [
 
 ACCEPTABLE_TARGETS = [
 	'c99_runtime',
+	'correct_iso_cpp_string_wchar_protos',
 	'gas',
 	'init_priority',
 	'int32plus',
@@ -109,6 +113,7 @@ UNACCEPTABLE_TARGETS = [
 	'int128',
 	'pcc_bitfield_type_matters',
 	'powerpc_hard_double',
+	'powerpc_spe_nocache',
 	'short_enums',
 	'vmx_hw',
 	'vxworks_kernel',
@@ -189,6 +194,7 @@ def parseDejaGnu
 			@lineNum += 1
 			if(SKIP_LINES.include?(line.strip))
 				@mode = :skip
+				@skipReason = "skipped line: #{line}"
 				return
 			end
 			# skip non-comment lines.
@@ -251,10 +257,12 @@ def parseDejaGnu
 							acceptable = isAcceptableTarget?(o[1..-1])
 							if(!acceptable)
 								@mode = :skip
+								@skipReason = "dg-do unacceptable target: #{o[1..-1]}"
 								return
 							end
 						when 'xfail'	# expected to fail?
 							@mode = :skip
+							@skipReason = "dg-do xfail"
 							return
 						else
 							raise "Unknown option in array: #{o.inspect}"
@@ -267,6 +275,7 @@ def parseDejaGnu
 				a[1..-1].each do |ret|
 					if(!isEffectiveTarget?(ret))
 						@mode = :skip
+						@skipReason = "dg-require-effective-target #{ret}"
 						return
 					end
 				end
@@ -277,8 +286,8 @@ def parseDejaGnu
 				a[2..-1].each do |ret|
 					if(ret != '' && ret != '*' && ret != [''] && ret != ['*'] &&
 						isAcceptableTarget?(ret))
-						puts "Because: #{reason.inspect}"
 						@mode = :skip
+						@skipReason = "#{a[0]} #{reason.inspect}"
 						return
 					end
 				end
@@ -311,6 +320,7 @@ def parseDejaGnu
 				BAD_OPTIONS.each do |bo|
 					if(options.include?(bo))
 						@mode = :skip
+						@skipReason = "bad option: #{bo}"
 						return
 					end
 				end
@@ -364,18 +374,31 @@ def parseDejaGnu
 				if(aa.is_an?(Array))
 					if(aa[0].start_with?('scan-assembler'))
 						@mode = :skip
+						@skipReason = 'dg-message terminated'
 						return
 					end
 				end
 			when 'dg-message'
-				if(a[1] == 'terminated')
+				case(a[1])
+					when 'terminated',
+						'unimplemented'
 					@mode = :skip
+					@skipReason = "dg-message #{a[1]}"
 					return
 				end
 			when 'dg-require-iconv'
 				if(a[1] == 'IBM1047' && HOST == :win32)
 					@mode = :skip
+					@skipReason = 'dg-require-iconv IBM1047'
 					return
+				end
+			when 'dg-bogus'
+				if(a[3].is_an?(Array))
+					if(a[3][0] == 'xfail')
+						@mode = :skip
+						@skipReason = 'dg-bogus xfail'
+						return
+					end
 				end
 			when 'dg-require-named-sections',
 				'dg-require-ifunc',
@@ -387,9 +410,9 @@ def parseDejaGnu
 				'dg-error'
 				#puts "Error detected"
 				@mode = :skip
+				@skipReason = a[0]
 				return
-			when 'dg-bogus',
-				'dg-timeout-factor',
+			when 'dg-timeout-factor',
 				'dg-prune-output',
 				'dg-excess-errors',
 				'dg-require-alias',
@@ -402,6 +425,8 @@ def parseDejaGnu
 				'dg-final-use',
 				'dg-require-weak-override',
 				'dg-require-host-local',
+				'dg-output',
+				'dg-timeout',
 				'dg-warning'
 				# ignored
 			else
