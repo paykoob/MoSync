@@ -26,6 +26,11 @@ static _CONST int year_lengths[2] = {
   366
 } ;
 
+void _mktm_r_dummy(time_t t);
+void _mktm_r_dummy(time_t t)
+{
+}
+
 struct tm *
 _DEFUN (_mktm_r, (tim_p, res, is_gmtime),
 	_CONST time_t * tim_p _AND
@@ -107,6 +112,10 @@ _DEFUN (_mktm_r, (tim_p, res, is_gmtime),
 		days -= ((yg - y) * 365
 			+ LEAPS_THRU_END_OF (yg - 1)
 			- LEAPS_THRU_END_OF (y - 1));
+
+		/* workaround for a gcc bug */
+		_mktm_r_dummy(LEAPS_THRU_END_OF (yg - 1));
+
 		y = yg;
 		loopCount++;
 		assert(loopCount < 100);
