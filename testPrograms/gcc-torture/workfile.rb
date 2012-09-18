@@ -5,7 +5,7 @@ require './settings.rb'
 EXIT_ON_ERROR = false if(!SETTINGS[:stop_on_fail])
 
 target = nil
-if(ARGV.size > 0 && ARGV[0].end_with?('.c'))
+if(ARGV.size > 0 && (ARGV[0].end_with?('.c') || ARGV[0].end_with?('.C')))
 	target = ARGV[0]
 	ARGV.delete_at(0)
 end
@@ -53,6 +53,9 @@ end
 
 # allowed modes: run, compile, dejaGnu (parse the source file to find compile or run).
 SETTINGS[:source_paths] =
+	dgSub('g++.dg', :run)+
+	dgSub('g++.old-deja', :run)+
+	dgSub('gcc.dg', :compile)+
 [
 	sp('ieee/', BASE + 'gcc.c-torture/execute/ieee'),
 	sp('', BASE + 'gcc.c-torture/execute'),
@@ -63,9 +66,6 @@ SETTINGS[:source_paths] =
 	sp('unsorted/', BASE + 'gcc.c-torture/unsorted', :compile),
 	sp('compat/', BASE + 'gcc.c-torture/compat'),
 ]+
-	dgSub('gcc.dg', :compile)+
-	#dgSub('g++.dg', :run)+
-	#dgSub('g++.old-deja', :run)+
 []
 
 NEEDS_HEAP = [
@@ -223,6 +223,10 @@ class TTWork < PipeExeWork
 		FileUtils.mkdir_p(@BUILDDIR)
 		makeGccTask(FileTask.new(self, @sourcepath), '.o').invoke
 	end
+	def setup
+		setMode
+		super
+	end
 	def setMode
 		return if(@mode)
 		if(@sourcefile.sourcePath.mode == :dejaGnu)
@@ -242,6 +246,7 @@ class TTWork < PipeExeWork
 		begin
 			setMode
 			if(@mode == :run || @mode == :link)
+				#puts "@EXTRA_CPPFLAGS: #{@EXTRA_CPPFLAGS}"
 				super()
 			elsif(@mode == :compile)
 				@EXTRA_CPPFLAGS << ' -fexceptions -frtti'
@@ -301,6 +306,15 @@ def matchRegexp(tName)
 	return false
 end
 
+at_exit {
+	#beep
+	if(HOST == :win32)
+		require "win32/sound"
+		include Win32
+		Sound.play("SystemAsterisk", Sound::ALIAS)
+	end
+}
+
 files.each do |f|
 	sp = f.sourcePath
 	filename = f.filename
@@ -335,21 +349,21 @@ files.each do |f|
 	failFile = ofn.ext('.fail' + suffix)
 	logFile = ofn.ext('.log' + suffix)
 	sldFile = ofn.ext('.sld' + suffix)
-	force_rebuild = SETTINGS[:rebuild_failed] && File.exists?(failFile)
+	force_rebuild = (SETTINGS[:rebuild_failed] && File.exists?(failFile)) || targetFound
 
 	next if(!SETTINGS[:retry_failed] && File.exists?(failFile))
-
-	if(SETTINGS[:strict_prerequisites])
-		if(!work)
-			work = TTWork.new(f, bn)
-		end
-		work.invoke
-	end
 
 	if(force_rebuild)
 		FileUtils.rm_f(ofn)
 		FileUtils.rm_f(pfn)
 		FileUtils.rm_f(winFile)
+	end
+
+	if(SETTINGS[:strict_prerequisites])
+		if(!work)
+			work = TTWork.new(f, bn)
+		end
+		work.invoke(winFile)
 	end
 
 	winTask = FileTask.new(work, winFile)

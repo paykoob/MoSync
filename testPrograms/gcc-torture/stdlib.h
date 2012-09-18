@@ -1,3 +1,6 @@
+#ifndef __STDLIB_H__
+#define __STDLIB_H__
+
 #include <mastdlib.h>
 #include <conprint.h>
 #include <maheap.h>
@@ -12,3 +15,5 @@ void abort(void);
 #endif
 
 #define EXIT_SUCCESS 0
+
+#endif	//__STDLIB_H__

@@ -69,12 +69,8 @@ crt0_startup:
 	call &_MAMain
 
 crt_exit:
-	ld	[sp,0], r0		// save return value
-
-	call &_crt_dtor_chain
-
-	ld	p0, [sp,0]	// restore return value
-	call &_maExit
+	ld	p0, r0		// save return value
+	call &_exit
 
 .size crt0_startup, .-crt0_startup
 Lscope1:

@@ -4,4 +4,5 @@
 
 namespace std {
 	extern "C" void abort(void);
+	extern "C" void exit(int);
 }

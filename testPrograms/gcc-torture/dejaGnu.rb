@@ -6,6 +6,7 @@ BAD_OPTIONS = [
 #	'-fexceptions',	# only bad if mode == :run
 	'-ftrapv',
 	'--dump=',
+	'-da',
 	'-fno-foobar',
 	'-ftree-parallelize-loops',
 	'-Wclobbered',
@@ -15,6 +16,7 @@ BAD_OPTIONS = [
 	'-std=iso9899:199409 -pedantic',
 	'-fopenmp',
 	'-frepo',
+	'-fsyntax-only',
 ]
 
 if(defined?(MODE) && MODE == 'rebuild')
@@ -31,6 +33,7 @@ EFFECTIVE_TARGETS = [
 	'large_double',
 	'lto',
 	'mempcpy',
+	'named_sections',
 	'nonpic',
 	'ptr32plus',
 	'section_anchors',
@@ -94,6 +97,7 @@ ACCEPTABLE_TARGETS = [
 	'*-*-*gnu*',
 	'*-*-*',
 	'!',
+	'-fomit-frame-pointer',
 ]
 
 UNACCEPTABLE_TARGETS = [
@@ -132,6 +136,7 @@ UNACCEPTABLE_TARGETS = [
 	/-aix/,
 	/-cygwin/,
 	/-darwin/,
+	/-hpux/,
 	/-interix/,
 	/-linux/,
 	/-mingw/,
@@ -198,13 +203,16 @@ def parseDejaGnu
 				return
 			end
 			# skip non-comment lines.
-			start = line.index('//')
-			if(!start)
-				start = line.index('/*')
-				if(start)
-					multilineComment = line if(!line.include?('*/'))
-					#puts "mlc start #{@lineNum}" if(multilineComment)
-				end
+			cpp = line.index('//')
+			c = line.index('/*')
+			start = cpp
+			if((cpp && c && c < cpp) || !cpp)
+				start = c
+			end
+			#puts "#{c.inspect}, #{cpp.inspect}, #{start.inspect}"
+			if(c)
+				multilineComment = line if(!line.include?('*/'))
+				#puts "mlc start #{@lineNum}" if(multilineComment)
 			end
 			next if(!start && !multilineComment)
 			if(multilineComment)
@@ -381,6 +389,7 @@ def parseDejaGnu
 			when 'dg-message'
 				case(a[1])
 					when 'terminated',
+						'undefined',
 						'unimplemented'
 					@mode = :skip
 					@skipReason = "dg-message #{a[1]}"

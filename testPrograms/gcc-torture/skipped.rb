@@ -116,6 +116,7 @@ SKIPPED = [
 'g++.old-deja/g++.benjamin/15071.C',	# iostream
 'g++.old-deja/g++.benjamin/typeid01.C',	# typeinfo
 'g++.old-deja/g++.brendan/eh1.C',	# exceptions
+'g++.old-deja/g++.bugs/900205_02.C', # unparsable by dejaGnu.rb
 'g++.old-deja/g++.jason/conversion10.C',	# old, unfixed gcc bug
 'g++.old-deja/g++.jason/dcast2.C',	# dynamic_cast
 'g++.old-deja/g++.jason/dcast3.C',	# dynamic_cast
@@ -130,26 +131,26 @@ SKIPPED = [
 #'g++.old-deja/g++.mike/p7912.C',	# exceptions
 #'g++.old-deja/g++.mike/p9706.C',	# exceptions
 'g++.old-deja/g++.oliva/delete3.C',	# exceptions
-#'g++.old-deja/g++.oliva/new1.C',	# exceptions
+'g++.old-deja/g++.oliva/new1.C',	# exceptions
 'g++.old-deja/g++.oliva/expr1.C',	# error: could not convert '0' from 'void' to 'bool'
 'g++.old-deja/g++.oliva/linkage1.C',	# unfixed gcc bug
 'g++.old-deja/g++.oliva/ns2.C',	# unfixed gcc bug
-#'g++.old-deja/g++.other/array1.C',	# exceptions
+'g++.old-deja/g++.other/array1.C',	# exceptions
 #'g++.old-deja/g++.other/crash15.C',	# exceptions
 #'g++.old-deja/g++.other/dcast2.C',	# dynamic_cast
-#'g++.old-deja/g++.other/delete3.C',	# exceptions
-#'g++.old-deja/g++.other/eh3.C',	# exceptions
+'g++.old-deja/g++.other/delete3.C',	# exceptions
+'g++.old-deja/g++.other/eh3.C',	# exceptions
 #'g++.old-deja/g++.other/eh5.C',	# exceptions
-#'g++.old-deja/g++.other/init7.C',	# exceptions
-#'g++.old-deja/g++.other/new7.C',	# exceptions
-#'g++.old-deja/g++.other/singleton.C',	# exceptions
+'g++.old-deja/g++.other/init7.C',	# exceptions
+'g++.old-deja/g++.other/new7.C',	# exceptions
+'g++.old-deja/g++.other/singleton.C',	# exceptions
 'g++.old-deja/g++.other/syntax1.C',	# -fsyntax-only
 'g++.old-deja/g++.other/syntax2.C',	# -fsyntax-only
-#'g++.old-deja/g++.other/vbase2.C',	# exceptions
+'g++.old-deja/g++.other/vbase2.C',	# exceptions
 'g++.old-deja/g++.pt/const2.C',	# fails on purpose, though it shouldn't. very weird.
 'g++.old-deja/g++.pt/crash20.C',	# fails on purpose?
 'g++.old-deja/g++.pt/explicit76.C', # fails on purpose?
-#'g++.old-deja/g++.pt/fntry1.C',	# exceptions
+'g++.old-deja/g++.pt/fntry1.C',	# exceptions
 'g++.old-deja/g++.pt/instantiate4.C',	# fails on purpose
 'g++.old-deja/g++.pt/instantiate6.C',	# fails on purpose
 'g++.old-deja/g++.pt/overload7.C',	# gcc bug
@@ -158,14 +159,14 @@ SKIPPED = [
 #'g++.old-deja/g++.robertl/eb124.C',	# exceptions
 'g++.old-deja/g++.robertl/eb130.C',	# requires GNU stl
 'g++.old-deja/g++.robertl/eb17.C',	# dynamic_cast
-#'g++.old-deja/g++.robertl/eb50.C',	# exceptions
-#'g++.old-deja/g++.robertl/eb88.C',	# exceptions
-#'g++.old-deja/g++.robertl/eh990323-1.C',	# exceptions
-#'g++.old-deja/g++.robertl/eh990323-2.C',	# exceptions
-#'g++.old-deja/g++.robertl/eh990323-3.C',	# exceptions
-#'g++.old-deja/g++.robertl/eh990323-4.C',	# exceptions
-#'g++.old-deja/g++.robertl/eh990323-5.C',	# exceptions
-#'g++.old-deja/g++.robertl/ice990323-2.C',	# exceptions
+'g++.old-deja/g++.robertl/eb50.C',	# exceptions
+'g++.old-deja/g++.robertl/eb88.C',	# exceptions
+'g++.old-deja/g++.robertl/eh990323-1.C',	# exceptions
+'g++.old-deja/g++.robertl/eh990323-2.C',	# exceptions
+'g++.old-deja/g++.robertl/eh990323-3.C',	# exceptions
+'g++.old-deja/g++.robertl/eh990323-4.C',	# exceptions
+'g++.old-deja/g++.robertl/eh990323-5.C',	# exceptions
+'g++.old-deja/g++.robertl/ice990323-2.C',	# exceptions
 
 'g++.dg/abi/dcast1.C', #rtti
 'g++.dg/abi/mangle60.C', # gcc bug
@@ -178,7 +179,10 @@ SKIPPED = [
 #'g++.dg/cpp0x/constexpr-defarg2.C',	# exceptions
 #'g++.dg/cpp0x/constexpr-potential1.C',	# exceptions
 'g++.dg/cpp0x/implicit8.C', # fails on purpose
+'g++.dg/cpp0x/initlist48.C', # unique_ptr
+'g++.dg/cpp0x/move1.C',	# std::move
 'g++.dg/cpp0x/nullptr21.C',	# exceptions
+'g++.dg/cpp0x/range-for7.C', # exceptions
 'g++.dg/cpp0x/variadic73.C', # exceptions
 'g++.dg/dfp/44473-1.C',	# unable to emulate 'SD'
 'g++.dg/expr/overflow1.C', # fails on purpose?
@@ -186,13 +190,51 @@ SKIPPED = [
 'g++.dg/ext/asm2.C', # x64 assembly
 'g++.dg/ext/asm3.C', # invalid inline asm?
 'g++.dg/ext/attrib6.C', # exceptions
+'g++.dg/ext/attrib32.C', # duplicate definition. gcc bug?
+'g++.dg/ext/has_nothrow_assign.C',#e
+'g++.dg/ext/has_nothrow_constructor.C',#e
+'g++.dg/ext/has_nothrow_copy-1.C',#e
+'g++.dg/ext/label2.C', # indirect jump
 'g++.dg/ext/label3.C', # exceptions
 'g++.dg/ext/tmplattr9.C', # as: redefined symbol cannot be used on reloc
 'g++.dg/init/array16.C', # exceptions
 'g++.dg/init/array5.C', # exceptions
 'g++.dg/init/copy7.C', # implements memcpy()
-'g++.dg/init/ctor1.C',
-'g++.dg/init/placement2.C',
+'g++.dg/init/ctor1.C', # exceptions
+'g++.dg/init/new5.C', # std::nothrow
+'g++.dg/init/placement2.C', # exceptions
+'g++.dg/init/ref9.C',#e
+'g++.dg/lookup/builtin1.C',#e
+'g++.dg/lookup/java2.C', # JNI
+#'g++.dg/lto/20081109-1_0.C',#e
+#'g++.dg/lto/20081118_0.C', # fails on purpose?
+'g++.dg/opt/eh2.C',#e
+'g++.dg/opt/eh3.C',#e
+'g++.dg/opt/pr22167.C',#e
+'g++.dg/opt/pr23299.C',#e
+'g++.dg/opt/pr23478.C',#e
+'g++.dg/opt/pr36449.C',#e
+'g++.dg/opt/pr47639.c',#e
+'g++.dg/opt/reg-stack.C',#e
+'g++.dg/opt/temp1.C', # implements memcpy()
+'g++.dg/opt/temp2.C', # implements memcpy()
+'g++.dg/other/warning1.C', # error: field initializer is not constant
+'g++.dg/overload/conv-op1.C', # fails on purpose
+'g++.dg/parse/varmod1.C',#nf
+'g++.dg/tc1/dr127.C',#e
+'g++.dg/template/crash56.C', # fails on purpose
+'g++.dg/template/error43.C', # xfail
+'g++.dg/template/fntry1.C',#e
+'g++.dg/template/sfinae20.C', # std::declval
+'g++.dg/template/sfinae22.C', # std::declval
+'g++.dg/torture/pr42462.C',#ij
+'g++.dg/torture/pr42739.C',#ij
+'g++.dg/torture/pr49115.C',#e
+'g++.dg/tree-prof/indir-call-prof-2.C',#e
+'g++.dg/tree-ssa/pr20458.C', # xfail?
+'g++.dg/tree-ssa/pr21407.C', # rtti
+'g++.dg/warn/Walways-true-2.C', # as: redefined symbol
+'g++.dg/warn/Wunused-label-3.C',#ij
 
 'gcc.dg/20020312-2.c',#ij
 'gcc.dg/20031218-3.c',#nf
@@ -289,6 +331,11 @@ SKIPPED = [
 
 'gcc.dg/initpri1.c',	# mapip2 bug, constructor priority.
 'gcc.dg/initpri3.c',	# mapip2 bug, constructor priority.
+'g++.dg/special/conpr-2.C',	# mapip2 bug, constructor priority.
+'g++.dg/special/conpr-3.C',	# mapip2 bug, constructor priority.
+'g++.dg/special/conpr-4.C',	# mapip2 bug, constructor priority.
+'g++.dg/special/initp1.C',	# mapip2 bug, constructor priority.
+'g++.dg/special/initpri1.C',	# mapip2 bug, constructor priority.
 'gcc.dg/compat/scalar-return-4_x.c',	# mapip2 bug, promote_function_mode(QCImode)
 'gcc.dg/compat/scalar-return-4_y.c',	# mapip2 bug, emit_move_insn QCImode -> SImode
 '20050121-1.c', # mapip2 bug, emit_move_insn QCImode -> SImode
@@ -330,6 +377,10 @@ SKIPPED_DIRS = [
 'g++.old-deja/g++.eh',
 'g++.dg/eh',
 'g++.dg/graphite',
+'g++.dg/lto',
+'g++.dg/pch',
+'g++.dg/plugin',
+'g++.dg/rtti',
 'gcc.dg/dfp',
 'gcc.dg/fixed-point',
 'gcc.dg/graphite',
@@ -344,14 +395,16 @@ if(!USE_NEWLIB)
 	SKIP_LINES << '#include <string>'
 	SKIP_LINES << '#include <list>'
 	SKIP_LINES << '#include <map>'
+	SKIP_LINES << '#include <set>'
 	SKIP_LINES << '#include <vector>'
 	SKIP_LINES << '#include <iterator>'
 	SKIP_LINES << '#include <utility>'
 	SKIP_LINES << '#include <algorithm>'
 	SKIP_LINES << '#include <limits>'
 	SKIP_LINES << '#include <memory>'
-	SKIP_LINES << '#include <cstring>'
-	SKIP_LINES << '#include <cassert>'
+	#SKIP_LINES << '#include <cstring>'
+	#SKIP_LINES << '#include <cassert>'
+	#SKIP_LINES << '#include <cstdarg>'
 	SKIP_LINES << '#include "guality.h"'
 	SKIPPED << 'pr34456.c'	# qsort
 	SKIPPED << 'g++.old-deja/g++.jason/template44.C'	# qsort
@@ -362,6 +415,10 @@ if(!USE_NEWLIB)
 	SKIPPED << 'g++.old-deja/g++.other/init18.C'	# atexit
 	SKIPPED << 'g++.old-deja/g++.other/init19.C'	# atexit
 	SKIPPED << 'g++.old-deja/g++.other/init5.C'	# atexit
+	SKIPPED << 'g++.dg/init/ref15.C'	# atexit
+	#SKIPPED << 'g++.dg/opt/dtor4.C'	# <cassert>
+	SKIPPED << 'g++.dg/torture/pr31863.C' # atexit
+	SKIPPED << 'g++.dg/warn/format1.C' # scanf
 	SKIPPED << 'gcc.dg/cdce1.c'	# errno.h
 	SKIPPED << 'gcc.dg/cdce2.c'	# errno.h
 	SKIPPED << 'gcc.dg/errno-1.c'	# errno.h

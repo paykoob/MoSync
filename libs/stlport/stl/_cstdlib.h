@@ -91,7 +91,7 @@ using _STLP_VENDOR_CSTD::wctomb;
 using _STLP_VENDOR_CSTD::qsort;
 using _STLP_VENDOR_CSTD::labs;
 using _STLP_VENDOR_CSTD::ldiv;
-#    if defined (_STLP_LONG_LONG) && !defined (_STLP_NO_VENDOR_STDLIB_L)
+#    if defined (_STLP_LONG_LONG) && !defined (_STLP_NO_VENDOR_STDLIB_L) && !defined(__STRICT_ANSI__)
 #      if !defined(__sun)
 using _STLP_VENDOR_CSTD::llabs;
 using _STLP_VENDOR_CSTD::lldiv_t;
