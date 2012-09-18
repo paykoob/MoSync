@@ -202,7 +202,7 @@ _DEFUN(mktime, (tim_p),
     tim_p->tm_wday += 7;
 
   /* compute total seconds */
-  tim += (days * _SEC_IN_DAY);
+  tim += ((time_t)days * _SEC_IN_DAY);
 
   /* Convert user positive into 1 */
   tm_isdst = tim_p->tm_isdst > 0  ?  1 : tim_p->tm_isdst;
