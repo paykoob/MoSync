@@ -5,10 +5,16 @@
     <ClCompile Include="pugixml-1.0\src\pugixml.cpp">
       <Filter>pugixml</Filter>
     </ClCompile>
+    <ClCompile Include="dirent\dirent.c">
+      <Filter>dirent</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="pugixml">
       <UniqueIdentifier>{2c8bc394-5596-457b-aa57-83fdd69f115e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dirent">
+      <UniqueIdentifier>{cc647770-af95-4ad0-b6d0-645d47f7ffee}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -17,6 +23,9 @@
     </ClInclude>
     <ClInclude Include="pugixml-1.0\src\pugixml.hpp">
       <Filter>pugixml</Filter>
+    </ClInclude>
+    <ClInclude Include="dirent\dirent.h">
+      <Filter>dirent</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

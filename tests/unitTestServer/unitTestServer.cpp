@@ -18,7 +18,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 //listen. use a thread pool.
 
 #include <stdio.h>
-#include <unistd.h>
 #include <vector>
 #include <ThreadPool.h>
 #include <FileStream.h>
@@ -30,6 +29,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <winsock2.h>
 typedef int socklen_t;
 #else
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

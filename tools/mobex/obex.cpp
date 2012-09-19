@@ -151,9 +151,9 @@ static int OBEXConnect(BtSppConnection& conn, u16* maxPacketSize, int fileSize) 
 		TEST_LEZ(conn.readFully(ReceiveBufferB, plength-3));
 		dumpPacket(ReceiveBufferB, plength-3);
 
-		byte obver = ReceiveBufferB[0]; //server obex version (16 = v1.0)
-		byte cflags = ReceiveBufferB[1]; //connect flags
-		int maxpack = (0xff * (int)ReceiveBufferB[2]) + ReceiveBufferB[3]; //max packet size
+		byte obver = ReceiveBufferB(0); //server obex version (16 = v1.0)
+		byte cflags = ReceiveBufferB(1); //connect flags
+		int maxpack = (0xff * (int)ReceiveBufferB(2)) + ReceiveBufferB(3); //max packet size
 
 		DUMPHEX(obver);
 		DUMPHEX(cflags);

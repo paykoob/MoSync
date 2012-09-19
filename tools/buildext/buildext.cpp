@@ -230,7 +230,7 @@ static void outputConstants(const Interface& inf) {
 	file << "#ifndef MX_" + toupper(inf.name) + "_CONSTS_H\n";
 	file << "#define MX_" + toupper(inf.name) + "_CONSTS_H\n\n";
 
-	streamConstants(file, inf.name, inf.constSets, MAIN_INTERFACE);
+	streamConstants(file, inf.constSets, MAIN_INTERFACE);
 
 	file << "#endif	//MX_" + toupper(inf.name) + "_CONSTS_H\n";
 }

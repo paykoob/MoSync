@@ -60,7 +60,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>../../intlibs/idl-common/$(Configuration)/idl-common.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../../intlibs/filelist/$(Configuration)/filelist.lib;../../intlibs/idl-common/$(Configuration)/idl-common.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

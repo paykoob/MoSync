@@ -41,11 +41,11 @@ public:
 		allocate(s);
 	}
 
-	T& operator[](size_t index) {
+	T& operator()(size_t index) {
 		DEBUG_ASSERT(index < b);
 		return a[index];
 	}
-	const T& operator[](size_t index) const {
+	const T& operator()(size_t index) const {
 		DEBUG_ASSERT(index < b);
 		return a[index];
 	}

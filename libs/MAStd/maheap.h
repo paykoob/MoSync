@@ -166,7 +166,7 @@ block_size_hook set_block_size_hook(block_size_hook hook);
 * \param start The address of the start of the heap.
 * \param length The length of the heap, in bytes.
 */
-void override_heap_init_crt0(char* start, int length) __attribute((weak));
+void override_heap_init_crt0(char* start, int length) GCCATTRIB(weak);
 
 /**
 * The default heap initialization function.

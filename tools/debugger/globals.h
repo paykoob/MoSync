@@ -25,23 +25,6 @@ extern std::string gProgramFilename, gResourceFilename, gSldFilename;
 
 extern bool gTestWaiting;
 
-typedef struct _MA_HEAD
-{
-	int	Magic;				// Header magic
-	int	CodeLen;			// Length of code section
-	int	DataLen;			// Length of data section
-
-	int	DataSize;			// Prefurred data memory size	
-	int	StackSize;		// Stack size
-	int	HeapSize;			// Heap size
-
-	int	AppCode;			// App Code (App MIME)
-	int AppID;				// App ID
-
-	int	EntryPoint;		// Program entry point
-	int	IntLen;
-} MA_HEAD;
-
 extern MA_HEAD gHead;
 extern byte* gMemCs;
 extern int* gMemCp;

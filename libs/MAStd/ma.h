@@ -51,10 +51,10 @@ typedef int BOOL;
 extern "C" {
 #endif
 int MAMain(void);
-void exit(int);
 
 #ifdef MAPIP
 #define _ma_inline(string) __asm__(string "\n")
+void exit(int);
 #else
 #define _ma_inline(string)
 #endif

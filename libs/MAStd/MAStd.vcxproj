@@ -36,7 +36,6 @@
     <ClInclude Include="maheap.h" />
     <ClInclude Include="mastdlib.h" />
     <ClInclude Include="mastring.h" />
-    <ClInclude Include="matask.h" />
     <ClInclude Include="math_private.h" />
     <ClInclude Include="matime.h" />
     <ClInclude Include="mavsprintf.h" />
@@ -56,7 +55,6 @@
     <ClCompile Include="maint64.c" />
     <ClCompile Include="mastdlib.c" />
     <ClCompile Include="mastring.c" />
-    <ClCompile Include="matask.c" />
     <ClCompile Include="matime.c" />
     <ClCompile Include="mavsprintf.c" />
     <ClCompile Include="mawstring.c" />
