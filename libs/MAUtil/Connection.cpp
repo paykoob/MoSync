@@ -88,7 +88,6 @@ void Connection::read(void* dst, int len) {
 	mDst = (byte*)dst;
 	mRemain = len;
 	mRecv = &Connection::recvMem;
-	dummy(0);	//gcc bug causes crash unless a function is called.
 	(this->*mRecv)(0);
 }
 void Connection::recvMem(int prevRes) {
@@ -102,7 +101,6 @@ void Connection::readToData(MAHandle data, int offset, int len) {
 	mOffset = offset;
 	mRemain = len;
 	mRecv = &Connection::recvData;
-	dummy(0);	//gcc bug causes crash unless a function is called.
 	(this->*mRecv)(0);
 }
 void Connection::recvData(int prevRes) {

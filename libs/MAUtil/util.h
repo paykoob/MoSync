@@ -45,7 +45,7 @@ namespace MAUtil {
 	/** Returns f >= a && f <= b. **/
 	bool inside(int a, int b, int c);
 	/** Returns f >= a && f <= b. **/
-	bool inside(unsigned int a, unsigned int b, unsigned int c);	
+	bool inside(unsigned int a, unsigned int b, unsigned int c);
 	/** Converts \a f to its string representation, with \a decimals fractional digits. **/
 	String doubleToString(double f, int decimals = 5);
 	/** Converts \a f to its string representation in radix \a base. **/
@@ -67,10 +67,6 @@ namespace MAUtil {
 	* \a output is cleared, then the resulting strings are added to it. **/
 	void stringBreak(const char* str, const char* delim, MAUtil::Vector<String>& output);
 	void stringBreak(const wchar_t* str, const wchar_t* delim, MAUtil::Vector<WString>& output);
-
-	/// @cond DUMMY
-	int dummy(int);
-	/// @endcond
 }
 
 #endif	//_SE_MSAB_MAUTIL_UTIL_H_

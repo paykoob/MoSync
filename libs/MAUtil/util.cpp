@@ -181,8 +181,4 @@ namespace MAUtil {
 	void stringBreak(const wchar_t* str, const wchar_t* delim, MAUtil::Vector<WString>& output) {
 		stringBreak<wchar_t>(str, delim, output);
 	}
-
-	int dummy(int a) {
-		return a;
-	}
 }
