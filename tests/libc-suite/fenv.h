@@ -3,10 +3,5 @@
 #define FE_UNDERFLOW 0
 #define FE_INEXACT 0
 
-inline int feclearexcept(int excepts) {
-	return 0;
-}
-
-inline int fetestexcept (int excepts) {
-	return 0;
-}
+int feclearexcept(int excepts);
+int fetestexcept (int excepts);

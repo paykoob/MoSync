@@ -66,7 +66,7 @@ end
 # adds dependency handling
 class PipeResourceTask < PipeTask
 	def initialize(work, name, objects)
-		@depFile = "#{File.dirname(name)}/resources.mf"
+		@depFile = name + '.mf'
 		@tempDepFile = "#{@depFile}t"
 		super(work, name, objects, [], " -depend=#{@tempDepFile} -R")
 

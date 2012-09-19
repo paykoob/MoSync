@@ -333,3 +333,17 @@ unsigned alarm(unsigned __secs) {
 int malloc_trim(size_t __pad) {
 	return 1;
 }
+
+int feclearexcept(int excepts) {
+	return 0;
+}
+
+int fetestexcept (int excepts) {
+	return 0;
+}
+
+unsigned short __bswap_16(unsigned short s) {
+	short f = ((s >> 8) & 0xFF) |
+		((s & 0xFF) << 8);
+	return f;
+}

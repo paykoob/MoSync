@@ -154,7 +154,7 @@ end
 
 DEFAULT_RESOURCES = writeResourceFile('build/default')
 
-def getResFile(dataFiles, code, ofn)
+def getResFile(dataFiles, code, ofn, inputs)
 	clear_filesystem
 	has_files = false
 
@@ -235,7 +235,7 @@ class TTWork < PipeExeWork
 
 		code = SPECIFIC_CODE.fetch(bn, nil)
 
-		lstFileName = getResFile(dataFiles, code, 'build/'+name)
+		lstFileName = getResFile(dataFiles, code, 'build/'+name, inputs)
 		resFileName = 'build/'+name+'.res'
 		resFileName = 'build/default.res' if(lstFileName == DEFAULT_RESOURCES)
 

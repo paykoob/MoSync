@@ -222,6 +222,7 @@ SKIPPED = [
 'g++.dg/overload/conv-op1.C', # fails on purpose
 'g++.dg/parse/varmod1.C',#nf
 'g++.dg/tc1/dr127.C',#e
+'g++.dg/template/builtin1.C', # gcc bug?
 'g++.dg/template/crash56.C', # fails on purpose
 'g++.dg/template/error43.C', # xfail
 'g++.dg/template/fntry1.C',#e
