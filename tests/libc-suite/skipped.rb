@@ -68,7 +68,7 @@ SKIPPED_UNRESOLVED = [
 	# it's possible that newlib's implementation is still conformant.
 	'tst-strptime.c',
 
-	'bug-mktime1.c',	# fails because sizeof(time_t) < 8. Too tricky to fix.
+	#'bug-mktime1.c',	# fails because sizeof(time_t) < 8. Too tricky to fix.
 
 	# Fails because newlib's C locale isn't identical to its Unicode locale.
 	'test_wctype.c',
@@ -76,7 +76,8 @@ SKIPPED_UNRESOLVED = [
 	# Fails because mktime() doesn't properly return -1 on times outside its range.
 	# ex: bigtime_test(0), which is Jan 1 1900.
 	# Could also be fixed by making time_t 64-bit.
-	#'tst-mktime2.c',
+	# 64-bit time_t was also broken.
+	'tst-mktime2.c',
 ]
 
 if(CONFIG == '')

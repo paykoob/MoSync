@@ -235,8 +235,12 @@ class TTWork < PipeExeWork
 
 		code = SPECIFIC_CODE.fetch(bn, nil)
 
-		@resourceTask = PipeResourceTask.new(self, 'build/'+name+'.res',
-			[FileTask.new(self, getResFile(dataFiles, code, 'build/'+name))])
+		lstFileName = getResFile(dataFiles, code, 'build/'+name)
+		resFileName = 'build/'+name+'.res'
+		resFileName = 'build/default.res' if(lstFileName == DEFAULT_RESOURCES)
+
+		@resourceTask = PipeResourceTask.new(self, resFileName,
+			[FileTask.new(self, lstFileName)])
 
 		@SPECIFIC_CFLAGS = {
 		}
@@ -392,7 +396,7 @@ wins = 0
 
 files.sort.each do |filename, targetName|
 	bn = targetName
-	next if(bn != target)
+	next if(target && bn != target)
 	if(!File.exists?(filename))
 		puts "Nonexistant: #{bn}"
 		next
