@@ -271,6 +271,7 @@ wormhole.js
 /runtimes/csharp/windowsphone/mosync/mosyncLibContent/obj
 /runtimes/csharp/windowsphone/mosync/mosyncRuntime/obj/
 /runtimes/csharp/windowsphone/mosync/mosyncRuntime/Source/maapi.cs
+/runtimes/csharp/windowsphone/mosync/mosyncRuntime/Source/gen-core.cs
 
 /rules/local_config.rb
 

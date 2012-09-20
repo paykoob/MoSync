@@ -58,35 +58,40 @@ class PipeCppTask < PipeTask
 	end
 end
 
-class Mapip2CppTask < MultiFileTask
-	def initialize(work, name, objects, libs, linkflags)
+# Generates C++ or C# code from an ELF file.
+class Mapip2RebuildSourceTask < MultiFileTask
+	def initialize(work, name, objects, libs, linkflags, mode)
 		@elfTask = Mapip2LinkTask.new(work, name, objects, libs, linkflags)
 		@name = name
+		@mode = mode
 		@dataSectionName = name + '.data_section.bin'
-		super(work, name + '.rebuild.cpp', [
+		super(work, name + '.rebuild.' + mode, [
 			@dataSectionName,
-			#name + '.rebuild.s',
 		])
 		@prerequisites << @elfTask
 		@prerequisites << FileTask.new(work, "#{mosyncdir}/bin/elfStabSld#{EXE_FILE_ENDING}")
 	end
 	def dataSectionName; @dataSectionName; end
 	def execute
-		sh "#{mosyncdir}/bin/elfStabSld -cpp #{@elfTask} rebuild.build.cpp"
-		FileUtils.mv('rebuild.build.cpp', @NAME)
-		if(false)
-		sh "gcc -O2 -S #{@NAME} -I #{mosyncdir}/include-rebuild -o #{@name}.rebuild.s"+
-			' -fno-exceptions -fno-rtti'+
-			' -Wall -Wextra -Werror'+
-			' -Wno-unused-label -Wno-unused-but-set-variable -Wno-return-type -Wno-unused-function'+
-			' -Wno-error=uninitialized'+
-			' -Wno-unused-parameter'+
-			''
-		end
+		sh "#{mosyncdir}/bin/elfStabSld -#{@mode} #{@elfTask} rebuild.build.#{@mode}"
+		FileUtils.mv("rebuild.build.#{@mode}", @NAME)
 		FileUtils.mv('data_section.bin', @dataSectionName)
 	end
 end
 
+class Mapip2CppTask < Mapip2RebuildSourceTask
+	def initialize(work, name, objects, libs, linkflags)
+		super(work, name, objects, libs, linkflags, 'cpp')
+	end
+end
+
+class Mapip2CsTask < Mapip2RebuildSourceTask
+	def initialize(work, name, objects, libs, linkflags)
+		super(work, name, objects, libs, linkflags, 'cs')
+	end
+end
+
+# Compiles the generated C++ file.
 class RebuildCompileTask < FileTask
 	def initialize(work, cppTask)
 		targetDir = File.dirname(cppTask.to_s)
@@ -101,12 +106,14 @@ class RebuildCompileTask < FileTask
 			' -fno-exceptions -fno-rtti'+
 			' -Wall -Wextra -Werror'+
 			' -Wno-unused-label -Wno-unused-but-set-variable -Wno-return-type -Wno-unused-function'+
-			' -Wno-error=uninitialized'+
+			#' -Wno-error=uninitialized'+
 			' -Wno-unused-parameter'+
 			''
 	end
 end
 
+# Links the generated C++ file with MoRE/Reload.
+# Supports run.
 class Mapip2RebuildTask < Task
 	def initialize(work, name, objects, libs, linkflags)
 		super(work)
@@ -260,6 +267,7 @@ module MoSyncExeModule
 		if(defined?(MODE))
 			raise hell if(defined?(PACK))
 			return Mapip2CppTask if(MODE == 'cpp')
+			return Mapip2CsTask if(MODE == 'cs')
 			return Mapip2RebuildTask if(MODE == 'rebuild')
 			raise hell
 		end

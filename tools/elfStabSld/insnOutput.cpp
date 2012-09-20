@@ -3,19 +3,25 @@
 struct CCore {
 	unsigned printInstruction(unsigned ip);
 	void checkFunctionPointer(unsigned ip);
-	void streamReturnType(ReturnType returnType);
+	void streamReturnType1(ReturnType returnType);
+	void streamReturnType2(ReturnType returnType);
+	const char* REG(int r);
 
 	SIData& data;
 	ostream& os;
 	const Function& f;
 	const byte* textBytes;
 	const byte* dataBytes;
+	const char* out;
 };
 
 void streamFunctionInstructions(SIData& data, const Function& f) {
 	//printf("printInstructions(0x%x => 0x%x)\n", f.start, f.end);
 	DEBUG_ASSERT(f.end >= f.start);
-	CCore core = { data, data.stream, f, data.textBytes, data.dataBytes };
+	CCore core = {
+		data, data.stream, f, data.textBytes, data.dataBytes,
+		data.cs ? "out " : "",
+	};
 	unsigned ip = f.start;
 	while(ip <= f.end) {
 		ip = core.printInstruction(ip);
@@ -69,14 +75,14 @@ const size_t nIntRegs = ARRAY_SIZE(mapip2_register_names), nFloatRegs = ARRAY_SI
 #define FETCH_CONST if(op != OP_CALLI) checkFunctionPointer(ip); FETCH_IMM32
 
 #define IMM imm32
-#define IMMU "(unsigned)" << imm32
-#define REG(r) getIntRegName(r)
+#define IMMU "(uint)" << imm32
+
 #define RS REG(rs)
 #define RD REG(rd)
-#define RSU "(unsigned)" << RS
-#define RDU "(unsigned)" << RD
+#define RSU "(uint)" << RS
+#define RDU "(uint)" << RD
 
-#define ARITH(rdst, a, oper, b) os << REG(rdst) << " = " << a << " " #oper " " << b << ";"
+#define ARITH(rdst, a, oper, b) os << REG(rdst) << " = (int)(" << a << " " #oper " " << b << ");"
 
 #define DIVIDE(rdst, a, b) ARITH(rdst, a, /, b)
 
@@ -106,16 +112,32 @@ std::basic_ostream<charT, Traits>&
 	return os;
 }
 
-void CCore::streamReturnType(ReturnType returnType) {
+void CCore::streamReturnType1(ReturnType returnType) {
 	switch(returnType) {
 	case eVoid: break;
 	case eInt: os << "r0 = "; USE_I(REG_r0); break;
 	case eFloat: os << "f8 = "; USE_F(8); break;
-	case eLong: os << "{ FREG temp; temp.ll = "; USE_I(REG_r0); USE_I(REG_r1); break;
-	case eComplexFloat: os << "{ __complex__ double temp; temp = "; USE_F(8); USE_F(9); break;
-	case eComplexInt: os << "{ __complex__ int temp; temp = "; USE_I(REG_r0); USE_I(REG_r1); break;
+	case eLong: os << "MOV_DI("<<out<<"r0, "<<out<<"r1, "; USE_I(REG_r0); USE_I(REG_r1); break;
+	case eComplexFloat: os << "MOV_CF("<<out<<"f8, "<<out<<"f9, "; USE_F(8); USE_F(9); break;
+	case eComplexInt: os << "MOV_CI("<<out<<"r0, "<<out<<"r1, "; USE_I(REG_r0); USE_I(REG_r1); break;
 	}
 }
+void CCore::streamReturnType2(ReturnType returnType) {
+	switch(returnType) {
+	case eLong:
+	case eComplexFloat:
+	case eComplexInt:
+		os << ")";
+	default:
+		break;
+	}
+}
+
+const char* CCore::REG(int r) {
+	USE_I(r);
+	return getIntRegName(r);
+}
+
 
 void streamCallRegName(ostream& os, const CallInfo& ci) {
 	os << "callReg";
@@ -138,7 +160,7 @@ static void streamParameters(ostream& os, const CallInfo& ci, bool first = true)
 			first = false;
 		else
 			os << ", ";
-		os << REG(REG_p0 + i);
+		os << getIntRegName(REG_p0 + i);
 	}
 	for(unsigned i=0; i<ci.floatParams; i++) {
 		if(first)
@@ -150,13 +172,14 @@ static void streamParameters(ostream& os, const CallInfo& ci, bool first = true)
 	os << ")";
 }
 
-void streamFunctionCall(ostream& os, const Function& cf, bool syscall) {
-	streamFunctionName(os, cf, syscall);
+void streamFunctionCall(ostream& os, bool cs, const Function& cf, bool syscall) {
+	streamFunctionName(os, cs, cf, syscall);
 	os << "(";
 	streamParameters(os, cf.ci);
 }
 
 unsigned CCore::printInstruction(unsigned ip) {
+	if(!data.cs)
 	os << hex << showbase;
 	os << "L" << ip << ":\t";
 
@@ -182,12 +205,12 @@ unsigned CCore::printInstruction(unsigned ip) {
 		OPC(DIVUI)	FETCH_RD_CONST	DIVIDE(rd, RDU, IMMU);	EOP;
 		OPC(DIV)	FETCH_RD_RS	DIVIDE(rd, RD, RS);		EOP;
 		OPC(DIVI)	FETCH_RD_CONST	DIVIDE(rd, RD, "(int)" << IMM);	EOP;
-		OPC(SLL)	FETCH_RD_RS	ARITH(rd, RDU, <<, RSU);	EOP;
-		OPC(SLLI)	FETCH_RD_IMM8	ARITH(rd, RDU, <<, IMMU);	EOP;
-		OPC(SRA)	FETCH_RD_RS	ARITH(rd, RD, >>, RS);	EOP;
-		OPC(SRAI)	FETCH_RD_IMM8	ARITH(rd, RD, >>, IMM);	EOP;
-		OPC(SRL)	FETCH_RD_RS	ARITH(rd, RDU, >>, RSU);	EOP;
-		OPC(SRLI)	FETCH_RD_IMM8	ARITH(rd, RDU, >>, IMMU);	EOP;
+		OPC(SLL)	FETCH_RD_RS	ARITH(rd, RDU, <<, "(byte)" << RS);	EOP;
+		OPC(SLLI)	FETCH_RD_IMM8	ARITH(rd, RDU, <<, (uint)(byte)IMM);	EOP;
+		OPC(SRA)	FETCH_RD_RS	ARITH(rd, RD, >>, "(byte)" << RS);	EOP;
+		OPC(SRAI)	FETCH_RD_IMM8	ARITH(rd, RD, >>, (uint)(byte)IMM);	EOP;
+		OPC(SRL)	FETCH_RD_RS	ARITH(rd, RDU, >>, "(byte)" << RS);	EOP;
+		OPC(SRLI)	FETCH_RD_IMM8	ARITH(rd, RDU, >>, (uint)(byte)IMM);	EOP;
 
 		OPC(NOT)	FETCH_RD_RS	os << RD << " = ~" << RS << ";";	EOP;
 		OPC(NEG)	FETCH_RD_RS	os << RD << " = -" << RS << ";";	EOP;
@@ -299,101 +322,76 @@ unsigned CCore::printInstruction(unsigned ip) {
 		OPC(LDDI) FETCH_RD_CONST WRITE_REG(rd, IMM); os << " "; FETCH_CONST; WRITE_REG(rd+1, IMM); EOP;
 
 		OPC(FLOATS) FETCH_FRD_RS os << FRD << " = (double)(signed)" << RS << ";"; EOP;
-		OPC(FLOATUNS) FETCH_FRD_RS os << FRD << " = (double)(unsigned)" << RS << ";"; EOP;
+		OPC(FLOATUNS) FETCH_FRD_RS os << FRD << " = (double)(uint)" << RS << ";"; EOP;
 
 		OPC(FLOATD)
 			FETCH_FRD_RS;
-			os << "{ FREG temp; "
-			"temp.i[0] = " << RS << "; "
-			"temp.i[1] = " << REG(rs+1) << "; "
-			<< FRD << " = (double)(signed long long)temp.ll; }";
+			os << "FLOATS_DIDF(" << RS << ", "<< REG(rs+1) << ", "<<out<< FRD << ");";
 		EOP;
 
 		OPC(FLOATUND)
 			FETCH_FRD_RS;
-			os << "{ FREG temp; "
-			"temp.i[0] = " << RS << "; "
-			"temp.i[1] = " << REG(rs+1) << "; "
-			<< FRD << " = (double)(unsigned long long)temp.ll; }";
+			os << "FLOATU_DIDF(" << RS << ", "<< REG(rs+1) << ", "<<out<< FRD << ");";
 		EOP;
 
 		OPC(FSTRS)
-			FETCH_RD_FRS os << "{ MA_FV fv; ";
-			os << "fv.f = (float)" << FRS << "; ";
-			WRITE_REG(rd, "fv.i");
-			os << " }";
+			FETCH_RD_FRS;
+			os << "MOV_SFSI(" << RD << ", " << FRS << ");";
 		EOP;
 		OPC(FSTRD)
 			FETCH_RD_FRS
-			os << "{ FREG temp; temp.d = " << FRS << "; ";
-			WRITE_REG(rd, "temp.i[0]"); os << " ";
-			WRITE_REG(rd+1, "temp.i[1]");
-			os << " }";
+			os << "MOV_DFDI(" << RD << ", " << REG(rd+1) << ", " << FRS << ");";
 		EOP;
 
-		OPC(FLDRS) FETCH_FRD_RS os << "{ MA_FV fv; fv.i = " << RS << "; " << FRD << " = (double)fv.f; }"; EOP;
+		OPC(FLDRS) FETCH_FRD_RS os << "MOV_SISF(" << RS << ", "<<out<< FRD << ");"; EOP;
 		OPC(FLDRD)
 			FETCH_FRD_RS
-			os << "{ FREG temp; "
-			"temp.i[0] = " << RS << "; temp.i[1] = " << REG(rs+1) << "; "
-			<< FRD << " = temp.d; }";
+			os << "MOV_DIDF(" << RS << ", " << REG(rs+1) << ", "<<out<< FRD << ");";
 		EOP;
 
 		OPC(FLDR) FETCH_FRD_FRS os << FRD << " = " << FRS << ";"; EOP;
 
-		OPC(FLDIS) FETCH_FRD_CONST os << "{ MA_FV fv; fv.i = " << IMM << "; " << FRD << " = (double)fv.f; }"; EOP;
+		OPC(FLDIS) FETCH_FRD_CONST os << "MOV_SISF(" << IMM << ", "<<out<< FRD << ");"; EOP;
 		OPC(FLDID)
+		{
 			FETCH_FRD_CONST;
-			os << "{ FREG temp; "
-			"temp.i[0] = " << IMM << "; "; FETCH_CONST; os << "temp.i[1] = " << IMM << "; "
-			<< FRD << " = temp.d; }";
+			int i0 = IMM;
+			FETCH_CONST;
+			int i1 = IMM;
+			os << "MOV_DIDF(" << i0 << ", " << i1 << ", "<<out<< FRD << ");";
+		}
 		EOP;
 
 		OPC(FIX_TRUNCS) FETCH_RD_FRS WRITE_REG(rd, "(int)" << FRS); EOP;
 		OPC(FIX_TRUNCD)
 			FETCH_RD_FRS;
-			os << "{ FREG temp; "
-			"temp.ll = (long long)" << FRS << "; ";
-			WRITE_REG(rd, "temp.i[0]"); os << " ";
-			WRITE_REG(rd+1, "temp.i[1]"); os << " }";
+			os << "FIXS_DFDI("<<out<< RD << ", "<<out<< REG(rd+1) << ", " << FRS << ");";
 		EOP;
 
 		OPC(FIXUN_TRUNCS) FETCH_RD_FRS WRITE_REG(rd, "(unsigned int)" << FRS); EOP;
 		OPC(FIXUN_TRUNCD)
 			FETCH_RD_FRS;
-			os << "{ FREG temp; "
-			"temp.ll = (unsigned long long)" << FRS << "; ";
-			WRITE_REG(rd, "temp.i[0]"); os << " ";
-			WRITE_REG(rd+1, "temp.i[1]"); os << " }";
+			os << "FIXU_DFDI("<<out<< RD << ", "<<out<< REG(rd+1) << ", " << FRS << ");";
 		EOP;
 
 		OPC(FSTS)
 			FETCH_RD_FRS_CONST
-			os << "{ MA_FV fv; "
-			"fv.f = (float)" << FRS << "; "
-			"WINT(" << RD << " + " << IMM << ", fv.i); }";
+			os << "WFLOAT(" << RD << " + " << IMM << ", " << FRS << ");";
 		EOP;
 
 		OPC(FSTD)
 			FETCH_RD_FRS_CONST
-			os << "{ FREG temp; temp.d = " << FRS << "; "
-			"WINT(" << RD << " + " << IMM << ", temp.i[0]); "
-			"WINT(" << RD << " + " << IMM + 4 << ", temp.i[1]); }";
+			os << "WDOUBLE(" << RD << " + " << IMM << ", " << FRS << ");";
 		EOP;
 
 		OPC(FLDS)
 			FETCH_FRD_RS_CONST
-			os << "{ MA_FV fv; "
-			"fv.i = RINT(" << RS << " + " << IMM << "); "
-			<< FRD << " = (double)fv.f; }";
+			os << "MOV_SISF(RINT(" << RS << " + " << IMM << "), "<<out<< FRD << ");";
 		EOP;
 
 		OPC(FLDD)
 			FETCH_FRD_RS_CONST
-			os << "{ FREG temp; "
-			"temp.i[0] = RINT(" << RS << " + " << IMM << "); "
-			"temp.i[1] = RINT(" << RS << " + " << IMM + 4 << "); "
-			<< FRD << " = temp.d; }";
+			os << "MOV_DIDF(RINT(" << RS << " + " << IMM << "), RINT(" << RS << " + " << IMM + 4 << "), "<<out<< FRD << ");";
 		EOP;
 
 		OPC(FADD) FETCH_FRD_FRS os << FRD << " += " << FRS << ";"; EOP;
@@ -429,17 +427,17 @@ unsigned CCore::printInstruction(unsigned ip) {
 			case eInt: os << "return r0;"; USE_I(REG_r0); break;
 			case eFloat: os << "return f8;"; USE_F(8); break;
 			case eLong:
-				os << "{ FREG temp; temp.i[0] = r0; temp.i[1] = r1; return temp.ll; }";
+				os << "return RETURN_DI(r0, r1);";
 				USE_I(REG_r0);
 				USE_I(REG_r1);
 			break;
 			case eComplexFloat:
-				os << "{ __complex__ double cd; __real__ cd = f8; __imag__ cd = f9; return cd; }";
+				os << "return RETURN_CF(f8, f9);";
 				USE_F(8);
 				USE_F(9);
 			break;
 			case eComplexInt:
-				os << "{ __complex__ int temp; __real__ temp = r0; __imag__ temp = r1; return temp; }";
+				os << "return RETURN_CI(r0, r1);";
 				USE_I(REG_r0);
 				USE_I(REG_r1);
 			break;
@@ -474,14 +472,12 @@ unsigned CCore::printInstruction(unsigned ip) {
 #endif
 			}
 
-			streamReturnType(ci.returnType);
+			streamReturnType1(ci.returnType);
 			streamCallRegName(os, ci);
 			os << "(" << RD;
 			streamParameters(os, ci, false);
+			streamReturnType2(ci.returnType);
 			os << ";";
-			if(ci.returnType == eLong) os << " r0 = temp.i[0]; r1 = temp.i[1]; }";
-			if(ci.returnType == eComplexFloat) os << " f8 = __real__ temp; f9 = __imag__ temp; }";
-			if(ci.returnType == eComplexInt) os << " r0 = __real__ temp; r1 = __imag__ temp; }";
 		}
 		EOP;
 		OPC(CALLI)
@@ -497,12 +493,10 @@ unsigned CCore::printInstruction(unsigned ip) {
 			}
 			DEBUG_ASSERT(itr != functions.end());
 			const Function& cf(*itr);
-			streamReturnType(cf.ci.returnType);
-			streamFunctionCall(os, cf);
+			streamReturnType1(cf.ci.returnType);
+			streamFunctionCall(os, data.cs, cf);
+			streamReturnType2(cf.ci.returnType);
 			os << ";";
-			if(cf.ci.returnType == eLong) os << " r0 = temp.i[0]; r1 = temp.i[1]; }";
-			if(cf.ci.returnType == eComplexFloat) os << " f8 = __real__ temp; f9 = __imag__ temp; }";
-			if(cf.ci.returnType == eComplexInt) os << " r0 = __real__ temp; r1 = __imag__ temp; }";
 		}
 		EOP;
 
@@ -563,12 +557,18 @@ unsigned CCore::printInstruction(unsigned ip) {
 
 		OPC(SYSCALL)
 			FETCH_IMM8;
+			// warning: only works for mapip2_syscalls.s.
 			if(f.ci.returnType != eVoid) {
 				os << "return ";
 			}
-			os << "SYSCALL(";
-			streamFunctionCall(os, f, true);
-			os << ");\n";
+			if(data.cs)
+				os << "mSyscalls.";
+			else
+				os << "SYSCALL(";
+			streamFunctionCall(os, data.cs, f, true);
+			if(!data.cs)
+				os << ')';
+			os << ";\n";
 			// skip return instruction
 			DEBUG_ASSERT(IB == OP_RET);
 			return ip;

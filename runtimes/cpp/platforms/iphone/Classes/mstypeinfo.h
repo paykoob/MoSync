@@ -15,6 +15,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.
 */
 
+#ifndef MSTYPEINFO_H
+#define MSTYPEINFO_H
+
 #if 0
 #include <base/Syscall.h>
 #else
@@ -55,6 +58,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #define SYSCALL(name)	wrap_##name
 
+union FREG {
+	double d;
+	uint64_t ll;
+	int i[2];
+};
+
 void MoSyncDiv0();
 
 extern int sp;
@@ -68,14 +77,10 @@ extern unsigned char* mem_ds;
 
 #define zr 0
 
-union FREG {
-	double d;
-	uint64_t ll;
-	int i[2];
-};
-
 void entryPoint();
 
 unsigned char* CppInitReadData(const char* file, int fileSize, int mallocSize);
 
 //#define byte char
+
+#endif	//MSTYPEINFO_H

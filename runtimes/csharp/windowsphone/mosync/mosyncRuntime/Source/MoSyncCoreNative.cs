@@ -13,9 +13,8 @@ namespace MoSync
 {
     public class CoreNative : Core
     {
-        protected CoreNativeSyscallInvoker mSyscallInvoker;
+        protected Syscalls mSyscalls;
         protected int sp;
-        protected int __dbl_high;
 
         public CoreNative()
         {
@@ -36,6 +35,7 @@ namespace MoSync
             mDataMemory.WriteFromStream(0, dataSection, fileSize);
             dataSection.Close();
 
+						sp = dataSegmentSize - 16;
             int customEventDataSize = 60;
             sp -= customEventDataSize;
             mCustomEventPointer = dataSegmentSize - customEventDataSize;
@@ -50,33 +50,10 @@ namespace MoSync
             if (mRuntime == null)
                 MoSync.Util.CriticalError("No runtime!");
 
-            mSyscallInvoker = new CoreNativeSyscallInvoker(this, mRuntime.GetSyscalls());
+            mSyscalls = mRuntime.GetSyscalls();
         }
 
-        public int SetReturnValue(int value)
-        {
-            return value;
-        }
-
-        public int SetReturnValue(double value)
-        {
-            ulong ret = (ulong)BitConverter.DoubleToInt64Bits(value);
-            __dbl_high = (int)(ret >> 32);
-            return (int)(ret & 0xffffffffL);
-        }
-
-        public int SetReturnValue(float value)
-        {
-            return BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
-        }
-
-        public int SetReturnValue(long value)
-        {
-            __dbl_high = (int)(((ulong)value) >> 32);
-            return (int)(value & 0xffffffff);
-        }
-
-        public override int GetStackPointer()
+				public override int GetStackPointer()
         {
             return sp;
         }
@@ -94,5 +71,90 @@ namespace MoSync
         {
             Main();
         }
-    }
+
+			protected const int zr = 0;
+
+			protected int RINT(int address)
+			{
+				return mDataMemory.ReadInt32(address);
+			}
+			protected void WINT(int address, int data)
+			{
+				mDataMemory.WriteInt32(address, data);
+			}
+
+			protected byte RBYTE(int address)
+			{
+				return mDataMemory.ReadUInt8(address);
+			}
+			protected void WBYTE(int address, int data)
+			{
+				mDataMemory.WriteUInt8(address, (byte)data);
+			}
+
+			protected ushort RSHORT(int address)
+			{
+				return mDataMemory.ReadUInt16(address);
+			}
+			protected void WSHORT(int address, int data)
+			{
+				mDataMemory.WriteUInt16(address, (ushort)data);
+			}
+
+			protected void WDOUBLE(int address, double data)
+			{
+				mDataMemory.WriteDouble(address, data);
+			}
+
+			protected void MOV_DIDF(int i0, int i1, out double d)
+			{
+				d = MoSync.Util.ConvertToDouble(i0, i1);
+			}
+
+			protected void MOV_DI(out int i0, out int i1, long value)
+			{
+				i0 = (int)(value & 0xffffffff);
+				i1 = (int)(((ulong)value) >> 32);
+			}
+
+			protected double sqrt(double d)
+			{
+				return Math.Sqrt(d);
+			}
+
+			protected double sin(double d)
+			{
+				return Math.Sin(d);
+			}
+
+			protected double cos(double d)
+			{
+				return Math.Cos(d);
+			}
+
+			protected double exp(double d)
+			{
+				return Math.Exp(d);
+			}
+
+			protected double log(double d)
+			{
+				return Math.Log(d);
+			}
+
+			protected double pow(double a, double b)
+			{
+				return Math.Pow(a, b);
+			}
+
+			protected double atan2(double a, double b)
+			{
+				return Math.Atan2(a, b);
+			}
+
+			protected void maPanic(int code, String message)
+			{
+				MoSync.Util.CriticalError(message + "\ncode: " + code);
+			}
+		}
 }

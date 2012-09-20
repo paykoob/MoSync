@@ -4,17 +4,17 @@
 #include <sstream>
 #include <fstream>
 
-static void streamFunctionPrototype(ostream& os, const Function& f);
+static void streamFunctionPrototype(ostream& os, const Function& f, bool cs);
 static void streamFunctionContents(const DebuggingData& data,
 	const Array0<byte>& textBytes, const Array0<byte>& dataBytes,
 	ostream& os, const Function& f, CallRegs& cr, const Array0<Elf32_Rela>& textRela);
 static void parseFunctionInfo(Function& f);
 static void setCallRegDataRefs(const DebuggingData& data, CallRegs& cr);
 static void parseStabParams(const char* comma, unsigned& intParams, unsigned& floatParams);
-static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool first = true);
-static void streamCallRegPrototype(ostream& os, const CallInfo& ci);
+static void streamFunctionPrototypeParams(ostream& os, bool cs, const CallInfo& ci, bool first = true);
+static void streamCallRegPrototype(ostream& os, const CallInfo& ci, bool cs);
 static const Function& getFunction(unsigned address);
-static void streamCallRegSet(ostream& file, const CallInfo& ci, const FunctionPointerSet& fps);
+static void streamCallRegSet(ostream& file, const CallInfo& ci, const FunctionPointerSet& fps, bool cs);
 
 // warning: must match enum ReturnType!
 static const char* returnTypeStrings[] = {
@@ -24,6 +24,16 @@ static const char* returnTypeStrings[] = {
 	"int64_t",
 	"__complex__ double",
 	"__complex__ int",
+};
+
+// warning: must match enum ReturnType!
+static const char* cSharpReturnTypeStrings[] = {
+	"void",
+	"int",
+	"double",
+	"long",
+	"ComplexDouble",
+	"ComplexInt",
 };
 
 void writeCpp(const DebuggingData& data, const char* cppName) {
@@ -47,6 +57,15 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 	ofstream file(cppName);
 	gOutputFile = &file;
 
+	if(data.cs)
+	{
+		file << "public class CoreNativeProgram : MoSync.CoreNative {\n"
+			"\n"
+			"#pragma warning disable 0164\n"
+			"#pragma warning disable 1717\n"
+			"\n";
+	}
+	else
 	file <<
 "//****************************************\n"
 "//          Generated Cpp code\n"
@@ -61,13 +80,14 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 	unsigned scope = -1;
 
 	// normal function declarations
+	if(!data.cs)
 	for(set<Function>::iterator i = functions.begin(); i != functions.end(); ++i) {
 		Function& f((Function&)*i);
 		if(f.scope != scope) {
 			scope = f.scope;
 			oss << "// " << files[scope].name << "\n";
 		}
-		streamFunctionPrototype(oss, f);
+		streamFunctionPrototype(oss, f, data.cs);
 		oss << ";\n";
 	}
 
@@ -85,22 +105,26 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 			scope = f.scope;
 			oss << "// " << files[scope].name << "\n";
 		}
-		streamFunctionPrototype(oss, f);
+		if(data.cs)
+			oss << "private ";
+		streamFunctionPrototype(oss, f, data.cs);
 		oss << " {\n";
 		streamFunctionContents(data, textBytes, dataBytes, oss, f, cr, data.textRela);
 		oss << "}\n";
 	}
 
 	// callReg declarations
+	if(!data.cs)
 	for(FunctionPointerMap::const_iterator itr = gFunctionPointerMap.begin();
 		itr != gFunctionPointerMap.end(); ++itr)
 	{
 		const CallInfo& ci(itr->first);
-		streamCallRegPrototype(file, ci);
+		streamCallRegPrototype(file, ci, data.cs);
 		file << ";\n";
 	}
 
 	file << oss.str();
+	if(!data.cs)
 	file << hex << showbase;
 
 	// CallReg definitions
@@ -110,10 +134,10 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 		const CallInfo& ci(itr->first);
 		const FunctionPointerSet& fps(itr->second);
 		file << '\n';
-		streamCallRegPrototype(file, ci);
+		streamCallRegPrototype(file, ci, data.cs);
 		file << " {\n"
 		"\tswitch(pointer) {\n";
-		streamCallRegSet(file, ci, fps);
+		streamCallRegSet(file, ci, fps, data.cs);
 		if(ci.returnType == eVoid) {
 			// Certain function calls are Void even though their target function is not.
 			// Thus, all FPs with identical parameters must be listed here.
@@ -124,39 +148,43 @@ void writeCpp(const DebuggingData& data, const char* cppName) {
 			{
 				const CallInfo& jci(jtr->first);
 				if(jci.intParams == ci.intParams && jci.floatParams == ci.floatParams && jci.returnType != eVoid)
-					streamCallRegSet(file, ci, jtr->second);
+					streamCallRegSet(file, ci, jtr->second, data.cs);
 			}
 		}
-		file << "\tdefault: maPanic(1, \"Invalid callReg\");\n"
+		const char* csPanic = data.cs ? " throw new System.Exception();" : "";
+		file << "\tdefault: maPanic(1, \"Invalid callReg\");" << csPanic << "\n"
 		"\t}\n"
 		"}\n";
 	}
 
 	// entry point
-	file << "\n"
-	"void entryPoint() {\n"
+	file << "\n";
+	if(data.cs)
+		file << "public override void Main() {\n";
+	else
+		file << "void entryPoint() {\n";
+	file <<
 	"\tint p0 = "<< calculateDataSize(data, dataBytes.size()) <<";\n"
 	"\tint p1 = "<< data.stackSize <<";\n"
 	"\tint p2 = "<< data.heapSize <<";\n"
 	"\tint p3 = "<< data.ctorAddress <<";\n"
-	"\tint g0 = "<< data.dtorAddress <<";\n"
-	"\t";
-	streamFunctionName(file, getFunction(data.entryPoint));
+	"\tint g0 = "<< data.dtorAddress <<";\n";
+	if(data.cs)
+		file << "\tInitData(\"data_section.bin\", "<< dataBytes.size() <<", p0);\n";
+	file << "\t";
+	streamFunctionName(file, data.cs, getFunction(data.entryPoint));
 	file << "(p0, p1, p2, p3, g0);\n"
 	"}\n";
+	if(data.cs)
+		file << "}\n";
 }
 
-void writeCs(const DebuggingData& data, const char* csName) {
-	printf("Not implemented!\n");
-	DEBIG_PHAT_ERROR;
-}
-
-static void streamCallRegSet(ostream& file, const CallInfo& ci, const FunctionPointerSet& fps) {
+static void streamCallRegSet(ostream& file, const CallInfo& ci, const FunctionPointerSet& fps, bool cs) {
 	for(FunctionPointerSet::const_iterator jtr = fps.begin(); jtr != fps.end(); ++jtr) {
 		file << "\tcase " << *jtr << ": ";
 		if(ci.returnType != eVoid)
 			file << "return ";
-		streamFunctionCall(file, getFunction(*jtr));
+		streamFunctionCall(file, cs, getFunction(*jtr));
 		if(ci.returnType == eVoid)
 			file << "; return";
 		file << ";\n";
@@ -171,12 +199,17 @@ static const Function& getFunction(unsigned address) {
 	return *itr;
 }
 
-static void streamCallRegPrototype(ostream& os, const CallInfo& ci) {
+static void streamCallRegPrototype(ostream& os, const CallInfo& ci, bool cs) {
+	if(!cs)
 	os << noshowbase << dec;
-	os << "static " << returnTypeStrings[ci.returnType] << " ";
+	if(cs)
+		os << "private " << cSharpReturnTypeStrings[ci.returnType] << " ";
+	else
+		os << "static " << returnTypeStrings[ci.returnType] << " ";
 	streamCallRegName(os, ci);
 	os << "(int pointer";
-	streamFunctionPrototypeParams(os, ci, false);
+	streamFunctionPrototypeParams(os, cs, ci, false);
+	if(!cs)
 	os << showbase << hex;
 }
 
@@ -352,7 +385,8 @@ static void streamFunctionContents(const DebuggingData& data,
 	// output instructions
 	ostringstream oss;
 	SIData pid = { oss, cr, data.elfFile, textBytes, dataBytes,
-		textRela, data.symbols, data.strtab, data.textRelocMap, {0,0} };
+		textRela, data.symbols, data.strtab, data.textRelocMap, data.cs,
+		{0,0} };
 	streamFunctionInstructions(pid, f);
 
 	// declare registers
@@ -363,7 +397,8 @@ static void streamFunctionContents(const DebuggingData& data,
 	os << oss.str();
 }
 
-static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool first) {
+static void streamFunctionPrototypeParams(ostream& os, bool cs, const CallInfo& ci, bool first) {
+	if(!cs)
 	os << dec;
 	if(first)
 		os << '(';
@@ -382,21 +417,29 @@ static void streamFunctionPrototypeParams(ostream& os, const CallInfo& ci, bool 
 		os << "double f" << (8+j);
 	}
 	os << ')';
+	if(!cs)
 	os << hex;
 }
 
-static void streamFunctionPrototype(ostream& os, const Function& f) {
-	os << returnTypeStrings[f.ci.returnType] << " ";
-	streamFunctionName(os, f);
-	streamFunctionPrototypeParams(os, f.ci);
+static void streamFunctionPrototype(ostream& os, const Function& f, bool cs) {
+	if(cs)
+		os << cSharpReturnTypeStrings[f.ci.returnType] << " ";
+	else
+		os << returnTypeStrings[f.ci.returnType] << " ";
+	streamFunctionName(os, cs, f);
+	streamFunctionPrototypeParams(os, cs, f.ci);
 }
 
 static bool isctype(int c) {
 	return isalnum(c) || c == '_';
 }
 
-void streamFunctionName(ostream& os, const Function& f, bool syscall) {
+void streamFunctionName(ostream& os, bool cs, const Function& f, bool syscall) {
 	const char* ptr = f.name;
+	if(cs && syscall) {
+		DEBUG_ASSERT(ptr[0] == '_');
+		ptr++;
+	}
 	while(*ptr) {
 		if(isctype(*ptr))
 			os << *ptr;
@@ -405,7 +448,13 @@ void streamFunctionName(ostream& os, const Function& f, bool syscall) {
 		ptr++;
 	}
 	if(!syscall)
-		os << dec << '_' << f.scope << hex;
+	{
+		if(!cs)
+			os << dec;
+		os << '_' << f.scope;
+		if(!cs)
+			os << hex;
+	}
 }
 
 static void parseFunctionInfo(Function& f) {

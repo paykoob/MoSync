@@ -63,6 +63,9 @@
     <ClInclude Include="..\..\..\core\extensions.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\core\core_helpers.h">
+      <Filter>core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\sdl.rc" />

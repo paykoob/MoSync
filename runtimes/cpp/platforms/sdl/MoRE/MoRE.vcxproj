@@ -120,6 +120,7 @@ copy $(TargetPath)  $(MOSYNCDIR)\bin\ /Y
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\core\Core.h" />
+    <ClInclude Include="..\..\..\core\core_helpers.h" />
     <ClInclude Include="..\..\..\core\core_run.h" />
     <ClInclude Include="..\..\..\core\CoreCommon.h" />
     <ClInclude Include="..\..\..\core\debugger.h" />

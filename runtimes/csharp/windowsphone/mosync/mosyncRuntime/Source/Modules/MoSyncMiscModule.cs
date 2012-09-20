@@ -164,9 +164,96 @@ namespace MoSync
 		}
 		*/
 
+        /**
+         * Retrieves the values of MoSync System Properties
+         */
+        public static string getDeviceInfo(string key)
+        {
+            // imei
+            if (key.Equals("mosync.imei"))
+            {
+                string sImei = string.Empty;
+                object objImei;
+
+                if (Microsoft.Phone.Info.UserExtendedProperties.TryGetValue("ANID", out objImei))
+                {
+                    sImei = (string)objImei;
+                    return sImei;
+                }
+            }
+
+            // imsi - not available in WP7.1
+            if (key.Equals("mosync.imsi"))
+            {
+                //TODO
+            }
+
+            // lang
+            if (key.Equals("mosync.iso-639-1"))
+            {
+                return System.Globalization.CultureInfo.CurrentCulture.ToString();
+            }
+
+            // lantg
+            if (key.Equals("mosync.iso-639-2"))
+            {
+                return System.Globalization.CultureInfo.CurrentCulture.Name;
+            }
+
+            // device info
+            if (key.Equals("mosync.device"))
+            {
+                string device = DeviceStatus.DeviceManufacturer + ";" +
+                                DeviceStatus.DeviceFirmwareVersion;
+                                // + model name
+                return device;
+            }
+
+            // device name
+            if (key.Equals("mosync.device.name"))
+            {
+                return DeviceStatus.DeviceName;
+            }
+
+            //Note: to get a result requires ID_CAP_IDENTITY_DEVICE
+            // to be added to the capabilities of the WMAppManifest
+            // this will then warn users in marketplace
+            if (key.Equals("mosync.device.UUID"))
+            {
+                byte[] sUUID = null;
+                object uniqueId;
+                if (DeviceExtendedProperties.TryGetValue("DeviceUniqueId", out uniqueId))
+                {
+                    sUUID = (byte[])uniqueId;
+                    return BitConverter.ToString(sUUID);
+                }
+            }
+
+            // device OS
+            if (key.Equals("mosync.device.OS"))
+            {
+                return Environment.OSVersion.ToString();
+            }
+
+            // device OS version
+            if (key.Equals("mosync.device.OS.version"))
+            {
+                return Environment.OSVersion.Version.ToString();
+            }
+
+            // network connection type
+            if (key.Equals("mosync.network.type"))
+            {
+                return Microsoft.Phone.Net.NetworkInformation.NetworkInterface.NetworkInterfaceType.ToString();
+            }
+
+            // in case of no information
+            return null; // "not available";
+        }
+
         public void Init(Ioctls ioctls, Core core, Runtime runtime)
         {
-			mRuntime = runtime;
+						mRuntime = runtime;
 
             /**
              * Register system properties
@@ -375,112 +462,23 @@ namespace MoSync
 								return 0;
 							}
 						};
-        }
 
-			ioctls.maWakeLock = delegate(int flag)
-			{
-				if (MoSync.Constants.MA_WAKE_LOCK_ON == flag)
-				{
-					Microsoft.Phone.Shell.PhoneApplicationService.Current.
-						UserIdleDetectionMode =
-							Microsoft.Phone.Shell.IdleDetectionMode.Enabled;
-				}
-				else
-				{
-					Microsoft.Phone.Shell.PhoneApplicationService.Current.
-						UserIdleDetectionMode =
-							Microsoft.Phone.Shell.IdleDetectionMode.Disabled;
-				}
-				return 1;
-			};
-        }
-
-        /**
-         * Retrieves the values of MoSync System Properties
-         */
-        public static string getDeviceInfo(string key)
-        {
-            // imei
-            if (key.Equals("mosync.imei"))
-            {
-                string sImei = string.Empty;
-                object objImei;
-
-                if (Microsoft.Phone.Info.UserExtendedProperties.TryGetValue("ANID", out objImei))
-                {
-                    sImei = (string)objImei;
-                    return sImei;
-                }
-            }
-
-            // imsi - not available in WP7.1
-            if (key.Equals("mosync.imsi"))
-            {
-                //TODO
-            }
-
-            // lang
-            if (key.Equals("mosync.iso-639-1"))
-            {
-                return System.Globalization.CultureInfo.CurrentCulture.ToString();
-            }
-
-            // lantg
-            if (key.Equals("mosync.iso-639-2"))
-            {
-                return System.Globalization.CultureInfo.CurrentCulture.Name;
-            }
-
-            // device info
-            if (key.Equals("mosync.device"))
-            {
-                string device = DeviceStatus.DeviceManufacturer + ";" +
-                                DeviceStatus.DeviceFirmwareVersion;
-                                // + model name
-                return device;
-            }
-
-            // device name
-            if (key.Equals("mosync.device.name"))
-            {
-                return DeviceStatus.DeviceName;
-            }
-
-            //Note: to get a result requires ID_CAP_IDENTITY_DEVICE
-            // to be added to the capabilities of the WMAppManifest
-            // this will then warn users in marketplace
-            if (key.Equals("mosync.device.UUID"))
-            {
-                byte[] sUUID = null;
-                object uniqueId;
-                if (DeviceExtendedProperties.TryGetValue("DeviceUniqueId", out uniqueId))
-                {
-                    sUUID = (byte[])uniqueId;
-                    return BitConverter.ToString(sUUID);
-                }
-            }
-
-            // device OS
-            if (key.Equals("mosync.device.OS"))
-            {
-                return Environment.OSVersion.ToString();
-            }
-
-            // device OS version
-            if (key.Equals("mosync.device.OS.version"))
-            {
-                return Environment.OSVersion.Version.ToString();
-            }
-
-            // network connection type
-            if (key.Equals("mosync.network.type"))
-            {
-                return Microsoft.Phone.Net.NetworkInformation.NetworkInterface.NetworkInterfaceType.ToString();
-            }
-
-            // in case of no information
-            return null; // "not available";
-        }
-
+						ioctls.maWakeLock = delegate(int flag)
+						{
+							if (MoSync.Constants.MA_WAKE_LOCK_ON == flag)
+							{
+								Microsoft.Phone.Shell.PhoneApplicationService.Current.
+									UserIdleDetectionMode =
+										Microsoft.Phone.Shell.IdleDetectionMode.Enabled;
+							}
+							else
+							{
+								Microsoft.Phone.Shell.PhoneApplicationService.Current.
+									UserIdleDetectionMode =
+										Microsoft.Phone.Shell.IdleDetectionMode.Disabled;
+							}
+							return 1;
+						};
+					}
     } // end class MiscModule
 } // end namespace MoSync

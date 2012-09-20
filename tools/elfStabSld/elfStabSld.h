@@ -115,6 +115,7 @@ struct DebuggingData {
 	Array0<Elf32_Sym> symbols;
 	Array0<char> strtab;	// this one is used by symbols.
 	RelocMap textRelocMap;
+	bool cs;
 };
 
 // stores the set of addresses to functions that may be called by register.
@@ -137,7 +138,6 @@ extern FunctionPointerMap gFunctionPointerMap;
 extern ofstream* gOutputFile;
 
 void writeCpp(const DebuggingData& data, const char*);
-void writeCs(const DebuggingData& data, const char*) __attribute__((noreturn));
 
 struct SIData {
 	// input
@@ -149,6 +149,7 @@ struct SIData {
 	const Array0<Elf32_Sym>& symbols;
 	const Array0<char>& strtab;
 	const RelocMap& textRelocMap;
+	bool cs;
 
 	// output
 	struct RegUsage {
@@ -158,9 +159,9 @@ struct SIData {
 };
 
 void streamFunctionInstructions(SIData& data, const Function& f);
-void streamFunctionName(ostream& os, const Function& f, bool syscall = false);
+void streamFunctionName(ostream& os, bool cs, const Function& f, bool syscall = false);
 void streamCallRegName(ostream& os, const CallInfo& ci);
-void streamFunctionCall(ostream& os, const Function& cf, bool syscall = false);
+void streamFunctionCall(ostream& os, bool cs, const Function& cf, bool syscall = false);
 
 CallInfo parseCallInfoStab(const char* stab);
 

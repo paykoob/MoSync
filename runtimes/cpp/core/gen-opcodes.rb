@@ -263,6 +263,28 @@ elsif(mode == 'ccore')
 		file.puts
 		file.puts '#endif	//GEN_OPCODES_H'
 	end
+elsif(mode == 'cscore')
+	open(filename, 'w') do |file|
+		i = 0
+		file.puts 'namespace MoSync {'
+		file.puts "public class CoreGen {"
+		file.puts
+		file.puts "public class Op {"
+		OPCODES.each do |op|
+			file.puts "\tpublic const byte #{op.name.to_s.upcase} = #{sprintf('0x%x', i)};"
+			i += 1
+		end
+		file.puts '}'
+		file.puts
+		file.puts 'public class Reg {'
+		REGISTERS.each_with_index do |r, i|
+			file.puts "\tpublic const int #{r} = #{i};"
+		end
+		file.puts '}'
+		file.puts
+		file.puts '}'
+		file.puts '}'
+	end
 elsif(mode == 'binutils/desc')
 	open(filename, 'w') do |file|
 		file.puts '#ifndef _MAPIP2_DESC_H'

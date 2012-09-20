@@ -16,123 +16,27 @@ namespace MoSync
         protected byte[] mProgramMemory;
         protected uint mProgramSegmentSize;
         protected uint mProgramSegmentMask;
-        protected int[] mConstantPool;
-        protected int[] mRegisters = new int[128];
+        protected int[] mRegisters = new int[32];
+				protected double[] mFloatRegisters = new double[16];
         protected SyscallInvoker mSyscallInvoker;
 
         protected Stream mProgramFile;
 
         public class ProgramHeader
         {
-            public uint mMagic;
-            public uint mProgramLength;
-            public uint mDataLength;
-            public uint mDataSize;
-            public uint mStackSize;
-            public uint mHeapSize;
-            public uint mAppCode;
-            public uint mAppID;
-            public uint mEntryPoint;
-            public uint mIntLength;
-        }
+					public uint Magic;
+					public uint CodeLen;
+					public uint DataLen;
+					public uint DataSize;
+					public uint StackSize;
+					public uint HeapSize;
+					public uint CtorAddress;
+					public uint DtorAddress;
+					public uint BuildID;
+					public uint AppID;
+					public uint EntryPoint;
 
-        public class Op
-        {
-            public const byte NUL = 0;
-            public const byte PUSH = 1;
-            public const byte POP = 2;
-            public const byte CALL = 3;
-            public const byte CALLI = 4;
-            public const byte LDB = 5;
-            public const byte STB = 6;
-            public const byte LDH = 7;
-            public const byte STH = 8;
-            public const byte LDW = 9;
-            public const byte STW = 10;
-            public const byte LDI = 11;
-            public const byte LDR = 12;
-            public const byte ADD = 13;
-            public const byte ADDI = 14;
-            public const byte MUL = 15;
-            public const byte MULI = 16;
-            public const byte SUB = 17;
-            public const byte SUBI = 18;
-            public const byte AND = 19;
-            public const byte ANDI = 20;
-            public const byte OR = 21;
-            public const byte ORI = 22;
-            public const byte XOR = 23;
-            public const byte XORI = 24;
-            public const byte DIVU = 25;
-            public const byte DIVUI = 26;
-            public const byte DIV = 27;
-            public const byte DIVI = 28;
-            public const byte SLL = 29;
-            public const byte SLLI = 30;
-            public const byte SRA = 31;
-            public const byte SRAI = 32;
-            public const byte SRL = 33;
-            public const byte SRLI = 34;
-            public const byte NOT = 35;
-            public const byte NEG = 36;
-            public const byte RET = 37;
-            public const byte JC_EQ = 38;
-            public const byte JC_NE = 39;
-            public const byte JC_GE = 40;
-            public const byte JC_GEU = 41;
-            public const byte JC_GT = 42;
-            public const byte JC_GTU = 43;
-            public const byte JC_LE = 44;
-            public const byte JC_LEU = 45;
-            public const byte JC_LT = 46;
-            public const byte JC_LTU = 47;
-            public const byte JPI = 48;
-            public const byte JPR = 49;
-            public const byte XB = 50;
-            public const byte XH = 51;
-            public const byte SYSCALL = 52;
-            public const byte CASE = 53;
-            public const byte FAR = 54;
-            public const byte END = 55;
-        }
-
-        public class Reg
-        {
-            public const int ZERO = 0;
-            public const int SP = 1;
-            public const int RT = 2;
-            public const int FR = 3;
-
-            public const int D0 = 4;
-            public const int D1 = 5;
-            public const int D2 = 6;
-            public const int D3 = 7;
-            public const int D4 = 8;
-            public const int D5 = 9;
-            public const int D6 = 10;
-            public const int D7 = 11;
-
-            public const int I0 = 12;
-            public const int I1 = 13;
-            public const int I2 = 14;
-            public const int I3 = 15;
-
-            public const int R0 = 16;
-            public const int R1 = 17;
-            public const int R2 = 18;
-            public const int R3 = 19;
-            public const int R4 = 20;
-            public const int R5 = 21;
-            public const int R6 = 22;
-            public const int R7 = 23;
-            public const int R8 = 24;
-            public const int R9 = 25;
-            public const int R10 = 26;
-            public const int R11 = 27;
-            public const int R12 = 28;
-            public const int R13 = 29;
-            public const int R14 = 30;
-            public const int R15 = 31;
+					public static int MA_HEAD_MAGIC = 0x5944414d;	//MADY
         }
 
         public CoreInterpreted(Stream programFile)
@@ -147,7 +51,7 @@ namespace MoSync
 
             base.Init();
             Start();
-            mIp = (int)mProgramHeader.mEntryPoint;
+            mIp = (int)mProgramHeader.EntryPoint;
 
             if (mRuntime == null)
                 MoSync.Util.CriticalError("No runtime!");
@@ -162,30 +66,28 @@ namespace MoSync
 
         public void SetReturnValue(int value)
         {
-            mRegisters[Reg.R14] = value;
+            mRegisters[Reg.r0] = value;
         }
 
         public void SetReturnValue(double value)
         {
-            ulong ret = (ulong)BitConverter.DoubleToInt64Bits(value);
-            mRegisters[Reg.R14] = (int)(ret & 0xffffffffL);
-            mRegisters[Reg.R15] = (int)(ret >> 32);
+					mFloatRegisters[8] = value;
         }
 
         public void SetReturnValue(float value)
         {
-            mRegisters[Reg.R14] = BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
-        }
+					mFloatRegisters[8] = value;
+				}
 
         public void SetReturnValue(long value)
         {
-            mRegisters[Reg.R14] = (int)(value & 0xffffffff);
-            mRegisters[Reg.R15] = (int)(((ulong)value) >> 32);
+            mRegisters[Reg.r0] = (int)(value & 0xffffffff);
+            mRegisters[Reg.r1] = (int)(((ulong)value) >> 32);
         }
 
         public override int GetStackPointer()
         {
-            return mRegisters[Reg.SP];
+            return mRegisters[Reg.sp];
         }
 
         private void GenerateConstantTable()
@@ -222,56 +124,48 @@ namespace MoSync
 
         protected void LoadProgram(Stream program)
         {
-            mProgramHeader.mMagic = Util.StreamReadUint32(program);
-            mProgramHeader.mProgramLength = Util.StreamReadUint32(program);
-            mProgramHeader.mDataLength = Util.StreamReadUint32(program);
-            mProgramHeader.mDataSize = Util.StreamReadUint32(program);
-            mProgramHeader.mStackSize = Util.StreamReadUint32(program);
-            mProgramHeader.mHeapSize = Util.StreamReadUint32(program);
-            mProgramHeader.mAppCode = Util.StreamReadUint32(program);
-            mProgramHeader.mAppID = Util.StreamReadUint32(program);
-            mProgramHeader.mEntryPoint = Util.StreamReadUint32(program);
-            mProgramHeader.mIntLength = Util.StreamReadUint32(program);
+            mProgramHeader.Magic = Util.StreamReadUint32(program);
+            mProgramHeader.CodeLen = Util.StreamReadUint32(program);
+            mProgramHeader.DataLen = Util.StreamReadUint32(program);
+            mProgramHeader.DataSize = Util.StreamReadUint32(program);
+            mProgramHeader.StackSize = Util.StreamReadUint32(program);
+            mProgramHeader.HeapSize = Util.StreamReadUint32(program);
+            mProgramHeader.CtorAddress = Util.StreamReadUint32(program);
+            mProgramHeader.DtorAddress = Util.StreamReadUint32(program);
+            mProgramHeader.BuildID = Util.StreamReadUint32(program);
+            mProgramHeader.AppID = Util.StreamReadUint32(program);
+            mProgramHeader.EntryPoint = Util.StreamReadUint32(program);
 
-            if (mProgramHeader.mMagic != 0x5844414d)
+						if (mProgramHeader.Magic != ProgramHeader.MA_HEAD_MAGIC)
                 Util.CriticalError("Invalid magic!");
 
 
-            mIp = (int)mProgramHeader.mEntryPoint;
+            mIp = (int)mProgramHeader.EntryPoint;
 
 
-            mProgramSegmentSize = Util.NextPowerOfTwo(2, mProgramHeader.mProgramLength);
+						mProgramSegmentSize = Util.NextPowerOfTwo(2, mProgramHeader.CodeLen);
             mProgramSegmentMask = mProgramSegmentSize - 1;
             mProgramMemory = new byte[mProgramSegmentSize];
 
-            for (int i = 0; i < mProgramHeader.mProgramLength; i++)
+						for (int i = 0; i < mProgramHeader.CodeLen; i++)
             {
                 mProgramMemory[i] = Util.StreamReadUint8(program);
             }
 
-            mDataSegmentSize = Util.NextPowerOfTwo(2, mProgramHeader.mDataSize);
+            mDataSegmentSize = Util.NextPowerOfTwo(2, mProgramHeader.DataSize);
             mDataSegmentMask = mDataSegmentSize - 1;
             mDataMemory = new Memory((int)mDataSegmentSize); // new int[mDataSegmentSize >> 2];
 
-            for (int i = 0; i < mProgramHeader.mDataLength; i++)
+            for (int i = 0; i < mProgramHeader.DataLen; i++)
             {
                 mDataMemory.WriteUInt8(i, Util.StreamReadUint8(program));
             }
 
-
-            mConstantPool = new int[mProgramHeader.mIntLength];
-            for (int i = 0; i < mProgramHeader.mIntLength; i++)
-            {
-                mConstantPool[i] = Util.StreamReadInt32(program);
-            }
-
-            GenerateConstantTable();
-
             uint customEventDataSize = 60;
-            mRegisters[Reg.SP] = (int)(mDataSegmentSize - customEventDataSize - 4);
-            mRegisters[Reg.I0] = (int)mDataSegmentSize;
-            mRegisters[Reg.I1] = (int)mProgramHeader.mStackSize;
-            mRegisters[Reg.I2] = (int)mProgramHeader.mHeapSize;
+            mRegisters[Reg.sp] = (int)(mDataSegmentSize - customEventDataSize - 4);
+            mRegisters[Reg.p0] = (int)mDataSegmentSize;
+            mRegisters[Reg.p1] = (int)mProgramHeader.StackSize;
+            mRegisters[Reg.p2] = (int)mProgramHeader.HeapSize;
             mCustomEventPointer = (int)(mDataSegmentSize - customEventDataSize);
         }
 
@@ -389,12 +283,6 @@ namespace MoSync
                 res.Append(String.Format("ADDR({0:x}): {1:x}\n", i, mDataMemory.ReadUInt8(i)));
             }
 
-            int constantPoolSize = mConstantPool.Length;
-            for (int i = 0; i < constantPoolSize; i++)
-            {
-                res.Append(String.Format("CONSTANT({0:d}): {1:x}\n", i, mConstantPool[i]));
-            }
-
             for (int i = 0; i < mProgramMemory.Length; i++)
             {
                 res.Append(String.Format("CODE({0:x}): {1:x}\n", i, mProgramMemory[i]));
@@ -405,6 +293,14 @@ namespace MoSync
 
         // ---------------- END FUGLY DEBUG FACILITIES ----------------------------
 
+				int readInt()
+				{
+					int i = mProgramMemory[mIp++];
+					i |= ((int)mProgramMemory[mIp++] << 8);
+					i |= ((int)mProgramMemory[mIp++] << 16);
+					i |= ((int)mProgramMemory[mIp++] << 24);
+					return i;
+				}
 
         public override void Run()
         {
@@ -442,8 +338,8 @@ namespace MoSync
                             MoSync.Util.CriticalError("Hell");
                         do
                         {
-                            mRegisters[Reg.SP] -= 4;
-                            mDataMemory.WriteInt32(mRegisters[Reg.SP], mRegisters[rd]);
+                            mRegisters[Reg.sp] -= 4;
+                            mDataMemory.WriteInt32(mRegisters[Reg.sp], mRegisters[rd]);
                             rd++;
                             imm32--;
                         } while (imm32 != 0);
@@ -456,23 +352,23 @@ namespace MoSync
                             MoSync.Util.CriticalError("Hell");
                         do
                         {
-                            mRegisters[rd] = mDataMemory.ReadInt32(mRegisters[Reg.SP]);
-                            mRegisters[Reg.SP] += 4;
+                            mRegisters[rd] = mDataMemory.ReadInt32(mRegisters[Reg.sp]);
+                            mRegisters[Reg.sp] += 4;
                             rd--;
                             imm32--;
                         } while (imm32 != 0);
                         break;
 
-                    case Op.CALL: // CALL
+                    case Op.CALLR: // CALL
                         rd = mProgramMemory[mIp++];
-                        mRegisters[Reg.RT] = mIp;
+                        mRegisters[Reg.ra] = mIp;
                         mIp = mRegisters[rd];
                         break;
 
                     case Op.CALLI: // CALLI
-                        imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
+												imm32 = readInt();
                         //console.log("calli addr: " + callAddr);
-                        mRegisters[Reg.RT] = mIp;
+                        mRegisters[Reg.ra] = mIp;
                         mIp = imm32;
                         break;
 
@@ -480,10 +376,7 @@ namespace MoSync
                         {
                             rd = mProgramMemory[mIp++];
                             rs = mProgramMemory[mIp++];
-                            imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ?
-                                mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] :
-                                mConstantPool[imm32];
-                            //mRegisters[rd] = mDataMemory.ReadUInt8(mRegisters[rs] + imm32);
+														imm32 = readInt();
                             mRegisters[rd] = mDataMemory.ReadInt8(mRegisters[rs] + imm32);
                         }
                         break;
@@ -492,9 +385,7 @@ namespace MoSync
                         {
                             rd = mProgramMemory[mIp++];
                             rs = mProgramMemory[mIp++];
-                            imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ?
-                                mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] :
-                                mConstantPool[imm32];
+														imm32 = readInt();
                             mDataMemory.WriteUInt8(mRegisters[rd] + imm32, (byte)mRegisters[rs]);
                         }
                         break;
@@ -503,9 +394,7 @@ namespace MoSync
                         {
                             rd = mProgramMemory[mIp++];
                             rs = mProgramMemory[mIp++];
-                            imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ?
-                                mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] :
-                                mConstantPool[imm32];
+														imm32 = readInt();
                             mRegisters[rd] = mDataMemory.ReadInt16(mRegisters[rs] + imm32);
                         }
                         break;
@@ -514,10 +403,7 @@ namespace MoSync
                         {
                             rd = mProgramMemory[mIp++];
                             rs = mProgramMemory[mIp++];
-                            imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ?
-                                mConstantPool[(((imm32 & 127) << 8) |
-                                mProgramMemory[mIp++])] :
-                                mConstantPool[imm32];
+														imm32 = readInt();
                             mDataMemory.WriteUInt16(mRegisters[rd] + imm32, (ushort)mRegisters[rs]);
                         }
                         break;
@@ -525,9 +411,7 @@ namespace MoSync
                     case Op.LDW: // LDW
                         rd = mProgramMemory[mIp++];
                         rs = mProgramMemory[mIp++];
-                        imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ?
-                            mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] :
-                            mConstantPool[imm32];
+												imm32 = readInt();
                         mRegisters[rd] = mDataMemory.ReadInt32(mRegisters[rs] + imm32);
                         break;
 
@@ -535,18 +419,14 @@ namespace MoSync
                         {
                             rd = mProgramMemory[mIp++];
                             rs = mProgramMemory[mIp++];
-                            imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ?
-                                mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] :
-                                mConstantPool[imm32];
+														imm32 = readInt();
                             mDataMemory.WriteInt32(mRegisters[rd] + imm32, mRegisters[rs]);
                         }
                         break;
 
                     case Op.LDI: // LDI
                         rd = mProgramMemory[mIp++];
-                        imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ?
-                            mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] :
-                            mConstantPool[imm32];
+												imm32 = readInt();
                         mRegisters[rd] = imm32;
                         break;
 
@@ -564,7 +444,7 @@ namespace MoSync
 
                     case Op.ADDI: // ADDI
                         rd = mProgramMemory[mIp++];
-                        imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ? mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] : mConstantPool[imm32];
+												imm32 = readInt();
                         mRegisters[rd] += imm32;
                         break;
 
@@ -576,7 +456,7 @@ namespace MoSync
 
                     case Op.MULI: // MULI
                         rd = mProgramMemory[mIp++];
-                        imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ? mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] : mConstantPool[imm32];
+												imm32 = readInt();
                         mRegisters[rd] *= imm32;
                         break;
 
@@ -589,7 +469,7 @@ namespace MoSync
 
                     case Op.SUBI: // SUBI
                         rd = mProgramMemory[mIp++];
-                        imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ? mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] : mConstantPool[imm32];
+												imm32 = readInt();
                         mRegisters[rd] -= imm32;
                         break;
 
@@ -601,7 +481,7 @@ namespace MoSync
 
                     case Op.ANDI: // ANDI
                         rd = mProgramMemory[mIp++];
-                        imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ? mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] : mConstantPool[imm32];
+												imm32 = readInt();
                         mRegisters[rd] &= imm32;
                         break;
 
@@ -613,7 +493,7 @@ namespace MoSync
 
                     case Op.ORI: // ORI
                         rd = mProgramMemory[mIp++];
-                        imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ? mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] : mConstantPool[imm32];
+												imm32 = readInt();
                         mRegisters[rd] |= imm32;
                         break;
 
@@ -625,7 +505,7 @@ namespace MoSync
 
                     case Op.XORI: // XORI
                         rd = mProgramMemory[mIp++];
-                        imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ? mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] : mConstantPool[imm32];
+												imm32 = readInt();
                         mRegisters[rd] ^= imm32;
                         break;
 
@@ -637,7 +517,7 @@ namespace MoSync
 
                     case Op.DIVUI: // DIVUI
                         rd = mProgramMemory[mIp++];
-                        imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ? mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] : mConstantPool[imm32];
+												imm32 = readInt();
                         mRegisters[rd] = (int)((uint)(mRegisters[rd]) / ((uint)imm32));
                         break;
 
@@ -649,7 +529,7 @@ namespace MoSync
 
                     case Op.DIVI: // DIVI
                         rd = mProgramMemory[mIp++];
-                        imm32 = ((imm32 = mProgramMemory[mIp++]) > 127) ? mConstantPool[(((imm32 & 127) << 8) | mProgramMemory[mIp++])] : mConstantPool[imm32];
+												imm32 = readInt();
                         mRegisters[rd] /= imm32;
                         break;
 
@@ -702,7 +582,7 @@ namespace MoSync
                         break;
 
                     case Op.RET: // RET
-                        mIp = mRegisters[Reg.RT];
+                        mIp = mRegisters[Reg.ra];
                         break;
 
                     case Op.JC_EQ: // JC_EQ
@@ -710,12 +590,12 @@ namespace MoSync
                         rs = mProgramMemory[mIp++];
                         if (mRegisters[rd] == mRegisters[rs])
                         {
-                            imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
+														imm32 = readInt();
                             mIp = imm32;
                         }
                         else
                         {
-                            mIp += 2;
+                            mIp += 4;
                         }
                         break;
 
@@ -724,12 +604,12 @@ namespace MoSync
                         rs = mProgramMemory[mIp++];
                         if (mRegisters[rd] != mRegisters[rs])
                         {
-                            imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
+														imm32 = readInt();
                             mIp = imm32;
                         }
                         else
                         {
-                            mIp += 2;
+                            mIp += 4;
                         }
                         break;
 
@@ -738,12 +618,12 @@ namespace MoSync
                         rs = mProgramMemory[mIp++];
                         if (mRegisters[rd] >= mRegisters[rs])
                         {
-                            imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                            mIp = imm32;
+													imm32 = readInt();
+													mIp = imm32;
                         }
                         else
                         {
-                            mIp += 2;
+                            mIp += 4;
                         }
                         break;
 
@@ -752,12 +632,12 @@ namespace MoSync
                         rs = mProgramMemory[mIp++];
                         if ((uint)mRegisters[rd] >= (uint)mRegisters[rs])
                         {
-                            imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
+													  imm32 = readInt();
                             mIp = imm32;
                         }
                         else
                         {
-                            mIp += 2;
+                            mIp += 4;
                         }
                         break;
 
@@ -766,12 +646,12 @@ namespace MoSync
                         rs = mProgramMemory[mIp++];
                         if (mRegisters[rd] > mRegisters[rs])
                         {
-                            imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
+														imm32 = readInt();
                             mIp = imm32;
                         }
                         else
                         {
-                            mIp += 2;
+                            mIp += 4;
                         }
                         break;
 
@@ -780,12 +660,12 @@ namespace MoSync
                         rs = mProgramMemory[mIp++];
                         if ((uint)mRegisters[rd] > (uint)mRegisters[rs])
                         {
-                            imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
+														imm32 = readInt();
                             mIp = imm32;
                         }
                         else
                         {
-                            mIp += 2;
+                            mIp += 4;
                         }
                         break;
 
@@ -794,12 +674,12 @@ namespace MoSync
                         rs = mProgramMemory[mIp++];
                         if (mRegisters[rd] <= mRegisters[rs])
                         {
-                            imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
+														imm32 = readInt();
                             mIp = imm32;
                         }
                         else
                         {
-                            mIp += 2;
+                            mIp += 4;
                         }
                         break;
 
@@ -808,12 +688,12 @@ namespace MoSync
                         rs = mProgramMemory[mIp++];
                         if ((uint)mRegisters[rd] <= (uint)mRegisters[rs])
                         {
-                            imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
+														imm32 = readInt();
                             mIp = imm32;
                         }
                         else
                         {
-                            mIp += 2;
+                            mIp += 4;
                         }
                         break;
 
@@ -822,12 +702,12 @@ namespace MoSync
                         rs = mProgramMemory[mIp++];
                         if (mRegisters[rd] < mRegisters[rs])
                         {
-                            imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
+														imm32 = readInt();
                             mIp = imm32;
                         }
                         else
                         {
-                            mIp += 2;
+                            mIp += 4;
                         }
                         break;
 
@@ -836,23 +716,18 @@ namespace MoSync
                         rs = mProgramMemory[mIp++];
                         if ((uint)mRegisters[rd] < (uint)mRegisters[rs])
                         {
-                            imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
+														imm32 = readInt();
                             mIp = imm32;
                         }
                         else
                         {
-                            mIp += 2;
+                            mIp += 4;
                         }
                         break;
 
                     case Op.JPI: // JPI
                         imm32 = ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
                         mIp = imm32;
-                        break;
-
-                    case Op.JPR: // JPR
-                        rd = mProgramMemory[mIp++];
-                        mIp = mRegisters[rd];
                         break;
 
                     case Op.XB: // XB
@@ -899,164 +774,6 @@ namespace MoSync
                         {
                             int defaultCaseAddr = mDataMemory.ReadInt32(imm32 + 2 * 4); // mDataMemory[imm32 + 2]; // 2*sizeof(int)
                             mIp = defaultCaseAddr;
-                        }
-                        break;
-
-                    case Op.FAR: // FAR
-                        op = mProgramMemory[mIp++];
-                        switch (op)
-                        {
-                            case Op.CALLI: // CALLI
-                                imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                mRegisters[Reg.RT] = mIp;
-                                mIp = imm32;
-                                break;
-
-                            case Op.JC_EQ: // JC_EQ
-                                rd = mProgramMemory[mIp++];
-                                rs = mProgramMemory[mIp++];
-                                if (mRegisters[rd] == mRegisters[rs])
-                                {
-                                    imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                    mIp = imm32;
-                                }
-                                else
-                                {
-                                    mIp += 3;
-                                }
-                                break;
-
-
-                            case Op.JC_NE: // JC_NE
-                                rd = mProgramMemory[mIp++];
-                                rs = mProgramMemory[mIp++];
-                                if ((mRegisters[rd]) != (mRegisters[rs]))
-                                {
-                                    imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                    mIp = imm32;
-                                }
-                                else
-                                {
-                                    mIp += 3;
-                                }
-                                break;
-
-                            case Op.JC_GE: // JC_GE
-                                rd = mProgramMemory[mIp++];
-                                rs = mProgramMemory[mIp++];
-                                if (mRegisters[rd] >= mRegisters[rs])
-                                {
-                                    imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                    mIp = imm32;
-                                }
-                                else
-                                {
-                                    mIp += 3;
-                                }
-                                break;
-
-                            case Op.JC_GEU: // JC_GEU
-                                rd = mProgramMemory[mIp++];
-                                rs = mProgramMemory[mIp++];
-                                if (((uint)mRegisters[rd]) >= ((uint)mRegisters[rs]))
-                                {
-                                    imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                    mIp = imm32;
-                                }
-                                else
-                                {
-                                    mIp += 3;
-                                }
-                                break;
-
-                            case Op.JC_GT: // JC_GT
-                                rd = mProgramMemory[mIp++];
-                                rs = mProgramMemory[mIp++];
-                                if (mRegisters[rd] > mRegisters[rs])
-                                {
-                                    imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                    mIp = imm32;
-                                }
-                                else
-                                {
-                                    mIp += 3;
-                                }
-                                break;
-
-                            case Op.JC_GTU: // JC_GTU
-                                rd = mProgramMemory[mIp++];
-                                rs = mProgramMemory[mIp++];
-                                if (((uint)mRegisters[rd]) > ((uint)mRegisters[rs]))
-                                {
-                                    imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                    mIp = imm32;
-                                }
-                                else
-                                {
-                                    mIp += 3;
-                                }
-                                break;
-
-                            case Op.JC_LE: // JC_LE
-                                rd = mProgramMemory[mIp++];
-                                rs = mProgramMemory[mIp++];
-                                if (mRegisters[rd] <= mRegisters[rs])
-                                {
-                                    imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                    mIp = imm32;
-                                }
-                                else
-                                {
-                                    mIp += 3;
-                                }
-                                break;
-
-                            case Op.JC_LEU: // JC_LEU
-                                rd = mProgramMemory[mIp++];
-                                rs = mProgramMemory[mIp++];
-                                if (((uint)mRegisters[rd]) <= ((uint)mRegisters[rs]))
-                                {
-                                    imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                    mIp = imm32;
-                                }
-                                else
-                                {
-                                    mIp += 3;
-                                }
-                                break;
-
-                            case Op.JC_LT: // JC_LT
-                                rd = mProgramMemory[mIp++];
-                                rs = mProgramMemory[mIp++];
-                                if (mRegisters[rd] < mRegisters[rs])
-                                {
-                                    imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                    mIp = imm32;
-                                }
-                                else
-                                {
-                                    mIp += 3;
-                                }
-                                break;
-
-                            case Op.JC_LTU: // JC_LTU
-                                rd = mProgramMemory[mIp++];
-                                rs = mProgramMemory[mIp++];
-                                if (((uint)mRegisters[rd]) < ((uint)mRegisters[rs]))
-                                {
-                                    imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                    mIp = imm32;
-                                }
-                                else
-                                {
-                                    mIp += 3;
-                                }
-                                break;
-
-                            case Op.JPI: // JPI
-                                imm32 = ((int)mProgramMemory[mIp++] << 16) | ((int)mProgramMemory[mIp++] << 8) | ((int)mProgramMemory[mIp++]);
-                                mIp = imm32;
-                                break;
                         }
                         break;
 

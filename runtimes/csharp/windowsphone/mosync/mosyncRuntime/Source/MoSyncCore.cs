@@ -7,7 +7,7 @@ using System;
 
 namespace MoSync
 {
-    public class Core
+    public class Core : CoreGen
     {
         public Core()
         {

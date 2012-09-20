@@ -17,23 +17,18 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "ma.h"
 #include "maheap.h"
-#include "mavsprintf.h"
 #include "mastack.h"
 #include "maassert.h"
+
+#ifdef MOSYNCDEBUG
+#include "mavsprintf.h"
+#endif
 
 #if defined(MOSYNCDEBUG) && !defined(__arm__)
 #define HAVE_STACK_DUMP 1
 #else
 #define HAVE_STACK_DUMP 0
 #endif
-
-struct MA_STACK_FRAME* nextFrame(struct MA_STACK_FRAME* frame) {
-	char* bp = (char*)(frame->_nextFrame);
-	if(!bp)
-		return NULL;
-	else
-		return (struct MA_STACK_FRAME*)(bp - 8);
-}
 
 malloc_handler gMallocHandler = default_malloc_handler;
 malloc_hook gMallocHook = NULL;
@@ -50,72 +45,15 @@ int gUsedMem = 0;
 int gWastedMem = 0;
 int gNumMallocs = 0, gNumFrees = 0;
 #endif
-#if HAVE_STACK_DUMP
-static MAHandle sDumpFile = 0;
-static void dumpStack(int req, int block, void* address);
-#endif	//HAVE_STACK_DUMP
 
 #if HAVE_STACK_DUMP
-void initStackDump(void) {
-	// Mosync Heap Stack Dump.
-	sDumpFile = maFileOpen("/mhsd.bin", MA_ACCESS_READ_WRITE);
-	lprintfln("initStackDump maFileOpen: %i", sDumpFile);
-	if(sDumpFile > 0) {
-		// todo: better error handling
-		int res = maFileExists(sDumpFile);
-		if(res == 0)
-			res = maFileCreate(sDumpFile);
-		else if(res == 1)
-			res = maFileTruncate(sDumpFile, 0);
-		if(res < 0) {
-			maFileClose(sDumpFile);
-			sDumpFile = res;
-			lprintfln("initStackDump error: %i", sDumpFile);
-			return;
-		}
-		maFileWrite(sDumpFile, "MHSD", 4);	// magic header, identifies this file type.
-	}
-}
-
-/* Dump format:
-struct Dump {
-	uint timeStamp;	// maGetMilliSecondCount()
-	int requestedSize;	// number of bytes requested for malloc(). -1 for free().
-	uint blockSize;	// number of bytes actually allocated/freed. 0 on malloc error.
-	uint address;	// address of allocated block. 0 on malloc error.
-	uint nFrames;	// number of stack frames
-
-	struct Frame {
-		uint address;
-	} frames[nFrames];
-};
-*/
-static void dumpStack(int req, int block, void* address) {
-	int count;
-	MA_STACK_FRAME* frame;
-	if(sDumpFile <= 0)
-		return;
-
-	count = maGetMilliSecondCount();
-	maFileWrite(sDumpFile, &count, sizeof(int));
-
-	maFileWrite(sDumpFile, &req, sizeof(int));
-	maFileWrite(sDumpFile, &block, sizeof(int));
-	maFileWrite(sDumpFile, &address, sizeof(int));
-
-	frame = getStackTop();
-	count = 0;
-	while(frame) {
-		count++;
-		frame = nextFrame(frame);
-	}
-	maFileWrite(sDumpFile, &count, sizeof(int));
-	frame = getStackTop();
-	while(frame) {
-		maFileWrite(sDumpFile, &frame->retAddr, sizeof(int));
-		frame = nextFrame(frame);
-	}
-}
+// The dumpStack system has been moved to a separate file in order to avoid
+// linking it if it is not in use.
+// This was done because _getStackTop is not valid in Rebuild mode.
+// The variable gDumpStack must be defined here; if it is defined in mastackdump.c,
+// that entire file gets linked, again causing the original problem.
+void (*gDumpStack)(int req, int block, void* address) = NULL;
+#define dumpStack if(gDumpStack) gDumpStack
 #endif
 
 void default_malloc_handler(int size) {

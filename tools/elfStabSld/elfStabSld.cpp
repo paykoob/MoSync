@@ -133,10 +133,12 @@ int main(int argc, const char** argv) {
 		}
 		break;
 	case eCPP:
+		data.cs = false;
 		writeCpp(data, s_outputName);
 		break;
 	case eCS:
-		writeCs(data, s_outputName);
+		data.cs = true;
+		writeCpp(data, s_outputName);
 		break;
 	}
 

@@ -92,6 +92,15 @@ GEN_OPCODES.instance_eval do
 	end
 end
 
+GEN_CS_OPCODES = FileTask.new(nil, 'runtimes/csharp/windowsphone/mosync/mosyncRuntime/Source/gen-core.cs')
+GEN_CS_OPCODES.instance_eval do
+	@gen = 'runtimes/cpp/core/gen-opcodes.rb'
+	@prerequisites << FileTask.new(nil, @gen)
+	def execute
+		sh "ruby #{@gen} cscore #{@NAME}"
+	end
+end
+
 class ExtensionIncludeWork < Work
 	def setup
 		extIncDir = mosyncdir + '/ext-include'
@@ -119,6 +128,7 @@ target :base => [SKINS, RULES] do
 	SKINS.invoke
 	RULES.invoke
 	GEN_OPCODES.invoke
+	GEN_CS_OPCODES.invoke
 	Work.invoke_subdirs(PRE_DIRS)
 	#Work.invoke_subdir("tools/WrapperGenerator", "compile")
 	Work.invoke_subdir("tools/idl2", "compile")

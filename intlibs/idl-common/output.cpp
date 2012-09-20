@@ -1105,7 +1105,7 @@ std::string getCSharpType(const Interface& maapi, const std::string& maapiType, 
 
 void outputCSharpSyscallArg(ostream& maapiFile, int i, const std::string& coreObject) {
 	if(i < 4) {
-		maapiFile << coreObject << "GetRegisterValue(CoreInterpreted.Reg.I" << i << ")";
+		maapiFile << coreObject << "GetRegisterValue(CoreInterpreted.Reg.p" << i << ")";
 	} else {
 		maapiFile << coreObject << "GetStackValue(" << ((i-4)<<2) << ")";
 	}
@@ -1113,7 +1113,7 @@ void outputCSharpSyscallArg(ostream& maapiFile, int i, const std::string& coreOb
 
 void outputCSharpSyscallNativeArg(ostream& maapiFile, int i, const string& coreObject) {
 	if(i < 4) {
-		maapiFile << "i" << i;
+		maapiFile << "p" << i;
 	} else {
 		maapiFile << coreObject << "GetStackValue(" << ((i-4)<<2) << ")";
 	}
