@@ -30,6 +30,9 @@ void streamFunctionInstructions(SIData& data, const Function& f) {
 		printf("f.start %x, f.end %x, ip %x\n", f.start, f.end, ip);
 	}
 	DEBUG_ASSERT(ip == f.end + 1);
+	// in case of noreturn
+	if(data.cs && f.ci.returnType != eVoid)
+		core.os << "\tthrow new System.Exception();\n";
 }
 
 #include "build/gen-regnames.h"
@@ -321,7 +324,7 @@ unsigned CCore::printInstruction(unsigned ip) {
 		OPC(LDDR) FETCH_RD_RS WRITE_REG(rd, RS); os << " "; WRITE_REG(rd+1, REG(rs+1)); EOP;
 		OPC(LDDI) FETCH_RD_CONST WRITE_REG(rd, IMM); os << " "; FETCH_CONST; WRITE_REG(rd+1, IMM); EOP;
 
-		OPC(FLOATS) FETCH_FRD_RS os << FRD << " = (double)(signed)" << RS << ";"; EOP;
+		OPC(FLOATS) FETCH_FRD_RS os << FRD << " = (double)(int)" << RS << ";"; EOP;
 		OPC(FLOATUNS) FETCH_FRD_RS os << FRD << " = (double)(uint)" << RS << ";"; EOP;
 
 		OPC(FLOATD)
@@ -336,11 +339,11 @@ unsigned CCore::printInstruction(unsigned ip) {
 
 		OPC(FSTRS)
 			FETCH_RD_FRS;
-			os << "MOV_SFSI(" << RD << ", " << FRS << ");";
+			os << "MOV_SFSI(" <<out<< RD << ", " << FRS << ");";
 		EOP;
 		OPC(FSTRD)
 			FETCH_RD_FRS
-			os << "MOV_DFDI(" << RD << ", " << REG(rd+1) << ", " << FRS << ");";
+			os << "MOV_DFDI(" <<out<< RD << ", " <<out<< REG(rd+1) << ", " << FRS << ");";
 		EOP;
 
 		OPC(FLDRS) FETCH_FRD_RS os << "MOV_SISF(" << RS << ", "<<out<< FRD << ");"; EOP;

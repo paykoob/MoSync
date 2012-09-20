@@ -106,15 +106,35 @@ namespace MoSync
 				mDataMemory.WriteDouble(address, data);
 			}
 
+			protected void WFLOAT(int address, double data)
+			{
+				mDataMemory.WriteFloat(address, (float)data);
+			}
+
 			protected void MOV_DIDF(int i0, int i1, out double d)
 			{
 				d = MoSync.Util.ConvertToDouble(i0, i1);
+			}
+
+			protected void MOV_DFDI(out int i0, out int i1, double d)
+			{
+				MOV_DI(out i0, out i1, BitConverter.DoubleToInt64Bits(d));
 			}
 
 			protected void MOV_DI(out int i0, out int i1, long value)
 			{
 				i0 = (int)(value & 0xffffffff);
 				i1 = (int)(((ulong)value) >> 32);
+			}
+
+			protected void MOV_SISF(int i0, out double d)
+			{
+				d = MoSync.Util.ConvertToFloat(i0);
+			}
+
+			protected void MOV_SFSI(out int i0, double d)
+			{
+				i0 = MoSync.Util.ConvertToInt((float)d);
 			}
 
 			protected double sqrt(double d)

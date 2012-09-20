@@ -124,7 +124,7 @@ int main(void)
         //printf("Machine precision:  %d digits.\n",BASE10DIG);
         printf("Array size %d X %d.\n",arsize,arsize);
         printf("Average rolled and unrolled performance:\n\n");
-        printf("    Reps Time(s) DGEFA   DGESL  OVERHEAD    MFLOPS\n");
+        printf("    MFLOPS    Reps Time(s) DGEFA   DGESL  OVERHEAD\n");
         printf("----------------------------------------------------\n");
         nreps=4;
 //        linpack(nreps, arsize);
@@ -188,10 +188,10 @@ static REAL linpack(long nreps,int arsize)
         tdgesl=0.;
     if (toverhead<0.)
         toverhead=0.;
-    printf("%8ld %6.2f %6.2f%% %6.2f%% %6.2f%%  %9.3f\n",
-            nreps,totalt,100.*tdgefa/totalt,
-            100.*tdgesl/totalt,100.*toverhead/totalt,
-            kflops/1000.0);
+    printf("%9.3f%8ld %6.2f %6.2f%% %6.2f%% %6.2f%%\n",
+            kflops/1000.0,nreps,totalt,100.*tdgefa/totalt,
+            100.*tdgesl/totalt,100.*toverhead/totalt
+            );
 		//if(totalt > 10.){ //publish the result in the benchmark database
 			//publish_linpack_result("http://modev.mine.nu:8070/benchmark/publish_result.php", "1337", "MoSync", "987123ab", "HTC%20Wildfire", "2", kflops/1000.0);
 		//}
