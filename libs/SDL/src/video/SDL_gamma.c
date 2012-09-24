@@ -68,6 +68,7 @@ static void CalculateGammaRamp(float gamma, Uint16 *ramp)
 		}
 	}
 }
+#if 0
 static void CalculateGammaFromRamp(float *gamma, Uint16 *ramp)
 {
 	/* The following is adapted from a post by Garrett Bass on OpenGL
@@ -89,12 +90,13 @@ static void CalculateGammaFromRamp(float *gamma, Uint16 *ramp)
 		*gamma = 1.0f / (sum / count);
 	}
 }
+#endif
 
 int SDL_SetGamma(float red, float green, float blue)
 {
 	int succeeded;
 	SDL_VideoDevice *video = current_video;
-	SDL_VideoDevice *this  = current_video;	
+	SDL_VideoDevice *this  = current_video;
 
 	succeeded = -1;
 	/* Prefer using SetGammaRamp(), as it's more flexible */
@@ -113,6 +115,7 @@ int SDL_SetGamma(float red, float green, float blue)
 	return succeeded;
 }
 
+#if 0
 /* Calculating the gamma by integrating the gamma ramps isn't exact,
    so this function isn't officially supported.
 */
@@ -120,7 +123,7 @@ int SDL_GetGamma(float *red, float *green, float *blue)
 {
 	int succeeded;
 	SDL_VideoDevice *video = current_video;
-	SDL_VideoDevice *this  = current_video;	
+	SDL_VideoDevice *this  = current_video;
 
 	succeeded = -1;
 	/* Prefer using GetGammaRamp(), as it's more flexible */
@@ -140,12 +143,13 @@ int SDL_GetGamma(float *red, float *green, float *blue)
 	}
 	return succeeded;
 }
+#endif
 
 int SDL_SetGammaRamp(const Uint16 *red, const Uint16 *green, const Uint16 *blue)
 {
 	int succeeded;
 	SDL_VideoDevice *video = current_video;
-	SDL_VideoDevice *this  = current_video;	
+	SDL_VideoDevice *this  = current_video;
 	SDL_Surface *screen = SDL_PublicSurface;
 
 	/* Verify the screen parameter */
@@ -177,7 +181,7 @@ int SDL_SetGammaRamp(const Uint16 *red, const Uint16 *green, const Uint16 *blue)
 		/* If physical palette has been set independently, use it */
 		if(video->physpal)
 		        pal = video->physpal;
-		      
+
 		SDL_SetPalette(screen, SDL_PHYSPAL,
 			       pal->colors, 0, pal->ncolors);
 		return 0;
@@ -196,7 +200,7 @@ int SDL_SetGammaRamp(const Uint16 *red, const Uint16 *green, const Uint16 *blue)
 int SDL_GetGammaRamp(Uint16 *red, Uint16 *green, Uint16 *blue)
 {
 	SDL_VideoDevice *video = current_video;
-	SDL_VideoDevice *this  = current_video;	
+	SDL_VideoDevice *this  = current_video;
 
 	/* Lazily allocate the gamma table */
 	if ( ! video->gamma ) {

@@ -28,6 +28,8 @@
 #define DECLSPEC
 #define SDLCALL
 
+#define SDL_HAS_64BIT_TYPE 1
+
 /* This is the minimal configuration that can be used to build SDL */
 
 #include <stdarg.h>

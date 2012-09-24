@@ -95,12 +95,12 @@ typedef enum {
 	SDL_TRUE  = 1
 } SDL_bool;
 
-typedef int8_t		Sint8;
-typedef uint8_t		Uint8;
-typedef int16_t		Sint16;
-typedef uint16_t	Uint16;
-typedef int32_t		Sint32;
-typedef uint32_t	Uint32;
+typedef signed char		Sint8;
+typedef unsigned char		Uint8;
+typedef signed short		Sint16;
+typedef unsigned short	Uint16;
+typedef signed int		Sint32;
+typedef unsigned int	Uint32;
 
 #ifdef SDL_HAS_64BIT_TYPE
 typedef int64_t		Sint64;
@@ -584,7 +584,7 @@ extern DECLSPEC int SDLCALL SDL_vsnprintf(char *text, size_t maxlen, const char 
 #endif
 
 /** @name SDL_ICONV Error Codes
- *  The SDL implementation of iconv() returns these error codes 
+ *  The SDL implementation of iconv() returns these error codes
  */
 /*@{*/
 #define SDL_ICONV_ERROR		(size_t)-1

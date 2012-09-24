@@ -150,7 +150,7 @@ static int generate_rowbytes(int src_w, int dst_w, int bpp)
 #endif /* USE_ASM_STRETCH */
 
 #define DEFINE_COPY_ROW(name, type)			\
-void name(type *src, int src_w, type *dst, int dst_w)	\
+static void name(type *src, int src_w, type *dst, int dst_w)	\
 {							\
 	int i;						\
 	int pos, inc;					\
@@ -172,7 +172,7 @@ DEFINE_COPY_ROW(copy_row2, Uint16)
 DEFINE_COPY_ROW(copy_row4, Uint32)
 
 /* The ASM code doesn't handle 24-bpp stretch blits */
-void copy_row3(Uint8 *src, int src_w, Uint8 *dst, int dst_w)
+static void copy_row3(Uint8 *src, int src_w, Uint8 *dst, int dst_w)
 {
 	int i;
 	int pos, inc;
@@ -203,7 +203,6 @@ int SDL_SoftStretch(SDL_Surface *src, SDL_Rect *srcrect,
 	int src_locked;
 	int dst_locked;
 	int pos, inc;
-	int dst_width;
 	int dst_maxrow;
 	int src_row, dst_row;
 	Uint8 *srcp = NULL;
@@ -280,7 +279,6 @@ int SDL_SoftStretch(SDL_Surface *src, SDL_Rect *srcrect,
 	inc = (srcrect->h << 16) / dstrect->h;
 	src_row = srcrect->y;
 	dst_row = dstrect->y;
-	dst_width = dstrect->w*bpp;
 
 #ifdef USE_ASM_STRETCH
 	/* Write the opcodes for this stretch */
@@ -313,7 +311,7 @@ int SDL_SoftStretch(SDL_Surface *src, SDL_Rect *srcrect,
 			__asm {
 				push edi
 				push esi
-	
+
 				mov edi, dstp
 				mov esi, srcp
 				call dword ptr code

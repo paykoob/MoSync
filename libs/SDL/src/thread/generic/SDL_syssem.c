@@ -30,6 +30,44 @@
 
 #if SDL_THREADS_DISABLED
 
+#ifdef MAPIP
+SDL_sem *SDL_CreateSemaphore(Uint32 initial_value)
+{
+	return (SDL_sem *)1;
+}
+
+void SDL_DestroySemaphore(SDL_sem *sem)
+{
+	return;
+}
+
+int SDL_SemTryWait(SDL_sem *sem)
+{
+	return 0;
+}
+
+int SDL_SemWaitTimeout(SDL_sem *sem, Uint32 timeout)
+{
+	return 0;
+}
+
+int SDL_SemWait(SDL_sem *sem)
+{
+	return 0;
+}
+
+Uint32 SDL_SemValue(SDL_sem *sem)
+{
+	return 0;
+}
+
+int SDL_SemPost(SDL_sem *sem)
+{
+	return 0;
+}
+
+#else
+
 SDL_sem *SDL_CreateSemaphore(Uint32 initial_value)
 {
 	SDL_SetError("SDL not configured with thread support");
@@ -69,6 +107,7 @@ int SDL_SemPost(SDL_sem *sem)
 	SDL_SetError("SDL not configured with thread support");
 	return -1;
 }
+#endif	//MAPIP
 
 #else
 
@@ -181,7 +220,7 @@ int SDL_SemWait(SDL_sem *sem)
 Uint32 SDL_SemValue(SDL_sem *sem)
 {
 	Uint32 value;
-	
+
 	value = 0;
 	if ( sem ) {
 		SDL_LockMutex(sem->count_lock);

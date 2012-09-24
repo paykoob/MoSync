@@ -47,7 +47,6 @@ static struct MS_ADPCM_decoder {
 static int InitMS_ADPCM(WaveFMT *format)
 {
 	Uint8 *rogue_feel;
-	Uint16 extra_info;
 	int i;
 
 	/* Set the rogue pointer to the MS_ADPCM specific data */
@@ -60,7 +59,6 @@ static int InitMS_ADPCM(WaveFMT *format)
 					 SDL_SwapLE16(format->bitspersample);
 	rogue_feel = (Uint8 *)format+sizeof(*format);
 	if ( sizeof(*format) == 16 ) {
-		extra_info = ((rogue_feel[1]<<8)|rogue_feel[0]);
 		rogue_feel += sizeof(Uint16);
 	}
 	MS_ADPCM_state.wSamplesPerBlock = ((rogue_feel[1]<<8)|rogue_feel[0]);
@@ -127,7 +125,7 @@ static int MS_ADPCM_decode(Uint8 **audio_buf, Uint32 *audio_len)
 	encoded_len = *audio_len;
 	encoded = *audio_buf;
 	freeable = *audio_buf;
-	*audio_len = (encoded_len/MS_ADPCM_state.wavefmt.blockalign) * 
+	*audio_len = (encoded_len/MS_ADPCM_state.wavefmt.blockalign) *
 				MS_ADPCM_state.wSamplesPerBlock*
 				MS_ADPCM_state.wavefmt.channels*sizeof(Sint16);
 	*audio_buf = (Uint8 *)SDL_malloc(*audio_len);
@@ -227,7 +225,6 @@ static struct IMA_ADPCM_decoder {
 static int InitIMA_ADPCM(WaveFMT *format)
 {
 	Uint8 *rogue_feel;
-	Uint16 extra_info;
 
 	/* Set the rogue pointer to the IMA_ADPCM specific data */
 	IMA_ADPCM_state.wavefmt.encoding = SDL_SwapLE16(format->encoding);
@@ -239,7 +236,6 @@ static int InitIMA_ADPCM(WaveFMT *format)
 					 SDL_SwapLE16(format->bitspersample);
 	rogue_feel = (Uint8 *)format+sizeof(*format);
 	if ( sizeof(*format) == 16 ) {
-		extra_info = ((rogue_feel[1]<<8)|rogue_feel[0]);
 		rogue_feel += sizeof(Uint16);
 	}
 	IMA_ADPCM_state.wSamplesPerBlock = ((rogue_feel[1]<<8)|rogue_feel[0]);
@@ -344,7 +340,7 @@ static int IMA_ADPCM_decode(Uint8 **audio_buf, Uint32 *audio_len)
 	encoded_len = *audio_len;
 	encoded = *audio_buf;
 	freeable = *audio_buf;
-	*audio_len = (encoded_len/IMA_ADPCM_state.wavefmt.blockalign) * 
+	*audio_len = (encoded_len/IMA_ADPCM_state.wavefmt.blockalign) *
 				IMA_ADPCM_state.wSamplesPerBlock*
 				IMA_ADPCM_state.wavefmt.channels*sizeof(Sint16);
 	*audio_buf = (Uint8 *)SDL_malloc(*audio_len);
@@ -417,7 +413,7 @@ SDL_AudioSpec * SDL_LoadWAV_RW (SDL_RWops *src, int freesrc,
 		was_error = 1;
 		goto done;
 	}
-		
+
 	/* Check the magic header */
 	RIFFchunk	= SDL_ReadLE32(src);
 	wavelen		= SDL_ReadLE32(src);
