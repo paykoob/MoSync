@@ -303,7 +303,7 @@ MDLFixed::MDLFixed ( MAHandle h,
 		stream->readUInt8( );
 
 		stream->read( frame.m_name, 16 );
-		printf( "%u: name: %s\n", i, frame.m_name );
+		//printf( "%u: name: %s\n", i, frame.m_name );
 
 		stream->read( buffer, m_vtxCount*4 );
 		for ( j = 0; j < m_vtxCount; j++ )
