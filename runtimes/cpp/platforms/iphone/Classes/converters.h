@@ -49,7 +49,7 @@ inline T convertPointerArg(int arg) {
 #define FLOATU_DIDF(i0, i1, frd) { FREG temp; temp.i[0] = i0; temp.i[1] = i1; frd = (double)(unsigned long long)temp.ll; }
 
 #define MOV_SFSI(i0, frs) { MA_FV fv; fv.f = (float)(frs); i0 = fv.i; }
-#define MOD_DFDI(i0, i1, frs) { FREG temp; temp.d = frs; i0 = temp.i[0]; i1 = temp.i[1]; }
+#define MOV_DFDI(i0, i1, frs) { FREG temp; temp.d = frs; i0 = temp.i[0]; i1 = temp.i[1]; }
 
 #define MOV_SISF(i0, frd) { MA_FV fv; fv.i = i0; frd = fv.f; }
 #define MOV_DIDF(i0, i1, frd) { FREG temp; temp.i[0] = i0; temp.i[1] = i1; frd = temp.d; }
@@ -65,9 +65,11 @@ inline T convertPointerArg(int arg) {
 inline long long RETURN_DI(int i0, int i1) {
 	FREG temp; temp.i[0] = i0; temp.i[1] = i1; return temp.ll;
 }
+#ifdef __GNUC__
 inline __complex__ double RETURN_CF(double f8, double f9) {
 	__complex__ double cd; __real__ cd = f8; __imag__ cd = f9; return cd;
 }
 inline __complex__ int RETURN_CI(int i0, int i1) {
 	__complex__ int ci; __real__ ci = i0; __imag__ ci = i1; return ci;
 }
+#endif	//__GNUC__

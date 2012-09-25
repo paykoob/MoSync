@@ -174,6 +174,16 @@ const char* Base::Syscall::GetValidatedStr(int address) {
 const wchar* Base::Syscall::GetValidatedWStr(int address) {
 	return (const wchar*)(size_t)address;
 }
+
+// warn: not gonna work in 64-bit systems.
+int Base::Syscall::TranslateNativePointerToMoSyncPointer(void* n) {
+	return (int)(size_t)n;
+}
+
+void* Base::Syscall::GetCustomEventPointer() {
+	static char buffer[1024];
+	return buffer;
+}
 #endif	//_USE_REBUILDER_
 
 void Base::Syscall::VM_Yield() {
@@ -210,16 +220,6 @@ void Base::reportCallStack() {
 
 int Base::maDumpCallStackEx(const char*, int) {
 	return -1;
-}
-
-void* Base::Syscall::GetCustomEventPointer() {
-	static char buffer[1024];
-	return buffer;
-}
-
-// warn: not gonna work in 64-bit systems.
-int Base::Syscall::TranslateNativePointerToMoSyncPointer(void* n) {
-	return (int)(size_t)n;
 }
 
 #ifdef MEMORY_PROTECTION

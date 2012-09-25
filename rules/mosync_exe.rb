@@ -91,7 +91,7 @@ class Mapip2CsTask < Mapip2RebuildSourceTask
 	end
 end
 
-# Compiles the generated C++ file.
+# Compiles the generated C++ file. Unused.
 class RebuildCompileTask < FileTask
 	def initialize(work, cppTask)
 		targetDir = File.dirname(cppTask.to_s)
@@ -107,6 +107,7 @@ class RebuildCompileTask < FileTask
 			' -Wall -Wextra -Werror'+
 			' -Wno-unused-label -Wno-unused-but-set-variable -Wno-return-type -Wno-unused-function'+
 			#' -Wno-error=uninitialized'+
+			' -Wno-maybe-uninitialized'+
 			' -Wno-unused-parameter'+
 			''
 	end

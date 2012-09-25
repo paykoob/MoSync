@@ -146,18 +146,19 @@ namespace Base {
 		int address = sp + offset;
 		if(((address&0x03)!=0) || uint(address)<STACK_BOTTOM || uint(address)>STACK_TOP)
 			BIG_PHAT_ERROR(ERR_STACK_OOB);
-		address>>=2;
-		return mem_ds[address];
+		return *(int*)(mem_ds + address);
 	}
 
-#if 0
-	int TranslateNativePointerToMoSyncPointer(void *nativePointer) {
+	int Syscall::TranslateNativePointerToMoSyncPointer(void *nativePointer) {
 	    if(nativePointer == NULL)
 	        return 0;
 	    else
 	        return (int)PTR2ADDRESS(nativePointer);
 	}
-#endif
+
+	void* Base::Syscall::GetCustomEventPointer() {
+		return mem_ds + STACK_TOP;
+	}
 
 	const char* Syscall::GetValidatedStr(int a) {
 		unsigned address = a;

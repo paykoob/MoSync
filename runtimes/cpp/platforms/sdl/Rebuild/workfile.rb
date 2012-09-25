@@ -42,6 +42,8 @@ work.instance_eval do
 			' -Wno-unused-label -Wno-unused-but-set-variable -Wno-return-type -Wno-unused-function'+
 			' -Wno-error=uninitialized'+
 			' -Wno-unused-parameter -Wno-float-equal -fno-exceptions -Wno-error=suggest-attribute=noreturn'+
+			' -Wno-maybe-uninitialized'+
+			' -Wno-strict-overflow'+
 			'',
 	}
 	if(HOST == :win32)

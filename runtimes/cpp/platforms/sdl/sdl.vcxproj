@@ -51,7 +51,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../base;../../../../intlibs;$(ProjectDir);../../../../libs;%(AdditionalIncludeDirectories);../../../../intlibs/sqlite</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../base;../../../../intlibs;$(ProjectDir);../../../../libs;../../../../tools/ReleasePackageBuild/build_package_tools/include;%(AdditionalIncludeDirectories);../../../../intlibs/sqlite</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>

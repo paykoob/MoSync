@@ -910,7 +910,7 @@ namespace Base {
 		return res;
 	}
 
-#define FILE_FAIL(val) do { LOG_VAL(val); return val; } while(0)
+#define FILE_FAIL(val) do { LOGF(val); return val; } while(0)
 
 	static int openFile(Syscall::FileHandle& fh) {
 		int res = isDirectory(fh.name);
@@ -948,6 +948,9 @@ namespace Base {
 #if FILESYSTEM_CHROOT
 		std::string name = std::string(FILESYSTEM_DIR) + path;
 		fn = name.c_str();
+		if(path[0] != '/') {
+			LOG("Bad path: %s\n", path);
+		}
 		MYASSERT(path[0] == '/', ERR_FILE_PATH_INVALID);
 		size = name.length() + 1;
 #else
@@ -977,7 +980,9 @@ namespace Base {
 #endif
 
 		fh.fs = NULL;
-		TLTZ_PASS(openFile(fh));
+		int res = openFile(fh);
+		if(res < 0)
+			return res;
 		FileHandle* fhp = fhs.extract();
 		CLEANUPSTACK_PUSH(fhp);
 		gFileHandles.insert(gFileNextHandle, fhp);

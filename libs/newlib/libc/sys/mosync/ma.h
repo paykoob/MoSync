@@ -32,14 +32,16 @@ extern "C"
 int MAMain(void);
 
 #ifdef MAPIP
-#define _ma_inline(string) __asm__(string "\n")	
+#define _ma_inline(string) __asm__(string "\n")
 #else
-#define _ma_inline(string)	
+#define _ma_inline(string)
 #endif
 
 typedef int BOOL;
+#ifndef TRUE
 #define TRUE	1
 #define FALSE	0
+#endif
 
 #ifndef NULL
 #define NULL 0
