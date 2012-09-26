@@ -1649,7 +1649,10 @@ namespace Base {
 			return 0;
 		}
 		const MAEventNative& e(gEventFifo.get());
-		memcpy(dst, &e, sizeof(*dst));
+		dst->type = e.type;
+		// copy data separately, because there can be padding in MAEventNative on 64-bit systems.
+		// compare offsetof(MAEventNative, data)) and offsetof(MAEvent, data))
+		memcpy(&dst->data, &e.data, sizeof(*dst) - sizeof(dst->type));
 
 		void* cep = SYSCALL_THIS->GetCustomEventPointer();
 
