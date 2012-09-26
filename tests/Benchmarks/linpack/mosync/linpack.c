@@ -36,7 +36,7 @@
 #include <math.h>
 #endif
 
-#define SP
+#define DP
 
 #ifdef SP
 #define ZERO        0.0
