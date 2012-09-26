@@ -146,6 +146,7 @@ end
 
 # EarlyTime is a fake timestamp that occurs _before_ any other time value.
 # Its instance is called EARLY.
+# Equivalent to a file not existing.
 class EarlyTime
 	include Comparable
 	include Singleton
@@ -177,18 +178,6 @@ class LateTime
 	end
 end
 LATE = LateTime.instance
-
-# Extension to the standard Time class to allow comparison with EarlyTime and LateTime.
-class Time
-	alias work_original_compare :<=>
-	def <=>(other)
-		if(other.instance_of?(EarlyTime) || other.instance_of?(LateTime))
-			return - other.<=>(self)
-		else
-			return work_original_compare(other)
-		end
-	end
-end
 
 # Extension to class File, to make sure that the drive letter is always lowercase.
 # This resolves an issue where programs were rebuilt due to file paths being changed,

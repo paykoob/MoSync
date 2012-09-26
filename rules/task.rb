@@ -276,9 +276,15 @@ class FileTask < Task
 
 	def self.timestamp(file)
 		if File.exist?(file)
-			File.mtime(file)
+			# ctime is not useful for comparisons.
+			# be careful when copying files manually.
+
+			#c = File.ctime(file)
+			m = File.mtime(file)
+			#return c if(c > m)
+			return m
 		else
-			LATE
+			EARLY
 		end
 	end
 
@@ -366,9 +372,9 @@ class DirTask < FileTask
 	end
 	def timestamp
 		if File.directory?(@NAME)
-			t = EARLY
+			t = File.ctime(@NAME)
 		else
-			t = LATE
+			t = EARLY
 		end
 		#puts "Timestamp(#{@NAME}): #{t}"
 		#p File.directory?(@NAME)
