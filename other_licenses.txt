@@ -5,6 +5,7 @@ rakefile.*
 workfile.rb
 build-all.rb
 build-one.rb
+*.csproj
 
 # directories
 

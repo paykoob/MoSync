@@ -128,7 +128,9 @@ wormhole.js
 /runtimes/cpp/core/gen-opcodes.h
 
 /runtimes/cpp/platforms/sdl/mosynclib/mosynclib.def
-/runtimes/cpp/platforms/sdl/MoRE/filesystem/*
+/runtimes/cpp/platforms/sdl/MoRE/filesystem
+/runtimes/cpp/platforms/sdl/Rebuild/filesystem
+/runtimes/cpp/platforms/sdl/mosynclib/filesystem
 
 /runtimes/cpp/platforms/iphone/Classes/helpers/maapi_defs.h
 /runtimes/cpp/platforms/iphone/Classes/syscall_static_cpp.h

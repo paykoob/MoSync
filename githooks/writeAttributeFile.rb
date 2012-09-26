@@ -7,11 +7,13 @@ BASEDIR = File.expand_path("#{File.dirname(__FILE__)}/..")
 
 outName = "#{BASEDIR}/.gitattributes"
 inName = "#{BASEDIR}/other_licenses.txt"
+#igName = "#{BASEDIR}/.gitignore"
 
 CHECK_PATTERNS = [
 	'workfile.rb',
 	'/templates',
 	'/githooks',
+	'/build',
 ]
 
 class String
