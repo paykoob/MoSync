@@ -22,9 +22,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #ifdef USE_ARM_RECOMPILER
 
-#include <Core.h>
-#include "Recompiler.h"
-#include "disassembler.h"
+#include "../Core.h"
+#include "../disassembler.h"
 
 /*
 #define MIN(x, y) ((x)<(y)?(x):(y))
@@ -37,18 +36,23 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 	(addr) & mEnvironment.dataMask & ~(sizeof(type) - 1))
 #define RECOMP_MEM(type, addr, write) RECOMP_MEMREF(type, addr)
 
+#define START_IP 0x100
+
 namespace MoSync {
 
 	// struct used to hold a decoded mosync instruction
 	struct Instruction {
 		byte op; // operation
-		byte op2; // if multiop (FAR)
 		byte rd; // destination register
 		byte rs; // source register
+		byte length; // instruction length in bytes
 		int imm; // immediate value
+		int imm2; // second immediate value (for 64-bit instructions)
+		// extra immediate values (for CASE)
+		int imm3;
+		int imm4;
 
 		int ip; // address of the instruction
-		byte length; // instruction length in bytes
 	};
 
 	class VMCoreInt;
@@ -65,12 +69,11 @@ namespace MoSync {
 		const int *mem_ds;
 		int dataSize;
 		int dataMask;
-		const int *mem_cp;
-		int constantPoolSize;
 		int *regs;
+		double* floatRegs;
 	};
 
-	// function pointer for the 
+	// function pointer for the
 
 
 
@@ -82,18 +85,21 @@ namespace MoSync {
 
 		// make a tree for all sequences possible, and use it for early outs.
 		struct InstructionPatternNode {
-			InstructionPatternNode(InstructionPatternNode *parent=NULL, int depth=0) : depth(depth), matcher(0), visitor(0), parent(parent) {
+			InstructionPatternNode(InstructionPatternNode *_parent=NULL, int _depth=0) :
+				depth(_depth), matcher(0), visitor(0), parent(_parent)
+			{
 				memset(children, 0, sizeof(InstructionPatternNode*));
 			}
 
 			int depth;
 			Matcher matcher;
 			Visitor visitor;
-			InstructionPatternNode *children[Core::_ENDOP];
+			InstructionPatternNode *children[OPCODE_COUNT];
 			InstructionPatternNode *parent;
 		};
 
 		Recompiler(int numPasses) :
+			mInstructions(NULL),
 			mInstructionsToFetch(1),
 			mNumPasses(numPasses),
 			mStopped(true) {
@@ -104,11 +110,11 @@ namespace MoSync {
 		void setPattern(Matcher m, Visitor v, byte *sequence) {
 			int length = 0;
 			InstructionPatternNode *node = &mPatternNodeRoot;
-			if(*sequence == Core::_NUL) {
+			if(*sequence == OP_NOP) {
 				// error
 			}
 
-			while(*sequence != Core::_NUL) {
+			while(*sequence != OP_NOP) {
 				node = node->children[*sequence] = new InstructionPatternNode(node, length+1);
 				sequence++;
 				length++;
@@ -158,9 +164,8 @@ namespace MoSync {
 			mEnvironment.mem_ds = core->mem_ds;
 			mEnvironment.dataSize = core->Head.DataLen;
 			mEnvironment.dataMask = core->DATA_SEGMENT_SIZE-1;
-			mEnvironment.mem_cp = core->mem_cp;
-			mEnvironment.constantPoolSize = core->Head.IntLen*4;
 			mEnvironment.regs = core->regs;
+			mEnvironment.floatRegs = (double*)core->freg;
 		}
 
 		virtual void close() {
@@ -168,7 +173,7 @@ namespace MoSync {
 		}
 
 		struct Label {
-			Label(int ip) : ip(ip), next(0) {
+			Label(int _ip) : ip(_ip), next(0) {
 			}
 
 			int ip;
@@ -176,9 +181,9 @@ namespace MoSync {
 		};
 
 		struct Function {
-			Function(int start, int end) : 
-				start(start), end(end), labels(0), next(0) {
-				addLabel(start);	
+			Function(int _start, int _end) :
+				start(_start), end(_end), labels(0), next(0) {
+				addLabel(start);
 			}
 			Label *findLabel(int ip) {
 				Label *l = labels;
@@ -186,7 +191,7 @@ namespace MoSync {
 				while(l) {
 					if(ip == l->ip) {
 						return l;
-						
+
 					} else if(ip > l->ip) {
 						potential = l;
 					}
@@ -197,7 +202,7 @@ namespace MoSync {
 
 			Label *findNextLabel(int ip) {
 				Label *l;
-				if(l = findLabel(ip)) return l->next;
+				if((l = findLabel(ip))) return l->next;
 				else return 0;
 			}
 
@@ -208,9 +213,9 @@ namespace MoSync {
 				} else {
 					Label *l = findLabel(ip);
 					if(l->ip != ip) {
-						Label *next = l->next;
+						Label *_next = l->next;
 						l->next = new Label(ip);
-						l->next->next = next;
+						l->next->next = _next;
 					}
 				}
 			}
@@ -221,16 +226,15 @@ namespace MoSync {
 		};
 
 		Function* findFunctions() {
-			int ip = 1;
+			int ip = START_IP;
 			Function *start;
 			Function *f = start = new Function(0, 0);
 			Instruction inst;
 			while(ip != mEnvironment.codeSize) {
 				ip+=decodeInstruction(&mEnvironment.mem_cs[ip], inst);
 
-				if(inst.op == Core::_FAR) inst.op = inst.op2;
 				switch(inst.op) {
-					case Core::_RET :
+					case OP_RET :
 					{
 endOfFunction:
 						int ipOfInstruction = ip-inst.length;
@@ -238,55 +242,67 @@ endOfFunction:
 						l = f->findNextLabel(ipOfInstruction);
 						if(!l) {
 							f->end = ip;
+							if(ip == mEnvironment.codeSize)
+								break;
 							Function *next = new Function(ip, 0);
 							f->next = next;
 							f = f->next;
 						}
 					}
 					break;
-					case Core::_CASE: 
+					case OP_CASE:
 					{
-						inst.imm<<=2;
-						//uint CaseStart = RECOMP_MEM(int, inst.imm, READ);
-						uint CaseLength = RECOMP_MEM(int, inst.imm + 1*sizeof(int), READ);
-						int tableAddress = inst.imm + 3*sizeof(int);
-						int defaultCaseAddress = RECOMP_MEM(int, inst.imm + 2*sizeof(int), READ);
+						//uint CaseStart = inst.imm;
+						uint CaseLength = inst.imm2;
+						uint tableAddress = inst.imm3;
+						int defaultLabel = inst.imm4;
 
 						int maxJump = -1;
 						for(size_t i = 0; i < CaseLength; i++) {
 							int j = RECOMP_MEM(int, tableAddress+i*sizeof(int), READ);
-							if(j > maxJump) j = maxJump;						
+							if(j > maxJump) j = maxJump;
 							f->addLabel(j);
 						}
-						f->addLabel(defaultCaseAddress);
-						if(defaultCaseAddress>maxJump) maxJump=defaultCaseAddress;
-				
+						f->addLabel(defaultLabel);
+						if(defaultLabel>maxJump) maxJump=defaultLabel;
+
 						if(maxJump<ip) {
 							goto endOfFunction;
 						}
 					}
 					break;
-					case Core::_JPI:
+					case OP_JPI:
 					if(inst.imm<ip) {
 						f->addLabel(inst.imm);
 						goto endOfFunction;
 					}
 
-					case Core::_JC_EQ:
-					case Core::_JC_NE:
-					case Core::_JC_GE:
-					case Core::_JC_GEU:
-					case Core::_JC_GT:
-					case Core::_JC_GTU:
-					case Core::_JC_LE:
-					case Core::_JC_LEU:
-					case Core::_JC_LT:
-					case Core::_JC_LTU:
+					case OP_JC_EQ:
+					case OP_JC_NE:
+					case OP_JC_GE:
+					case OP_JC_GEU:
+					case OP_JC_GT:
+					case OP_JC_GTU:
+					case OP_JC_LE:
+					case OP_JC_LEU:
+					case OP_JC_LT:
+					case OP_JC_LTU:
+
+					case OP_FJC_EQ:
+					case OP_FJC_NE:
+					case OP_FJC_GE:
+					case OP_FJC_GT:
+					case OP_FJC_LE:
+					case OP_FJC_LT:
 						f->addLabel(inst.imm);
 					break;
 					default: break;
 				}
 			}
+			// if we're at the end of the program
+			if(f->end == 0 && ip == mEnvironment.codeSize)
+				f->end = ip;
+			DEBUG_ASSERT(f->end > f->start);
 			return start;
 		}
 
@@ -315,8 +331,8 @@ endOfFunction:
 			mFunctions = findFunctions();
 			//printFunctionsSize(mFunctions);
 			//printFunctions(fb);
-			for(mPass = 1; mPass <= mNumPasses; mPass++) { 
-				int ip = 1, windowIp = 1;
+			for(mPass = 1; mPass <= mNumPasses; mPass++) {
+				int ip = START_IP, windowIp = START_IP;
 				int numInstructions = 0;
 				T* thisImpl = ((T*)this);
 
@@ -332,7 +348,7 @@ endOfFunction:
 					ip+=decodeInstruction(&mEnvironment.mem_cs[ip], mInstructions[numInstructions]);
 					(thisImpl->*defaultVisitors[mInstructions[0].op])();
 					*/
-					thisImpl->beginInstruction(ip);	
+					thisImpl->beginInstruction(ip);
 
 					// fetch instruction window
 					for(; numInstructions < mInstructionsToFetch; numInstructions++) {
@@ -347,9 +363,9 @@ endOfFunction:
 					//if(!node) {
 						(thisImpl->*defaultVisitors[mInstructions[0].op])();
 						ip+=mInstructions[0].length;
-						for(int i = 1; i < numInstructions; i++) {   
+						for(int i = 1; i < numInstructions; i++) {
 							mInstructions[i-1] = mInstructions[i];
-						}		
+						}
 						numInstructions -= 1;
 					/*
 					} else {
@@ -363,9 +379,12 @@ endOfFunction:
 					}
 					*/
 
-					if(ip>mCurrentFunction->end) { 
+					DEBUG_ASSERT(mCurrentFunction->end > mCurrentFunction->start);
+					if(ip>mCurrentFunction->end) {
 						thisImpl->endFunction(mCurrentFunction);
-						mCurrentFunction = mCurrentFunction->next; 
+						if(!mCurrentFunction->next)
+							break;
+						mCurrentFunction = mCurrentFunction->next;
 						mNextLabel = mCurrentFunction->labels;
 						if(mNextLabel) mNextLabel = mNextLabel->next;
 						thisImpl->beginFunction(mCurrentFunction);
@@ -373,8 +392,8 @@ endOfFunction:
 					}
 					else if(mNextLabel && ip>mNextLabel->ip) {
 						mNextLabel = mNextLabel->next;
-					} 
-	
+					}
+
 				}
 				thisImpl->endPass();
 			}
@@ -385,8 +404,15 @@ endOfFunction:
 	protected:
 		int decodeInstruction(const byte *ip, Instruction& inst) {
 //		int Recompiler::decodeInstruction(const byte *ip, Instruction& inst) {
+			//char buf[1024];
+			inst.rd = 0xff; inst.rs = 0xff;
 			inst.ip = (int)(ip-mEnvironment.mem_cs);
-			inst.length = disassemble_one(ip, mEnvironment.mem_cs, mEnvironment.mem_cp, (char*)NULL, inst.op, inst.op2, inst.rd, inst.rs, inst.imm);
+			inst.length = disassemble_one(ip, mEnvironment.mem_cs,
+				(char*)NULL, inst.op, inst.rd, inst.rs, inst.imm,
+				inst.imm2, inst.imm3, inst.imm4);
+			//LOG("%s", buf);
+			DEBUG_ASSERT(inst.rd == 0xff || inst.rd < NUM_REGS);
+			DEBUG_ASSERT(inst.rs == 0xff || inst.rs < NUM_REGS);
 			return inst.length;
 		}
 
@@ -402,7 +428,7 @@ endOfFunction:
 		int mNumPasses;
 		int mPass;
 
-		Visitor defaultVisitors[Core::_ENDOP];
+		Visitor defaultVisitors[OPCODE_COUNT];
 
 		bool mStopped;
 

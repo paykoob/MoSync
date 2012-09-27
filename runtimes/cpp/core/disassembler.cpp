@@ -23,110 +23,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <stdarg.h>
 #endif
 
+#include "helpers/attribute.h"
+
 typedef unsigned char byte;
 typedef unsigned int uint;
-
-//****************************************
-//		 Instruction descripters
-//****************************************
-enum
-{
-	_NUL = 0,
-	_PUSH,
-	_POP,
-	_CALL,
-	_CALLI,
-	_LDB,
-	_STB,
-	_LDH,
-	_STH,
-	_LDW,
-	_STW,
-	_LDI,
-	_LDR,
-	_ADD,
-	_ADDI,
-	_MUL,
-	_MULI,
-	_SUB,
-	_SUBI,
-	_AND,
-	_ANDI,
-	_OR,
-	_ORI,
-	_XOR,
-	_XORI,
-	_DIVU,
-	_DIVUI,
-	_DIV,
-	_DIVI,
-	_SLL,
-	_SLLI,
-	_SRA,
-	_SRAI,
-	_SRL,
-	_SRLI,
-	_NOT,
-	_NEG,
-	_RET,	
-	_JC_EQ,
-	_JC_NE,
-	_JC_GE,
-	_JC_GEU,
-	_JC_GT,
-	_JC_GTU,
-	_JC_LE,
-	_JC_LEU,
-	_JC_LT,
-	_JC_LTU,
-	_JPI,
-	_JPR,
-	_XB,
-	_XH,
-	_SYSCALL,
-	_CASE,
-	_FAR,
-	_ENDOP
-};
-
-enum
-{
-	REG_zero,
-	REG_sp,
-	REG_rt,
-	REG_fr,
-	REG_d0,
-	REG_d1,
-	REG_d2,
-	REG_d3,
-	REG_d4,
-	REG_d5,
-	REG_d6,
-	REG_d7,
-	REG_i0,
-	REG_i1,
-	REG_i2,
-	REG_i3,
-
-	REG_r0,
-	REG_r1,
-	REG_r2,
-	REG_r3,
-	REG_r4,
-	REG_r5,
-	REG_r6,
-	REG_r7,
-	REG_r8,
-	REG_r9,
-	REG_r10,
-	REG_r11,
-	REG_r12,
-	REG_r13,
-	REG_r14,
-	REG_r15
-};
-
-#define _DBG_OP _ENDOP
 
 #ifdef __SYMBIAN32__
 #define WRITE(argv...) if(buf) buf += write(buf, argv)
@@ -143,6 +43,7 @@ __inline int write(char* buf, const char* fmt, ...) {
 }
 #else
 static char* sPtr;
+__inline void WRITE(const char* fmt, ...) GCCATTRIB(format(printf, 1, 2));
 __inline void WRITE(const char* fmt, ...) {
 	if(!sPtr) return;
 	va_list argptr;
@@ -154,64 +55,41 @@ __inline void WRITE(const char* fmt, ...) {
 
 #define IB ((int)(*ip++))
 
-#define OPC(opcode)	case _##opcode: WRITE("%x: %i %s", ip - mem_cs - 1, _##opcode, #opcode);
+#define OPC(opcode)	case OP_##opcode: WRITE("%x: %i %s", (int)(ip - mem_cs - 1), OP_##opcode, #opcode);
 #define EOP	WRITE("\n"); break;
+
+#define LOGC WRITE
+
+#include "core_helpers.h"
+#include "CoreCommon.h"
+#include "gen-opcodes.h"
+#include "disassembler.h"
 
 #define FETCH_RD	rd = IB; WRITE(" rd%i", rd);
 #define FETCH_RS	rs = IB; WRITE(" rs%i", rs);
-#define FETCH_CONST	imm32 = IB; if(imm32>127) {imm32=((imm32&127)<<8)+IB;}\
-	WRITE(" c[%i]", imm32); imm32=mem_cp[imm32]; WRITE("(%i)", imm32);
-#define FETCH_INT	imm32 = IB; if(imm32>127) {imm32=((imm32&127)<<8)+IB;}\
-	WRITE(" i%i", imm32);
-#define FETCH_IMM8	imm32 = IB; WRITE(" n%i", imm32);
-#define FETCH_IMM16	imm32 = IB << 8; imm32 += IB; WRITE(" m%i(0x%x)", imm32, imm32);
-#define FETCH_IMM24	imm32 = IB << 16; imm32 += IB << 8; imm32 += IB;\
-	WRITE(" i%i(0x%x)", imm32, imm32);
+#define FETCH_FRD	rd = IB; WRITE(" frd%i", rd);
+#define FETCH_FRS	rs = IB; WRITE(" frs%i", rs);
+#define FETCH_CONST	FETCH_INT
 
 #define ARITH(a, oper, b)
 #define DIVIDE(a, b)
 #define CALL_IMM
 #define CALL_RD
 #define JMP_IMM
-#define JMP_RD
 #define JMP_GENERIC(a)
 #define REG(i) (i)
 #define MEM(type, addr) (addr)
 
-#define FETCH_RD_RS		FETCH_RD FETCH_RS
-#define FETCH_RD_CONST		FETCH_RD FETCH_CONST
-#define FETCH_RD_RS_CONST	FETCH_RD FETCH_RS FETCH_CONST
-#define FETCH_RD_RS_ADDR16	FETCH_RD FETCH_RS FETCH_IMM16
-#define FETCH_RD_RS_ADDR24	FETCH_RD FETCH_RS FETCH_IMM24
-#define FETCH_RD_IMM8		FETCH_RD FETCH_IMM8
-
-
-
-/**
- * Disassembles one MoSync IL instruction
- *
- * @param ip      [in] Pointer to the instruction
- * @param mem_cs  [in] Pointer to data section
- * @param mem_cp  [in] Pointer to constant section
- * @param buff    [in] Pointer to char buffer which can hold one
- *                     dissassembled instruction.
- * @param op      [out] Opcode
- * @param op2     [out] Second opcode, incase op was a prefix opcode
- * @param rd      [out] Destination register
- * @param rs      [out] Source register
- * @param imm32   [out] Immediate
- *
- * @return Size of the dissassembled instruction in bytes
- */
-int disassemble_one ( const byte* ip, 
-                      const byte* mem_cs, 
-                      const int* mem_cp, 
-                      char* buf, 
-                      byte& op, 
-                      byte& op2, 
-                      byte &rd, 
-                      byte &rs, 
-                      int &imm32 )
+int disassemble_one ( const byte* ip,
+                      const byte* mem_cs,
+                      char* buf,
+                      byte& op,
+                      byte &rd,
+                      byte &rs,
+                      int &imm32,
+                      int &imm2,
+                      int &imm3,
+                      int &imm4)
 {
 	const byte* startIp = ip;
 #ifndef __SYMBIAN32__
@@ -249,11 +127,63 @@ int disassemble_one ( const byte* ip,
 		OPC(NOT)	FETCH_RD_RS	RD = ~RS;	EOP;
 		OPC(NEG)	FETCH_RD_RS	RD = -RS;	EOP;
 
-		OPC(PUSH)	FETCH_RD_IMM8		EOP;
+		OPC(PUSH) FETCH_RD_RS EOP;
+		OPC(POP) FETCH_RD_RS EOP;
 
-		OPC(POP) FETCH_RD_IMM8 EOP;
+		OPC(FPUSH) FETCH_FRD_FRS EOP;
+		OPC(FPOP) FETCH_FRD_FRS EOP;
 
-		OPC(LDB)	FETCH_RD_RS_CONST EOP;
+		OPC(LDDR) FETCH_RD_RS EOP;
+		OPC(LDDI) FETCH_RD_CONST FETCH_IMM32(imm2) EOP;
+
+		OPC(FLOATS) FETCH_FRD_RS EOP;
+		OPC(FLOATUNS) FETCH_FRD_RS EOP;
+
+		OPC(FLOATD) FETCH_FRD_RS; EOP;
+
+		OPC(FLOATUND) FETCH_FRD_RS; EOP;
+
+		OPC(FSTRS) FETCH_RD_RS EOP;
+		OPC(FSTRD) FETCH_RD_RS EOP;
+
+		OPC(FLDRS) FETCH_FRD_RS EOP;
+		OPC(FLDRD) FETCH_FRD_RS EOP;
+
+		OPC(FLDR) FETCH_FRD_FRS EOP;
+
+		OPC(FLDIS) FETCH_FRD_CONST EOP;
+		OPC(FLDID) FETCH_FRD_CONST FETCH_IMM32(imm2) EOP;
+
+		OPC(FIX_TRUNCS) FETCH_RD_FRS EOP;
+		OPC(FIX_TRUNCD) FETCH_RD_FRS EOP;
+
+		OPC(FIXUN_TRUNCS) FETCH_RD_FRS EOP;
+		OPC(FIXUN_TRUNCD) FETCH_RD_FRS EOP;
+
+		OPC(FSTS) FETCH_RD_FRS_CONST EOP;
+		OPC(FSTD) FETCH_RD_FRS_CONST EOP;
+
+		OPC(FLDS) FETCH_RD_RS_CONST EOP;
+		OPC(FLDD) FETCH_RD_RS_CONST EOP;
+
+		OPC(FADD) FETCH_FRD_FRS EOP;
+		OPC(FSUB) FETCH_FRD_FRS EOP;
+		OPC(FMUL) FETCH_FRD_FRS EOP;
+		OPC(FDIV) FETCH_FRD_FRS EOP;
+
+		OPC(FSQRT) FETCH_FRD_FRS EOP;
+		OPC(FSIN) FETCH_FRD_FRS EOP;
+		OPC(FCOS) FETCH_FRD_FRS EOP;
+		OPC(FEXP) FETCH_FRD_FRS EOP;
+		OPC(FLOG) FETCH_FRD_FRS EOP;
+		OPC(FPOW) FETCH_FRD_FRS EOP;
+		OPC(FATAN2) FETCH_FRD_FRS EOP;
+
+		OPC(LDD) FETCH_RD_RS_CONST EOP;
+
+		OPC(STD) FETCH_RD_RS_CONST EOP;
+
+		OPC(LDB) FETCH_RD_RS_CONST EOP;
 
 		OPC(LDH) FETCH_RD_RS_CONST EOP;
 
@@ -272,53 +202,35 @@ int disassemble_one ( const byte* ip,
 		JMP_GENERIC(REG(REG_rt));
 		EOP;
 
-		OPC(CALL)
+		OPC(CALLR)
 			FETCH_RD
 			CALL_RD
 		EOP;
 		OPC(CALLI)
-			FETCH_IMM16
+			FETCH_INT
 			CALL_IMM
 		EOP;
 
-		OPC(JC_EQ) 	FETCH_RD_RS_ADDR16	if (RD == RS)	{ JMP_IMM; } 	EOP;
-		OPC(JC_NE)	FETCH_RD_RS_ADDR16	if (RD != RS)	{ JMP_IMM; }	EOP;
-		OPC(JC_GE)	FETCH_RD_RS_ADDR16	if (RD >= RS)	{ JMP_IMM; }	EOP;
-		OPC(JC_GT)	FETCH_RD_RS_ADDR16	if (RD >  RS)	{ JMP_IMM; }	EOP;
-		OPC(JC_LE)	FETCH_RD_RS_ADDR16	if (RD <= RS)	{ JMP_IMM; }	EOP;
-		OPC(JC_LT)	FETCH_RD_RS_ADDR16	if (RD <  RS)	{ JMP_IMM; }	EOP;
+		OPC(JC_EQ) 	FETCH_RD_RS_CONST	if (RD == RS)	{ JMP_IMM; } 	EOP;
+		OPC(JC_NE)	FETCH_RD_RS_CONST	if (RD != RS)	{ JMP_IMM; }	EOP;
+		OPC(JC_GE)	FETCH_RD_RS_CONST	if (RD >= RS)	{ JMP_IMM; }	EOP;
+		OPC(JC_GT)	FETCH_RD_RS_CONST	if (RD >  RS)	{ JMP_IMM; }	EOP;
+		OPC(JC_LE)	FETCH_RD_RS_CONST	if (RD <= RS)	{ JMP_IMM; }	EOP;
+		OPC(JC_LT)	FETCH_RD_RS_CONST	if (RD <  RS)	{ JMP_IMM; }	EOP;
 
-		OPC(JC_LTU)	FETCH_RD_RS_ADDR16	if (RDU <  RSU)	{ JMP_IMM; }	EOP;
-		OPC(JC_GEU)	FETCH_RD_RS_ADDR16	if (RDU >= RSU)	{ JMP_IMM; }	EOP;
-		OPC(JC_GTU)	FETCH_RD_RS_ADDR16	if (RDU >  RSU)	{ JMP_IMM; }	EOP;
-		OPC(JC_LEU)	FETCH_RD_RS_ADDR16	if (RDU <= RSU)	{ JMP_IMM; }	EOP;
+		OPC(FJC_EQ)	FETCH_RD_RS_CONST	if (RD == RS)	{ JMP_IMM; } 	EOP;
+		OPC(FJC_NE)	FETCH_RD_RS_CONST	if (RD != RS)	{ JMP_IMM; }	EOP;
+		OPC(FJC_GE)	FETCH_RD_RS_CONST	if (RD >= RS)	{ JMP_IMM; }	EOP;
+		OPC(FJC_GT)	FETCH_RD_RS_CONST	if (RD >  RS)	{ JMP_IMM; }	EOP;
+		OPC(FJC_LE)	FETCH_RD_RS_CONST	if (RD <= RS)	{ JMP_IMM; }	EOP;
+		OPC(FJC_LT)	FETCH_RD_RS_CONST	if (RD <  RS)	{ JMP_IMM; }	EOP;
 
-		OPC(JPI)		FETCH_IMM16		JMP_IMM		EOP;
-		OPC(JPR)		FETCH_RD		JMP_RD		EOP;
+		OPC(JC_LTU)	FETCH_RD_RS_CONST	if (RDU <  RSU)	{ JMP_IMM; }	EOP;
+		OPC(JC_GEU)	FETCH_RD_RS_CONST	if (RDU >= RSU)	{ JMP_IMM; }	EOP;
+		OPC(JC_GTU)	FETCH_RD_RS_CONST	if (RDU >  RSU)	{ JMP_IMM; }	EOP;
+		OPC(JC_LEU)	FETCH_RD_RS_CONST	if (RDU <= RSU)	{ JMP_IMM; }	EOP;
 
-		OPC(FAR) op2 = *ip++; switch(op2) {
-			OPC(CALLI)
-				FETCH_IMM24
-				CALL_IMM
-			EOP;
-
-			OPC(JC_EQ) 	FETCH_RD_RS_ADDR24	if (RD == RS)	{ JMP_IMM; } 	EOP;
-			OPC(JC_NE)		FETCH_RD_RS_ADDR24	if (RD != RS)	{ JMP_IMM; }	EOP;
-			OPC(JC_GE)		FETCH_RD_RS_ADDR24	if (RD >= RS)	{ JMP_IMM; }	EOP;
-			OPC(JC_GT)		FETCH_RD_RS_ADDR24	if (RD >  RS)	{ JMP_IMM; }	EOP;
-			OPC(JC_LE)		FETCH_RD_RS_ADDR24	if (RD <= RS)	{ JMP_IMM; }	EOP;
-			OPC(JC_LT)		FETCH_RD_RS_ADDR24	if (RD <  RS)	{ JMP_IMM; }	EOP;
-
-			OPC(JC_LTU)	FETCH_RD_RS_ADDR24	if (RDU <  RSU)	{ JMP_IMM; }	EOP;
-			OPC(JC_GEU)	FETCH_RD_RS_ADDR24	if (RDU >= RSU)	{ JMP_IMM; }	EOP;
-			OPC(JC_GTU)	FETCH_RD_RS_ADDR24	if (RDU >  RSU)	{ JMP_IMM; }	EOP;
-			OPC(JC_LEU)	FETCH_RD_RS_ADDR24	if (RDU <= RSU)	{ JMP_IMM; }	EOP;
-
-			OPC(JPI)		FETCH_IMM24		JMP_IMM		EOP;
-			default:
-				WRITE("Illegal far instruction 0x%02X @ 0x%04X\n", op, (ip - mem_cs) - 1);
-				//BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION);
-		} EOP;
+		OPC(JPI)		FETCH_INT		JMP_IMM		EOP;
 
 		OPC(XB)		FETCH_RD_RS		RD = (int)((char) RS);	EOP;
 		OPC(XH)		FETCH_RD_RS		RD = (int)((short) RS);	EOP;
@@ -330,56 +242,37 @@ int disassemble_one ( const byte* ip,
 		}
 		EOP;
 
-		OPC(CASE) FETCH_RD; FETCH_IMM24; {
-			int imm32temp = imm32 << 2;
-			uint CaseStart = MEM(int, imm32temp);
-			uint CaseLength = MEM(int, imm32temp + 1*sizeof(int));
-			WRITE("cs 0x%x, cl 0x%x", CaseStart, CaseLength);
+		OPC(CASE) FETCH_RD; FETCH_CONST; {
+			uint CaseStart = imm32;
+			FETCH_CONST; uint CaseLength = imm32;
+			FETCH_CONST; uint tableAddress = imm32;
+			FETCH_CONST; uint defaultLabel = imm32;
+			WRITE("cs 0x%x, cl 0x%x, ta 0x%x, dl 0x%x",
+				CaseStart, CaseLength, tableAddress, defaultLabel);
+			// store decoded fields
+			imm32 = CaseStart;
+			imm2 = CaseLength;
+			imm3 = tableAddress;
+			imm4 = defaultLabel;
 		} EOP;
 
-#ifdef ENABLE_DEBUGGER
-		OPC(DBG_OP) {
-			int pc = IP;
-			switch(Debugger::brk()) {
-	case Debugger::BRK_CONTINUE:
 	default:
-		BIG_PHAT_ERROR(0);
-			}
-			if(pc!=IP) {
-				ip = mem_cs+IP;
-			}
-		}
-#endif
-
-	default:
-		WRITE("Illegal instruction 0x%02X @ 0x%04X\n", op, (ip - mem_cs) - 1);
+		WRITE("Illegal instruction 0x%02x @ 0x%x\n", op, (int)((ip - mem_cs) - 1));
 		//BIG_PHAT_ERROR(ERR_ILLEGAL_INSTRUCTION);
 	}
 
 	return (int)(ip-startIp);
 }
 
-
-/**
- * Disassembles one MoSync IL instruction
- *
- * @param ip      [in] Pointer to the instruction
- * @param mem_cs  [in] Pointer to data section
- * @param mem_cp  [in] Pointer to constant section
- * @param buff    [in] Pointer to char buffer which can hold one
- *                     dissassembled instruction.
- *
- * @return Size of the dissassembled instruction in bytes
- */
-int disassemble_one ( const byte* ip, 
-                      const byte* mem_cs, 
-                      const int* mem_cp, 
-                      char* buf ) 
+int disassemble_one ( const byte* ip,
+                      const byte* mem_cs,
+                      char* buf )
 {
 	byte rd=0, rs=0;
-	byte op, op2;
-	int imm32;
-	return disassemble_one(ip, mem_cs, mem_cp, buf, op, op2, rd, rs, imm32);
+	byte op;
+	int imm32, imm2, imm3, imm4;
+	return disassemble_one(ip, mem_cs, buf, op, rd, rs, imm32,
+		imm2, imm3, imm4);
 }
 
 #endif	//PHONE_RELEASE

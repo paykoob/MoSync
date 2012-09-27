@@ -46,6 +46,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define LOGC(...) do { if(InstCount < 10000) LOG(__VA_ARGS__); } while(0)
 #endif
 
+//#undef USE_ARM_RECOMPILER
+
 #ifdef GDB_DEBUG
 #define UPDATE_IP
 /*
@@ -75,7 +77,6 @@ using namespace MoSyncError;
 #include <vector>
 #endif
 
-#include <config_platform.h>
 #if defined(USE_ARM_RECOMPILER)
 /*
 #include "disassembler.h"
@@ -119,7 +120,16 @@ __inline void chrashTestDummy(const char* fmt, ...) {
 #endif
 
 #include "gen-opcodes.h"
+
+#ifdef EMULATOR
+#define HAVE_ELF 1
+#else
+#define HAVE_ELF 0
+#endif
+
+#if HAVE_ELF
 #include <elf.h>
+#endif
 
 namespace Core {
 
@@ -131,7 +141,7 @@ class VMCoreInt : public VMCore {
 public:
 
 #ifdef LOG_STATE_CHANGE
-	int csRegs[128];
+	int csRegs[NUM_REGS];
 	int *csMem;
 
 	struct StateChange {
@@ -233,7 +243,7 @@ public:
 #else
 			csMem = (int*)1;
 #endif
-			for(unsigned int i = 0; i < 128; i++) {
+			for(unsigned int i = 0; i < NUM_REGS; i++) {
 				csRegs[i] = regs[i];
 			}
 
@@ -250,7 +260,7 @@ public:
 			// dump initial state
 			Base::WriteFileStream stateLog(STATE_LOG_DIR "more_initial_state.txt");
 
-			for(unsigned int i = 0; i < 128; i++) {
+			for(unsigned int i = 0; i < NUM_REGS; i++) {
 				char temp[1024];
 				int len = sprintf(temp, "REG%d: %x\n", i, regs[i]);
 				stateLog.write(temp, len);
@@ -273,7 +283,7 @@ public:
 
 		//LOG("\nIP: %x\n", ip);
 
-		unsigned int i = 128;
+		unsigned int i = NUM_REGS;
 		while(i--) {
 			if(csRegs[i] != regs[i]) {
 				//LOG("R%d: 0x%x != %d\n", i, csRegs[i], gCore->regs[i]);
@@ -315,8 +325,6 @@ public:
 		//LOG("logStateChange ends\n");
 	}
 #endif
-
-#define _DBG_OP _ENDOP
 
 	uint IP;
 	byte* rIP;
@@ -605,7 +613,7 @@ public:
 	void Run2() {
 #ifdef USE_ARM_RECOMPILER
 		//aIP = RunArm(aIP);
-		rIP = (byte*)recompiler.run((int)rIP);
+		rIP = (byte*)(size_t)recompiler.run((int)(size_t)rIP);
 #else
 		rIP = Run(rIP);
 #endif
@@ -617,38 +625,6 @@ public:
 		Run2();
 	}
 #endif
-
-	void GenConstTable() {
-		int n, p;
-		int mask;
-
-		for(p=0; p<32; p++) {
-			regs[p] = 0;
-		}
-
-		for (n=1;n<17;n++)
-		{
-			regs[p++] = n;
-			regs[p++] = -n;
-		}
-
-		mask = 0x20;
-
-		for (n=0;n<32-5;n++)
-		{
-			regs[p++] = mask-1;
-			regs[p++] = mask;
-			mask <<= 1;
-		}
-
-		mask = 0x10;
-
-		for (n=0;n<10;n++)
-		{
-			regs[p++] = mask ^ 0xffffffff;
-			mask <<= 1;
-		}
-	}
 
 	//****************************************
 	//				 Init MA
@@ -731,7 +707,9 @@ public:
 #ifdef MEMORY_DEBUG
 		InstCount = 0;
 #endif
-		GenConstTable();
+
+		regs[0] = 0;
+
 #ifdef FAKE_CALL_STACK
 		resetFakeCallStack();
 #endif
@@ -742,7 +720,7 @@ public:
 
 #if 0
 		LOGC("Regs:\n");
-		for(int i=0; i<128; i++) {
+		for(int i=0; i<NUM_REGS; i++) {
 			LOGC("%i: 0x%x(%i)\n", i, regs[i], regs[i]);
 		}
 		LOGC("\n");
@@ -756,6 +734,7 @@ public:
 #endif
 	}
 
+#if HAVE_ELF
 	int LoadElfVM(Stream& file) {
 		Elf32_Ehdr ehdr;
 
@@ -972,6 +951,7 @@ public:
 		rIP = mem_cs + IP;
 		return 1;
 	}
+#endif
 
 	//****************************************
 	//Loader
@@ -982,10 +962,12 @@ public:
 
 		TEST(file.isOpen());
 		TEST(file.readObject(Head));	// Load header
+#if HAVE_ELF
 		if(Head.Magic == 0x464c457f) {	//ELF.
 			TEST(file.seek(Seek::Start, 0));
 			return LoadElfVM(file);
 		}
+#endif
 		if(Head.Magic != MA_HEAD_MAGIC) {
 			LOG("Magic error: 0x%08x should be 0x%x\n", Head.Magic, MA_HEAD_MAGIC);
 			FAIL;
@@ -1196,7 +1178,7 @@ void WRITE_REG(int reg, int value) {
 #define FETCH_FRD	rd = IB; LOGC(" frd%i(0x%" PRIx64 ", %g)", rd, FRD.ll, FRD.d);
 #define FETCH_FRS	rs = IB; LOGC(" frs%i(0x%" PRIx64 ", %g)", rs, FRS.ll, FRS.d);
 
-#define FETCH_CONST FETCH_IMM32
+#define FETCH_CONST FETCH_INT
 
 #include "core_helpers.h"
 

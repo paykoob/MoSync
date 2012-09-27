@@ -23,7 +23,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
  *
  * @param ip      [in] Pointer to the instruction
  * @param mem_cs  [in] Pointer to data section
- * @param mem_cp  [in] Pointer to constant section
  * @param buff    [in] Pointer to char buffer which can hold one
  *                     dissassembled instruction.
  *
@@ -31,7 +30,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
  */
 int disassemble_one ( const byte* ip, 
                       const byte* mem_cs, 
-                      const int* mem_cp, 
                       char* buf );
 
 /**
@@ -39,11 +37,9 @@ int disassemble_one ( const byte* ip,
  *
  * @param ip      [in] Pointer to the instruction
  * @param mem_cs  [in] Pointer to data section
- * @param mem_cp  [in] Pointer to constant section
  * @param buff    [in] Pointer to char buffer which can hold one
  *                     dissassembled instruction.
  * @param op      [out] Opcode
- * @param op2     [out] Second opcode, incase op was a prefix opcode
  * @param rd      [out] Destination register
  * @param rs      [out] Source register
  * @param imm32   [out] Immediate
@@ -52,12 +48,14 @@ int disassemble_one ( const byte* ip,
  */
 int disassemble_one ( const byte* ip, 
                       const byte* mem_cs, 
-                      const int* mem_cp, 
                       char* buf, 
                       byte& op, 
-                      byte& op2, 
                       byte &rd, 
                       byte &rs, 
-                      int &imm32 );
+                      int &imm32,
+                      int &imm2,
+                      int &imm3,
+                      int &imm4
+											);
 
 #endif	//DISASSEMBLER_H
