@@ -111,8 +111,8 @@ final int EXEC_NAME() throws Exception {
 			OPC(LDI)	FETCH_RD_CONST	RD = IMM;	EOP;
 			OPC(LDR)	FETCH_RD_RS	RD = RS;	EOP;
 
-			OPC(LDDR) FETCH_RD_RS WRITE_REG(rd, RS); WRITE_REG(rd+1, REG(rs+1)); EOP;
-			OPC(LDDI) FETCH_RD_CONST WRITE_REG(rd, IMM); FETCH_CONST; WRITE_REG(rd+1, IMM); EOP;
+			OPC(LDDR) FETCH_RD_RS WRITE_REG(rdlo, RSLO); WRITE_REG(rdhi, RSHI); EOP;
+			OPC(LDDI) FETCH_RD_CONST WRITE_REG(rdlo, IMM); FETCH_CONST; WRITE_REG(rdhi, IMM); EOP;
 
 			OPC(FLOATS) FETCH_FRD_RS FRD = (double)RS; EOP;
 			OPC(FLOATUNS) FETCH_FRD_RS FRD = (double)(((long)RS) & 0x0ffffffff); EOP;
@@ -120,13 +120,13 @@ final int EXEC_NAME() throws Exception {
 			OPC(FLOATD)
 			{
 				FETCH_FRD_RS;
-				FRD = (double)ints2long(RS, REG(rs+1));
+				FRD = (double)ints2long(RSLO, RSHI);
 			} EOP;
 
 			OPC(FLOATUND)
 			{
 				FETCH_FRD_RS;
-				long l = ints2long(RS, REG(rs+1));
+				long l = ints2long(RSLO, RSHI);
 				if(l >= 0)
 					FRD = (double)l;
 				else	// This is how BigInteger.doubleValue() does it.
@@ -140,25 +140,25 @@ final int EXEC_NAME() throws Exception {
 			OPC(FSTRD) {
 				FETCH_RD_FRS;
 				long l = Double.doubleToLongBits(FRS);
-				WRITE_REG(rd, (int)(l >> 32));
-				WRITE_REG(rd+1, (int)l);
+				WRITE_REG(rdlo, (int)(l >> 32));
+				WRITE_REG(rdhi, (int)l);
 			} EOP;
 
 			OPC(FLDRS) FETCH_FRD_RS FRD = (double)Float.intBitsToFloat(RS); EOP;
-			OPC(FLDRD) FETCH_FRD_RS FRD = Double.longBitsToDouble(ints2long(RS, REG(rs+1))); EOP;
+			OPC(FLDRD) FETCH_FRD_RS FRD = Double.longBitsToDouble(ints2long(RSLO, RSHI)); EOP;
 
 			OPC(FLDR) FETCH_FRD_FRS FRD = FRS; EOP;
 
 			OPC(FLDIS) FETCH_FRD_CONST FRD = (double)Float.intBitsToFloat(IMM); EOP;
-			OPC(FLDID) FETCH_FRD_CONST { int imm = IMM; FETCH_CONST; FRD = Double.longBitsToDouble(ints2long(imm, IMM)); } EOP;
+			OPC(FLDID) FETCH_FRD_CONST { int imm = IMM; FETCH_CONST; FRD = Double.longBitsToDouble(ints2long(IMM, imm)); } EOP;
 
 			OPC(FIX_TRUNCS) FETCH_RD_FRS WRITE_REG(rd, (int)FRS); EOP;
 			OPC(FIX_TRUNCD)
 			{
 				FETCH_RD_FRS;
 				long l = (long)FRS;
-				WRITE_REG(rd, (int)(l >> 32));
-				WRITE_REG(rd+1, (int)l);
+				WRITE_REG(rdlo, (int)(l >> 32));
+				WRITE_REG(rdhi, (int)l);
 			} EOP;
 
 			// identical to FIX_*. todo: remove these two opcodes.
@@ -167,8 +167,8 @@ final int EXEC_NAME() throws Exception {
 			{
 				FETCH_RD_FRS;
 				long l = (long)FRS;
-				WRITE_REG(rd, (int)(l >> 32));
-				WRITE_REG(rd+1, (int)l);
+				WRITE_REG(rdlo, (int)(l >> 32));
+				WRITE_REG(rdhi, (int)l);
 			} EOP;
 
 			OPC(FSTS)
@@ -182,8 +182,8 @@ final int EXEC_NAME() throws Exception {
 				FETCH_RD_FRS_CONST
 				int addr = RD + IMM;
 				long l = Double.doubleToLongBits(FRS);
-				WINT(addr, (int)(l >> 32));
-				WINT(addr + 4, (int)l);
+				WINT(addrlo, (int)(l >> 32));
+				WINT(addrhi, (int)l);
 			} EOP;
 
 			OPC(FLDS)
@@ -196,7 +196,7 @@ final int EXEC_NAME() throws Exception {
 			{
 				FETCH_RD_RS_CONST
 				int addr = RS + IMM;
-				FRD = Double.longBitsToDouble(ints2long(RINT(addr), RINT(addr + 4)));
+				FRD = Double.longBitsToDouble(ints2long(RINT(addrlo), RINT(addrhi)));
 			} EOP;
 
 			OPC(FADD) FETCH_FRD_FRS FRD += FRS; EOP;
@@ -227,8 +227,8 @@ final int EXEC_NAME() throws Exception {
 			{
 				FETCH_RD_RS_CONST
 				int addr = RS + IMM;
-				RD = RINT(addr);
-				REG(rd+1) = RINT(addr + 4);
+				RDLO = RINT(addr);
+				RDHI = RINT(addr + 4);
 			}
 			EOP;
 
@@ -236,8 +236,8 @@ final int EXEC_NAME() throws Exception {
 			{
 				FETCH_RD_RS_CONST
 				int addr = RD + IMM;
-				WINT(addr, RS);
-				WINT(addr + 4, REG(rs+1));
+				WINT(addr, RSLO);
+				WINT(addr + 4, RSHI);
 			}
 			EOP;
 

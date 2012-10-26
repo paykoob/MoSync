@@ -96,6 +96,15 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define FETCH_FRD	rd = IB; DEBUG(" frd"+rd+"("+DOUBLE2HEX(FRD)+", "+FRD+")");
 #define FETCH_FRS	rs = IB; DEBUG(" frs"+rd+"("+DOUBLE2HEX(FRS)+", "+FRS+")");
 
+#define rdlo (rd+1)
+#define rdhi rd
+#define RDLO REG(rdlo)
+#define RDHI REG(rdhi)
+#define addrlo (addr + 4)
+#define addrhi addr
+#define RSLO REG(rs+1)
+#define RSHI RS
+
 
 #define UINT(a) ((long)(a) & 0x0ffffffffL)
 #define OPU(a, oper, b) (UINT(a) oper UINT(b))
