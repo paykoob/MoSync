@@ -89,6 +89,7 @@ class GenOpcodesTask < FileTask
 		@mode = mode
 		@gen = 'runtimes/cpp/core/gen-opcodes.rb'
 		@prerequisites << FileTask.new(nil, @gen)
+		@prerequisites << DirTask.new(nil, File.dirname(@NAME))
 	end
 	def execute
 		sh "ruby #{@gen} #{@mode} #{@NAME}"
