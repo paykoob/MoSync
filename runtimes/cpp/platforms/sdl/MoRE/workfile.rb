@@ -29,6 +29,9 @@ work.instance_eval do
 	if(HOST == :win32)
 		@EXTRA_LINKFLAGS = ' -mwindows'
 	end
+	if(HOST == :darwin)
+		@EXTRA_INCLUDES << "#{BD}/tools/ReleasePackageBuild/build_package_tools/include"
+	end
 
 	@LOCAL_LIBS = ["mosync_sdl", "demangle"] + @LOCAL_LIBS
 
