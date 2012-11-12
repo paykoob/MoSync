@@ -458,6 +458,7 @@ static void streamStruct(ostream& stream, const Struct& s, const string& name,
 			"\t__attribute((packed,aligned(4)))\n"
 			"#elif defined(_MSC_VER)\n"
 			"#pragma pack(push, 4)\n"
+			"#elif defined(SYMBIAN)\n"
 			"#else\n"
 			"#error Unsupported compiler!\n"
 			"#endif\n"
