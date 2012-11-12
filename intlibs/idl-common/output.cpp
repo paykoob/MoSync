@@ -992,7 +992,7 @@ void streamInvokeSyscall(ostream& stream, const Interface& maapi, bool java, int
 				convType = a.type;
 			}
 
-			bool isFloat = (argType == "double" || argType == "float");
+			bool isFloat = (a.type == "double" || a.type == "float");
 
 			int sizeOfArgType = 1;
 			if(argType == "double" || argType == "long")

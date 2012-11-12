@@ -6,12 +6,26 @@ Linux slave:
 Starting with Mint 13 (Maya)/Cinnamon/x64:
  Will probably work with *buntu 11.10 or later.
 
-apt-get install git ruby g++ libsdl1.2-dev libbluetooth-dev libssl-dev libexpat1-dev libglew1.6-dev libgtk2.0-dev libsdl-image1.2-dev libsdl-ttf2.0-dev libfreeimage-dev gperf bison flex libgmp-dev libmpfr-dev libmpc-dev libc6-dev-i386 lib32z1-dev
+sudo apt-get install git ruby g++ libsdl1.2-dev libbluetooth-dev libssl-dev libexpat1-dev libglew1.6-dev libgtk2.0-dev libsdl-image1.2-dev libsdl-ttf2.0-dev libfreeimage-dev gperf bison flex libgmp-dev libmpfr-dev libmpc-dev libc6-dev-i386 lib32z1-dev
 
 Run 'ssh-keygen', if ~/.ssh/id_rsa doesn't exist.
 Add id_rsa.pub to ~/.ssh/authorized_keys on relevant servers, so the scripts can login automatically later.
 
 Now you can start the Jenkins slave. The web interface will tell you how.
+
+To also be able to compile JavaME runtimes:
+sudo apt-get install tofrodos rubygems ruby-sqlite3 default-jdk
+
+Install JavaME SDK:
+Go to http://www.oracle.com/technetwork/java/javasebusiness/downloads/java-archive-downloads-javame-419430.html
+Download, chmod +x and run sun_java_wireless_toolkit-2.5.2_01-linuxi486.bin.sh.
+
+Install ProGuard:
+Go to http://proguard.sourceforge.net/#downloads.html
+Download proguard.zip. Latest version is recommended, 4.7 and 4.8 are tested.
+Copy proguard.jar to the WTK bin directory (default ~/WTK2.5.2/bin/)
+
+The first build will fail. Edit MoSync-source/tools/RuntimeBuilder/Settings.rb.
 
 
 13:40 2012-10-31
